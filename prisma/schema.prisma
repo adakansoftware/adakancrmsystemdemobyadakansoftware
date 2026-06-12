@@ -86,6 +86,16 @@ enum PipelineEntityType {
   DEAL
 }
 
+enum AuditAction {
+  CREATE
+  UPDATE
+  DELETE
+  LOGIN
+  LOGOUT
+  ASSIGN_ROLE
+  REMOVE_ROLE
+}
+
 model User {
   id               String     @id @default(uuid()) @db.Uuid
   email            String     @unique
@@ -111,6 +121,8 @@ model User {
   notes            Note[]     @relation("NoteAuthor")
   createdPipelines Pipeline[] @relation("PipelineCreator")
   createdStages    Stage[]    @relation("StageCreator")
+  sessions         Session[]
+  auditLogs        AuditLog[] @relation("AuditActor")
 
   @@index([status])
   @@index([lastLoginAt])
@@ -419,4 +431,36 @@ model Note {
   @@index([dealId, createdAt])
   @@index([taskId, createdAt])
   @@index([isPinned, createdAt])
+}
+
+model Session {
+  id         String   @id @default(uuid()) @db.Uuid
+  userId     String   @db.Uuid
+  tokenHash  String   @unique
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  lastSeenAt DateTime @default(now())
+  ipAddress  String?
+  userAgent  String?
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, expiresAt])
+  @@index([expiresAt])
+}
+
+model AuditLog {
+  id         String      @id @default(uuid()) @db.Uuid
+  actorId    String?     @db.Uuid
+  action     AuditAction
+  entityType String
+  entityId   String?
+  summary    String
+  metadata   Json?
+  createdAt  DateTime    @default(now())
+  actor      User?       @relation("AuditActor", fields: [actorId], references: [id], onDelete: SetNull)
+
+  @@index([actorId, createdAt])
+  @@index([entityType, entityId, createdAt])
+  @@index([action, createdAt])
 }

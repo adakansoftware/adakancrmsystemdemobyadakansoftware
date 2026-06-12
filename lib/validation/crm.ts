@@ -84,6 +84,23 @@ export const userSchema = z.object({
   roleIds: z.array(cuidOrUuid).default([]),
 })
 
+export const loginSchema = z.object({
+  email: z.email(),
+  password: z.string().min(8).max(128),
+})
+
+export const userRoleAssignmentSchema = z.object({
+  userId: cuidOrUuid,
+  roleId: cuidOrUuid,
+})
+
+export const setupSchema = z.object({
+  firstName: z.string().trim().min(1).max(100),
+  lastName: z.string().trim().min(1).max(100),
+  email: z.email(),
+  password: z.string().min(8).max(128),
+})
+
 export const companySchema = z.object({
   name: z.string().trim().min(2).max(160),
   legalName: nullableText,
@@ -213,3 +230,51 @@ export const noteSchema = z.object({
   body: z.string().trim().min(1),
   isPinned: z.boolean().optional(),
 })
+
+export const updateCompanySchema = companySchema.partial().extend({
+  id: cuidOrUuid,
+})
+
+export const updateContactSchema = contactSchema.partial().extend({
+  id: cuidOrUuid,
+})
+
+export const updateLeadSchema = leadSchema.partial().extend({
+  id: cuidOrUuid,
+})
+
+export const updateDealSchema = dealSchema.partial().extend({
+  id: cuidOrUuid,
+})
+
+export const updateNoteSchema = noteSchema.partial().extend({
+  id: cuidOrUuid,
+})
+
+export const deleteEntitySchema = z.object({
+  id: cuidOrUuid,
+})
+
+export const timelineFilterSchema = z
+  .object({
+    companyId: nullableId,
+    contactId: nullableId,
+    leadId: nullableId,
+    dealId: nullableId,
+    taskId: nullableId,
+    limit: z.number().int().positive().max(100).optional(),
+  })
+  .refine(
+    (value) =>
+      Boolean(
+        value.companyId ||
+          value.contactId ||
+          value.leadId ||
+          value.dealId ||
+          value.taskId,
+      ),
+    {
+      message: 'At least one timeline target is required',
+      path: ['companyId'],
+    },
+  )

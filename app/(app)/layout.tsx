@@ -1,17 +1,28 @@
 import type { Metadata } from 'next'
+import { redirect } from 'next/navigation'
 import { CrmSidebar } from '@/components/layout/crm-sidebar'
 import { Topbar } from '@/components/layout/topbar'
 import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar'
+import { requireAuthenticatedUser } from '@/lib/auth/rbac'
+import { db } from '@/lib/db/prisma'
 
 export const metadata: Metadata = {
   title: 'Adakan CRM',
 }
 
-export default function AppLayout({
+export default async function AppLayout({
   children,
 }: {
   children: React.ReactNode
 }) {
+  const userCount = await db.user.count()
+
+  if (userCount === 0) {
+    redirect('/setup')
+  }
+
+  await requireAuthenticatedUser()
+
   return (
     <SidebarProvider>
       <CrmSidebar />
