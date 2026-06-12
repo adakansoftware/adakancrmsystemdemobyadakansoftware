@@ -55,7 +55,6 @@ const ALL_PERMISSIONS: Permission[] = [
 
 const ROLE_PERMISSIONS: Record<SystemRoleSlug, Permission[]> = {
   owner: ALL_PERMISSIONS,
-  admin: ALL_PERMISSIONS,
   manager: [
     'companies:read',
     'companies:create',
@@ -74,7 +73,7 @@ const ROLE_PERMISSIONS: Record<SystemRoleSlug, Permission[]> = {
     'notes:create',
     'notes:update',
   ],
-  sales: [
+  staff: [
     'companies:read',
     'contacts:read',
     'contacts:create',

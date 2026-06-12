@@ -9,20 +9,14 @@ export const SYSTEM_ROLE_DEFINITIONS = [
     isSystem: true,
   },
   {
-    name: 'Admin',
-    slug: 'admin',
-    description: 'Administrative access across CRM modules',
-    isSystem: true,
-  },
-  {
     name: 'Manager',
     slug: 'manager',
     description: 'Operational access to manage sales data',
     isSystem: true,
   },
   {
-    name: 'Sales',
-    slug: 'sales',
+    name: 'Staff',
+    slug: 'staff',
     description: 'Sales-focused access to owned and assigned records',
     isSystem: true,
   },

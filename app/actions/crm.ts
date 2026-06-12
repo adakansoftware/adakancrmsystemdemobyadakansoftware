@@ -1,5 +1,6 @@
 'use server'
 
+import { revalidatePath } from 'next/cache'
 import { Prisma } from '@prisma/client'
 import { createValidatedAction } from '@/lib/actions/create-validated-action'
 import { createAuditLog } from '@/lib/audit/log'
@@ -15,6 +16,7 @@ import {
 } from '@/lib/crm/pipeline'
 import { db } from '@/lib/db/prisma'
 import {
+  activitySchema,
   companySchema,
   contactSchema,
   dealSchema,
@@ -25,6 +27,7 @@ import {
   pipelineQuerySchema,
   pipelineSchema,
   stageSchema,
+  taskSchema,
   trackDealValueSchema,
   timelineFilterSchema,
   updateCompanySchema,
@@ -34,10 +37,26 @@ import {
   updateNoteSchema,
   updatePipelineSchema,
   updateStageSchema,
+  updateTaskSchema,
 } from '@/lib/validation/crm'
 
 function asDecimal(value: number | null | undefined) {
   return value == null ? null : new Prisma.Decimal(value)
+}
+
+function revalidateCrmPaths() {
+  for (const path of [
+    '/',
+    '/musteriler',
+    '/firmalar',
+    '/leads',
+    '/anlasmalar',
+    '/pipeline',
+    '/gorevler',
+    '/takvim',
+  ]) {
+    revalidatePath(path)
+  }
 }
 
 export async function listCompanies() {
@@ -73,6 +92,7 @@ export const createCompanyAction = createValidatedAction(
       }),
     ])
 
+    revalidateCrmPaths()
     return company
   },
 )
@@ -103,6 +123,7 @@ export const updateCompanyAction = createValidatedAction(
       }),
     ])
 
+    revalidateCrmPaths()
     return company
   },
 )
@@ -124,6 +145,7 @@ export const deleteCompanyAction = createValidatedAction(
       summary: `Company archived: ${company.name}`,
     })
 
+    revalidateCrmPaths()
     return company
   },
 )
@@ -162,6 +184,7 @@ export const createContactAction = createValidatedAction(
       }),
     ])
 
+    revalidateCrmPaths()
     return contact
   },
 )
@@ -183,6 +206,7 @@ export const updateContactAction = createValidatedAction(
       summary: `Contact updated: ${contact.firstName} ${contact.lastName}`,
     })
 
+    revalidateCrmPaths()
     return contact
   },
 )
@@ -204,6 +228,7 @@ export const deleteContactAction = createValidatedAction(
       summary: `Contact archived: ${contact.firstName} ${contact.lastName}`,
     })
 
+    revalidateCrmPaths()
     return contact
   },
 )
@@ -244,6 +269,7 @@ export const createLeadAction = createValidatedAction(leadSchema, async (input) 
     }),
   ])
 
+  revalidateCrmPaths()
   return lead
 })
 
@@ -280,6 +306,7 @@ export const updateLeadAction = createValidatedAction(
       }),
     ])
 
+    revalidateCrmPaths()
     return lead
   },
 )
@@ -301,6 +328,7 @@ export const deleteLeadAction = createValidatedAction(
       summary: `Lead archived: ${lead.title}`,
     })
 
+    revalidateCrmPaths()
     return lead
   },
 )
@@ -373,6 +401,7 @@ export const createDealAction = createValidatedAction(dealSchema, async (input) 
     }),
   ])
 
+  revalidateCrmPaths()
   return deal
 })
 
@@ -454,6 +483,7 @@ export const updateDealAction = createValidatedAction(
       ...timelineTasks,
     ])
 
+    revalidateCrmPaths()
     return deal
   },
 )
@@ -475,7 +505,131 @@ export const deleteDealAction = createValidatedAction(
       summary: `Deal archived: ${deal.title}`,
     })
 
+    revalidateCrmPaths()
     return deal
+  },
+)
+
+export async function listTasks() {
+  await requirePermission('activities:read')
+  return db.task.findMany({
+    where: { archivedAt: null },
+    include: {
+      assignee: true,
+      company: true,
+      contact: true,
+      lead: true,
+      deal: true,
+    },
+    orderBy: [{ dueAt: 'asc' }, { createdAt: 'desc' }],
+  })
+}
+
+export const createTaskAction = createValidatedAction(taskSchema, async (input) => {
+  const session = await requirePermission('activities:read')
+  const task = await db.task.create({
+    data: {
+      ...input,
+      creatorId: session.userId,
+    },
+  })
+
+  await Promise.all([
+    createAuditLog({
+      actorId: session.userId,
+      action: 'CREATE',
+      entityType: 'Task',
+      entityId: task.id,
+      summary: `Task created: ${task.title}`,
+    }),
+    recordTimelineActivity({
+      actorId: session.userId,
+      type: 'TASK',
+      subject: `Task created: ${task.title}`,
+      companyId: task.companyId,
+      contactId: task.contactId,
+      leadId: task.leadId,
+      dealId: task.dealId,
+      taskId: task.id,
+    }),
+  ])
+
+  revalidateCrmPaths()
+  return task
+})
+
+export const updateTaskAction = createValidatedAction(
+  updateTaskSchema,
+  async ({ id, ...input }) => {
+    const session = await requirePermission('activities:read')
+    const task = await db.task.update({
+      where: { id },
+      data: {
+        ...input,
+        completedAt:
+          input.status == null
+            ? undefined
+            : input.status === 'DONE'
+              ? new Date()
+              : null,
+      },
+    })
+
+    await Promise.all([
+      createAuditLog({
+        actorId: session.userId,
+        action: 'UPDATE',
+        entityType: 'Task',
+        entityId: task.id,
+        summary: `Task updated: ${task.title}`,
+      }),
+      recordTimelineActivity({
+        actorId: session.userId,
+        type: 'STATUS_CHANGE',
+        subject: `Task updated: ${task.title}`,
+        companyId: task.companyId,
+        contactId: task.contactId,
+        leadId: task.leadId,
+        dealId: task.dealId,
+        taskId: task.id,
+      }),
+    ])
+
+    revalidateCrmPaths()
+    return task
+  },
+)
+
+export const createActivityAction = createValidatedAction(
+  activitySchema,
+  async (input) => {
+    const session = await requirePermission('activities:read')
+    const activity = await db.activity.create({
+      data: {
+        actorId: input.actorId ?? session.userId,
+        companyId: input.companyId ?? null,
+        contactId: input.contactId ?? null,
+        leadId: input.leadId ?? null,
+        dealId: input.dealId ?? null,
+        taskId: input.taskId ?? null,
+        type: input.type,
+        subject: input.subject,
+        description: input.description ?? null,
+        metadata: input.metadata as Prisma.InputJsonValue | undefined,
+        occurredAt: input.occurredAt,
+      },
+    })
+
+    await createAuditLog({
+      actorId: session.userId,
+      action: 'CREATE',
+      entityType: 'Activity',
+      entityId: activity.id,
+      summary: `Activity created: ${activity.subject}`,
+    })
+
+    revalidateCrmPaths()
+    return activity
   },
 )
 
@@ -533,6 +687,7 @@ export const createNoteAction = createValidatedAction(noteSchema, async (input) 
     }),
   ])
 
+  revalidateCrmPaths()
   return note
 })
 
@@ -553,6 +708,7 @@ export const updateNoteAction = createValidatedAction(
       summary: `Note updated`,
     })
 
+    revalidateCrmPaths()
     return note
   },
 )
@@ -573,6 +729,7 @@ export const deleteNoteAction = createValidatedAction(
       summary: `Note deleted`,
     })
 
+    revalidateCrmPaths()
     return { id: note.id }
   },
 )
@@ -636,6 +793,7 @@ export const createPipelineAction = createValidatedAction(
       summary: `Pipeline created: ${pipeline.name}`,
     })
 
+    revalidateCrmPaths()
     return pipeline
   },
 )
@@ -657,6 +815,7 @@ export const updatePipelineAction = createValidatedAction(
       summary: `Pipeline updated: ${pipeline.name}`,
     })
 
+    revalidateCrmPaths()
     return pipeline
   },
 )
@@ -680,6 +839,7 @@ export const createStageAction = createValidatedAction(
       summary: `Stage created: ${stage.name}`,
     })
 
+    revalidateCrmPaths()
     return stage
   },
 )
@@ -701,6 +861,7 @@ export const updateStageAction = createValidatedAction(
       summary: `Stage updated: ${stage.name}`,
     })
 
+    revalidateCrmPaths()
     return stage
   },
 )
@@ -770,6 +931,7 @@ export const moveDealToStageAction = createValidatedAction(
       }),
     ])
 
+    revalidateCrmPaths()
     return deal
   },
 )
@@ -821,6 +983,7 @@ export const trackDealValueAction = createValidatedAction(
       }),
     ])
 
+    revalidateCrmPaths()
     return deal
   },
 )

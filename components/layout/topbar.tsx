@@ -16,6 +16,7 @@ import {
   User,
   UserPlus,
 } from 'lucide-react'
+import { logoutAction } from '@/app/actions/auth'
 import { QuickCreateDialog } from '@/components/layout/quick-create-dialog'
 import { SearchInput } from '@/components/shared/search-input'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
@@ -36,29 +37,48 @@ import { SidebarTrigger } from '@/components/ui/sidebar'
 const notifications = [
   {
     title: 'Yeni lead atandı',
-    description: 'Erdoğan İnşaat size atandı',
+    description: 'Takip bekleyen kayıtlar güncellendi',
     time: '5 dk',
   },
   {
-    title: 'Teklif kabul edildi',
-    description: 'Yıldız Emlak teklifi onayladı',
+    title: 'Pipeline hareketi işlendi',
+    description: 'Aşama değişiklikleri veritabanına kaydedildi',
     time: '1 saat',
   },
   {
-    title: 'Fatura gecikti',
-    description: 'FT-2026-115 vadesi geçti',
+    title: 'Görev teslim tarihi yaklaşıyor',
+    description: 'Bugün kapanacak görevler takvimde görünüyor',
     time: '3 saat',
   },
 ] as const
 
 const quickCreateItems = [
-  { label: 'Yeni Lead', icon: UserPlus },
+  { label: 'Yeni Kişi', icon: UserPlus },
   { label: 'Yeni Anlaşma', icon: Handshake },
   { label: 'Yeni Görev', icon: CheckSquare },
-  { label: 'Yeni Teklif', icon: FileText },
+  { label: 'Yeni Firma', icon: FileText },
 ] as const
 
-export function Topbar() {
+type TopbarProps = {
+  currentUser: {
+    name: string
+    email: string
+    initials: string
+  }
+  quickCreateOptions: {
+    users: Array<{ id: string; name: string }>
+    companies: Array<{ id: string; name: string }>
+    contacts: Array<{ id: string; name: string }>
+    leads: Array<{ id: string; title: string }>
+    pipelines: Array<{
+      id: string
+      name: string
+      stages: Array<{ id: string; name: string }>
+    }>
+  }
+}
+
+export function Topbar({ currentUser, quickCreateOptions }: TopbarProps) {
   const { resolvedTheme, setTheme } = useTheme()
   const [quickOpen, setQuickOpen] = useState(false)
 
@@ -70,18 +90,13 @@ export function Topbar() {
       <SearchInput
         value=""
         onChange={() => undefined}
-        placeholder="Müşteri, anlaşma veya teklif ara..."
+        placeholder="Müşteri, anlaşma veya lead ara..."
         className="max-w-md max-md:hidden"
         inputClassName="h-9 rounded-lg"
       />
 
       <div className="ml-auto flex items-center gap-1.5">
-        <Button
-          variant="ghost"
-          size="icon"
-          className="rounded-lg md:hidden"
-          aria-label="Ara"
-        >
+        <Button variant="ghost" size="icon" className="rounded-lg md:hidden" aria-label="Ara">
           <Search />
         </Button>
 
@@ -99,12 +114,7 @@ export function Topbar() {
         <DropdownMenu>
           <DropdownMenuTrigger
             render={
-              <Button
-                variant="ghost"
-                size="icon"
-                className="relative rounded-lg"
-                aria-label="Bildirimler"
-              >
+              <Button variant="ghost" size="icon" className="relative rounded-lg" aria-label="Bildirimler">
                 <Bell />
                 <span className="absolute right-1.5 top-1.5 size-2 rounded-full bg-destructive ring-2 ring-background" />
               </Button>
@@ -122,15 +132,9 @@ export function Topbar() {
                   key={notification.title}
                   className="flex flex-col items-start gap-0.5 py-2"
                 >
-                  <span className="text-sm font-medium">
-                    {notification.title}
-                  </span>
-                  <span className="text-xs text-muted-foreground">
-                    {notification.description}
-                  </span>
-                  <span className="text-[11px] text-muted-foreground">
-                    {notification.time} önce
-                  </span>
+                  <span className="text-sm font-medium">{notification.title}</span>
+                  <span className="text-xs text-muted-foreground">{notification.description}</span>
+                  <span className="text-[11px] text-muted-foreground">{notification.time} önce</span>
                 </DropdownMenuItem>
               ))}
             </DropdownMenuGroup>
@@ -151,10 +155,7 @@ export function Topbar() {
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
               {quickCreateItems.map((item) => (
-                <DropdownMenuItem
-                  key={item.label}
-                  onClick={() => setQuickOpen(true)}
-                >
+                <DropdownMenuItem key={item.label} onClick={() => setQuickOpen(true)}>
                   <item.icon />
                   {item.label}
                 </DropdownMenuItem>
@@ -168,26 +169,21 @@ export function Topbar() {
         <DropdownMenu>
           <DropdownMenuTrigger
             render={
-              <Button
-                variant="ghost"
-                className="h-9 gap-2 rounded-lg px-1.5 sm:pr-2.5"
-              >
+              <Button variant="ghost" className="h-9 gap-2 rounded-lg px-1.5 sm:pr-2.5">
                 <Avatar className="size-7">
                   <AvatarFallback className="bg-primary/12 text-xs font-semibold text-primary">
-                    MŞ
+                    {currentUser.initials}
                   </AvatarFallback>
                 </Avatar>
-                <span className="text-sm font-medium max-sm:hidden">
-                  Mert Şahin
-                </span>
+                <span className="text-sm font-medium max-sm:hidden">{currentUser.name}</span>
               </Button>
             }
           />
           <DropdownMenuContent align="end" className="w-56">
             <DropdownMenuLabel className="flex flex-col">
-              <span>Mert Şahin</span>
+              <span>{currentUser.name}</span>
               <span className="text-xs font-normal text-muted-foreground">
-                mert@adakan.com
+                {currentUser.email}
               </span>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
@@ -202,7 +198,7 @@ export function Topbar() {
               </DropdownMenuItem>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
-            <DropdownMenuItem variant="destructive">
+            <DropdownMenuItem variant="destructive" onClick={() => logoutAction()}>
               <LogOut />
               Çıkış Yap
             </DropdownMenuItem>
@@ -210,7 +206,11 @@ export function Topbar() {
         </DropdownMenu>
       </div>
 
-      <QuickCreateDialog open={quickOpen} onOpenChange={setQuickOpen} />
+      <QuickCreateDialog
+        open={quickOpen}
+        onOpenChange={setQuickOpen}
+        options={quickCreateOptions}
+      />
     </header>
   )
 }

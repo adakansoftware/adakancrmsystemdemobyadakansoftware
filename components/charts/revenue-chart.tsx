@@ -7,17 +7,21 @@ import {
   ChartTooltipContent,
   type ChartConfig,
 } from '@/components/ui/chart'
-import { formatCompact, revenueData } from '@/lib/data'
+import { formatCompact } from '@/lib/format'
 
 const config = {
   gelir: { label: 'Gelir', color: 'var(--chart-1)' },
   hedef: { label: 'Hedef', color: 'var(--chart-2)' },
 } satisfies ChartConfig
 
-export function RevenueChart() {
+export function RevenueChart({
+  data,
+}: {
+  data: Array<{ month: string; gelir: number; hedef: number }>
+}) {
   return (
     <ChartContainer config={config} className="h-[260px] w-full">
-      <AreaChart data={revenueData} margin={{ left: 4, right: 8, top: 8 }}>
+      <AreaChart data={data} margin={{ left: 4, right: 8, top: 8 }}>
         <defs>
           <linearGradient id="fillGelir" x1="0" y1="0" x2="0" y2="1">
             <stop offset="5%" stopColor="var(--color-gelir)" stopOpacity={0.3} />

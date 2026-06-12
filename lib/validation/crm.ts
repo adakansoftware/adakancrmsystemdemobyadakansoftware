@@ -272,6 +272,10 @@ export const updateDealSchema = dealSchema.partial().extend({
   id: cuidOrUuid,
 })
 
+export const updateTaskSchema = taskSchema.partial().extend({
+  id: cuidOrUuid,
+})
+
 export const updateNoteSchema = noteSchema.partial().extend({
   id: cuidOrUuid,
 })

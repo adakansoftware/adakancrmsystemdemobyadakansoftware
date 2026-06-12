@@ -51,7 +51,7 @@ const DEFAULT_DEAL_STAGES: Array<{
     isClosed: true,
     isWon: false,
   },
-] as const
+]
 
 export async function ensureSystemRoles() {
   await Promise.all(

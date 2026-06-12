@@ -1,5 +1,5 @@
 {
-  "name": "my-project",
+  "name": "adakan-crm",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -7,11 +7,16 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint .",
+    "verify": "npm run prisma:validate && npm run lint && npm run build",
     "prisma:format": "prisma format",
     "prisma:validate": "prisma validate",
     "prisma:generate": "prisma generate",
     "db:push": "prisma db push",
-    "db:migrate": "prisma migrate dev"
+    "db:migrate": "prisma migrate dev",
+    "seed": "prisma db seed"
+  },
+  "prisma": {
+    "seed": "npx tsx prisma/seed.ts"
   },
   "dependencies": {
     "@base-ui/react": "^1.5.0",
@@ -33,13 +38,20 @@
     "zod": "^4.1.12"
   },
   "devDependencies": {
+    "@eslint/eslintrc": "^3.3.1",
+    "@eslint/js": "^9.29.0",
     "@tailwindcss/postcss": "^4.2.0",
+    "eslint": "^9.29.0",
+    "eslint-config-next": "16.2.6",
+    "globals": "^16.4.0",
     "@types/node": "^24",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "postcss": "^8.5",
     "prisma": "^6.16.0",
     "tailwindcss": "^4.2.0",
-    "typescript": "5.7.3"
+    "tsx": "^4.20.6",
+    "typescript": "5.7.3",
+    "typescript-eslint": "^8.34.1"
   }
 }

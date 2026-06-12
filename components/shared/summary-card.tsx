@@ -1,6 +1,6 @@
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
-import type { BadgeVariant } from '@/lib/data'
+import type { BadgeVariant } from '@/lib/ui-meta'
 
 type SummaryCardProps = {
   label: string

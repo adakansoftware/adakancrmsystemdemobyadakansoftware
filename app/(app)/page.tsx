@@ -5,7 +5,7 @@ import {
   Handshake,
   ListTodo,
   Phone,
-  ReceiptText,
+  Settings2,
   TrendingUp,
   Trophy,
   Users,
@@ -34,32 +34,34 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import {
-  formatCompact,
-  formatCurrency,
-  pipelineSummary,
-  priorityMeta,
-  recentActivities,
-  staffPerformance,
-  upcomingTasks,
-} from '@/lib/data'
+import { getDashboardData } from '@/lib/crm/queries'
+import { formatCompact, formatCurrency, formatDate, formatRelativeDate } from '@/lib/format'
+import { activityTypeMeta, priorityMeta } from '@/lib/ui-meta'
 
 const activityIcon = {
-  call: Phone,
-  quote: FileText,
-  meeting: CalendarCheck,
-  won: Trophy,
-  invoice: ReceiptText,
+  CALL: Phone,
+  EMAIL: FileText,
+  MEETING: CalendarCheck,
+  NOTE: FileText,
+  TASK: ListTodo,
+  STATUS_CHANGE: Settings2,
+  STAGE_CHANGE: TrendingUp,
+  COMMENT: FileText,
+  SYSTEM: Trophy,
 }
 
-const totalPipeline = pipelineSummary.reduce((sum, stage) => sum + stage.value, 0)
+export default async function DashboardPage() {
+  const data = await getDashboardData()
+  const totalPipeline = data.pipelineValueByStage.reduce((sum, stage) => sum + stage.value, 0)
+  const chartDelta =
+    data.revenueData[data.revenueData.length - 1]?.gelir -
+    data.revenueData[data.revenueData.length - 1]?.hedef
 
-export default function DashboardPage() {
   return (
     <>
       <PageHeader
         title="Dashboard"
-        description="İşletmenizin genel görünümü - 1-30 Haziran 2026"
+        description="CRM operasyonunuzun canlı görünümü"
       >
         <Button variant="outline">Bu Ay</Button>
         <Button>Rapor İndir</Button>
@@ -67,35 +69,35 @@ export default function DashboardPage() {
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <StatCard
-          title="Toplam Müşteri"
-          value="248"
-          change="+12,5%"
+          title="Toplam Kişi"
+          value={String(data.totalContacts)}
+          change={`${data.totalCompanies} firma`}
           trend="up"
-          hint="geçen aya göre"
+          hint="ilişkili kayıt"
           icon={Users}
         />
         <StatCard
           title="Açık Anlaşmalar"
-          value="34"
-          change="+8,2%"
+          value={String(data.openDeals)}
+          change={`${data.openLeads} açık lead`}
           trend="up"
-          hint="geçen aya göre"
+          hint="aktif satış hattı"
           icon={Handshake}
         />
         <StatCard
-          title="Aylık Gelir"
-          value="₺642B"
-          change="+18,3%"
+          title="Açık Deal Değeri"
+          value={formatCurrency(data.totalOpenDealValue)}
+          change={formatCompact(data.totalOpenDealValue)}
           trend="up"
-          hint="geçen aya göre"
+          hint="toplam pipeline tutarı"
           icon={TrendingUp}
         />
         <StatCard
           title="Bekleyen Görevler"
-          value="17"
-          change="-4,1%"
+          value={String(data.pendingTasks)}
+          change={`${data.upcomingTasks.length} yakın teslim`}
           trend="down"
-          hint="geçen haftaya göre"
+          hint="takip gerektiren iş"
           icon={ListTodo}
         />
       </div>
@@ -104,41 +106,39 @@ export default function DashboardPage() {
         <Card className="lg:col-span-2">
           <CardHeader>
             <CardTitle>Gelir Grafiği</CardTitle>
-            <CardDescription>
-              Aylık gerçekleşen gelir ve hedef karşılaştırması
-            </CardDescription>
+            <CardDescription>Son 6 ayın anlaşma tutarı görünümü</CardDescription>
             <CardAction>
-              <Badge variant="success">Hedefin %114 üzerinde</Badge>
+              <Badge variant={chartDelta >= 0 ? 'success' : 'warning'}>
+                {chartDelta >= 0 ? 'Hedef üstü' : 'Hedefe yakın'}
+              </Badge>
             </CardAction>
           </CardHeader>
           <CardContent>
-            <RevenueChart />
+            <RevenueChart data={data.revenueData} />
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader>
-            <CardTitle>Satış Hattı Özeti</CardTitle>
+            <CardTitle>Pipeline Değeri</CardTitle>
             <CardDescription>
-              Toplam {formatCurrency(totalPipeline)} değerinde
+              Toplam {formatCurrency(totalPipeline)}
             </CardDescription>
           </CardHeader>
           <CardContent className="flex flex-col gap-4">
-            {pipelineSummary.map((stage) => {
-              const percentage = Math.round((stage.value / totalPipeline) * 100)
+            {data.pipelineValueByStage.map((stage) => {
+              const percentage =
+                totalPipeline === 0 ? 0 : Math.round((stage.value / totalPipeline) * 100)
 
               return (
-                <div key={stage.stage} className="flex flex-col gap-1.5">
+                <div key={stage.id} className="flex flex-col gap-1.5">
                   <div className="flex items-center justify-between text-sm">
                     <span className="font-medium">{stage.stage}</span>
                     <span className="text-muted-foreground">
                       {stage.count} · {formatCompact(stage.value)} ₺
                     </span>
                   </div>
-                  <Progress
-                    value={percentage}
-                    aria-label={`${stage.stage} aşaması ${percentage}%`}
-                  />
+                  <Progress value={percentage} aria-label={`${stage.stage} yüzde ${percentage}`} />
                 </div>
               )
             })}
@@ -150,23 +150,22 @@ export default function DashboardPage() {
         <Card className="lg:col-span-2">
           <CardHeader>
             <CardTitle>Personel Performansı</CardTitle>
-            <CardDescription>Bu ayki en iyi temsilciler</CardDescription>
+            <CardDescription>Atanan deal ve görev yükü görünümü</CardDescription>
           </CardHeader>
           <CardContent className="overflow-x-auto">
             <Table>
               <TableHeader>
                 <TableRow>
                   <TableHead>Temsilci</TableHead>
-                  <TableHead className="text-center">Anlaşma</TableHead>
-                  <TableHead className="text-right">Gelir</TableHead>
-                  <TableHead className="text-right max-sm:hidden">
-                    Dönüşüm
-                  </TableHead>
+                  <TableHead className="text-center">Açık Deal</TableHead>
+                  <TableHead className="text-right">Kazanılan Tutar</TableHead>
+                  <TableHead className="text-right max-sm:hidden">Açık Görev</TableHead>
+                  <TableHead className="text-right max-sm:hidden">Kapanış</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {staffPerformance.map((person) => (
-                  <TableRow key={person.name}>
+                {data.staffPerformance.map((person) => (
+                  <TableRow key={person.id}>
                     <TableCell>
                       <div className="flex items-center gap-2.5">
                         <Avatar className="size-8">
@@ -182,9 +181,10 @@ export default function DashboardPage() {
                       {formatCurrency(person.revenue)}
                     </TableCell>
                     <TableCell className="text-right max-sm:hidden">
-                      <Badge
-                        variant={person.rate >= 60 ? 'success' : 'secondary'}
-                      >
+                      {person.taskLoad}
+                    </TableCell>
+                    <TableCell className="text-right max-sm:hidden">
+                      <Badge variant={person.rate >= 50 ? 'success' : 'secondary'}>
                         %{person.rate}
                       </Badge>
                     </TableCell>
@@ -200,7 +200,7 @@ export default function DashboardPage() {
             <CardTitle>Son Aktiviteler</CardTitle>
           </CardHeader>
           <CardContent className="flex flex-col gap-4">
-            {recentActivities.map((activity) => {
+            {data.recentActivities.map((activity) => {
               const Icon = activityIcon[activity.type]
 
               return (
@@ -211,10 +211,10 @@ export default function DashboardPage() {
                   <div className="flex flex-col gap-0.5">
                     <p className="text-sm leading-snug">
                       <span className="font-medium">{activity.who}</span>{' '}
-                      {activity.action}
+                      {activity.subject}
                     </p>
                     <span className="text-xs text-muted-foreground">
-                      {activity.time}
+                      {activityTypeMeta[activity.type].label} · {formatRelativeDate(activity.occurredAt)}
                     </span>
                   </div>
                 </div>
@@ -227,7 +227,7 @@ export default function DashboardPage() {
       <Card>
         <CardHeader>
           <CardTitle>Yaklaşan Görevler</CardTitle>
-          <CardDescription>Önümüzdeki günlerde yapılacaklar</CardDescription>
+          <CardDescription>Önümüzdeki günlerde planlanan işler</CardDescription>
           <CardAction>
             <Button
               variant="ghost"
@@ -241,7 +241,7 @@ export default function DashboardPage() {
           </CardAction>
         </CardHeader>
         <CardContent className="flex flex-col gap-2">
-          {upcomingTasks.map((task) => (
+          {data.upcomingTasks.map((task) => (
             <div
               key={task.id}
               className="flex flex-col gap-3 rounded-lg border p-3 sm:flex-row sm:items-center sm:justify-between"
@@ -253,12 +253,8 @@ export default function DashboardPage() {
                   </AvatarFallback>
                 </Avatar>
                 <div className="flex min-w-0 flex-col">
-                  <span className="truncate text-sm font-medium">
-                    {task.title}
-                  </span>
-                  <span className="text-xs text-muted-foreground">
-                    {task.related}
-                  </span>
+                  <span className="truncate text-sm font-medium">{task.title}</span>
+                  <span className="text-xs text-muted-foreground">{task.related}</span>
                 </div>
               </div>
               <div className="flex shrink-0 items-center gap-2 self-end sm:self-auto">
@@ -266,7 +262,7 @@ export default function DashboardPage() {
                   {task.priority}
                 </Badge>
                 <span className="text-xs text-muted-foreground">
-                  {task.dueDate}
+                  {formatDate(task.dueAt)}
                 </span>
               </div>
             </div>
