@@ -157,6 +157,31 @@ export const stageSchema = z.object({
   isWon: z.boolean().optional(),
 })
 
+export const updatePipelineSchema = pipelineSchema.partial().extend({
+  id: cuidOrUuid,
+})
+
+export const updateStageSchema = stageSchema.partial().extend({
+  id: cuidOrUuid,
+})
+
+export const pipelineQuerySchema = z.object({
+  pipelineId: nullableId,
+})
+
+export const moveDealSchema = z.object({
+  dealId: cuidOrUuid,
+  toPipelineId: cuidOrUuid,
+  toStageId: cuidOrUuid,
+  note: nullableText,
+})
+
+export const trackDealValueSchema = z.object({
+  dealId: cuidOrUuid,
+  amount: z.number().nonnegative(),
+  reason: nullableText,
+})
+
 export const leadSchema = z.object({
   companyId: nullableId,
   contactId: nullableId,
