@@ -140,19 +140,19 @@ export function PipelineBoardClient({
     <div className="flex flex-col gap-4">
       <div className="grid gap-4 sm:grid-cols-3">
         <div className="rounded-xl border bg-card p-4">
-          <p className="text-sm text-muted-foreground">Toplam değer</p>
+          <p className="text-sm text-muted-foreground">Toplam deger</p>
           <p className="mt-1 text-2xl font-semibold">
             {formatCompactCurrency(metrics.totalValue, 'TRY')}
           </p>
         </div>
         <div className="rounded-xl border bg-card p-4">
-          <p className="text-sm text-muted-foreground">Kazanılan değer</p>
+          <p className="text-sm text-muted-foreground">Kazanilan deger</p>
           <p className="mt-1 text-2xl font-semibold text-success">
             {formatCompactCurrency(metrics.wonValue, 'TRY')}
           </p>
         </div>
         <div className="rounded-xl border bg-card p-4">
-          <p className="text-sm text-muted-foreground">Kaybedilen değer</p>
+          <p className="text-sm text-muted-foreground">Kaybedilen deger</p>
           <p className="mt-1 text-2xl font-semibold text-destructive">
             {formatCompactCurrency(metrics.lostValue, 'TRY')}
           </p>
@@ -177,7 +177,7 @@ export function PipelineBoardClient({
                   'flex w-[290px] shrink-0 flex-col rounded-xl border bg-muted/40 transition-colors',
                   overStage === stage.id && 'border-primary bg-primary/5',
                 )}
-                aria-label={`${stage.name} sütunu`}
+                aria-label={`${stage.name} sutunu`}
               >
                 <div className="flex items-center justify-between gap-2 border-b px-3 py-3">
                   <div className="flex items-center gap-2">
@@ -251,10 +251,11 @@ export function PipelineBoardClient({
                     variant="outline"
                     size="sm"
                     className="justify-center"
+                    nativeButton={false}
                     render={
                       <Link href="/pipeline?quickCreate=deal">
                         <Plus data-icon="inline-start" />
-                        Anlaşma ekle
+                        Anlasma ekle
                       </Link>
                     }
                   />

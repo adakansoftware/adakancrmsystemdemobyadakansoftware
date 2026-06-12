@@ -17,9 +17,10 @@ export default async function CalendarPage() {
     <div className="flex flex-col gap-6">
       <PageHeader
         title="Takvim"
-        description="Yaklaşan görevler ve anlaşma kapanış tarihleri"
+        description="Yaklasan gorevler ve anlasma kapanis tarihleri"
         actions={
           <Button
+            nativeButton={false}
             render={
               <Link href="/takvim?quickCreate=task">
                 <PlusIcon data-icon="inline-start" />
@@ -33,14 +34,14 @@ export default async function CalendarPage() {
       <div className="grid gap-6 lg:grid-cols-[1fr_360px]">
         <Card>
           <CardHeader>
-            <CardTitle>Yaklaşan plan</CardTitle>
+            <CardTitle>Yaklasan plan</CardTitle>
           </CardHeader>
           <CardContent className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
             {events.slice(0, 12).map((event) => (
               <div key={`${event.type}-${event.id}`} className="rounded-lg border p-3">
                 <div className="flex items-center justify-between gap-2">
                   <Badge variant={event.type === 'TASK' ? 'warning' : 'info'}>
-                    {event.type === 'TASK' ? 'Görev' : 'Deal Kapanışı'}
+                    {event.type === 'TASK' ? 'Gorev' : 'Deal Kapanisi'}
                   </Badge>
                   <span className="text-xs text-muted-foreground">
                     {formatDateTime(event.date)}
@@ -55,7 +56,7 @@ export default async function CalendarPage() {
 
         <Card>
           <CardHeader>
-            <CardTitle>Yaklaşan detay listesi</CardTitle>
+            <CardTitle>Yaklasan detay listesi</CardTitle>
           </CardHeader>
           <CardContent className="flex flex-col gap-3">
             {events.map((event) => (
@@ -68,7 +69,7 @@ export default async function CalendarPage() {
                     {formatDateTime(event.date)}
                   </span>
                   <Badge variant={event.type === 'TASK' ? 'warning' : 'info'}>
-                    {event.type === 'TASK' ? 'Görev' : 'Deal'}
+                    {event.type === 'TASK' ? 'Gorev' : 'Deal'}
                   </Badge>
                 </div>
                 <span className="text-sm text-foreground">{event.title}</span>

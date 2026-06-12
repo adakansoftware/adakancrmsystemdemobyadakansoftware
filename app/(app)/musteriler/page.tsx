@@ -23,23 +23,25 @@ export default async function CustomersPage() {
   return (
     <>
       <PageHeader
-        title="Müşteriler"
-        description="Tüm müşteri ilişkilerini gerçek verilerle yönetin"
+        title="Musteriler"
+        description="Tum musteri iliskilerini gercek verilerle yonetin"
       >
         <Button
           variant="outline"
+          nativeButton={false}
           render={
             <Link href="/api/export?entity=contacts">
               <Download data-icon="inline-start" />
-              Dışa Aktar
+              Disa Aktar
             </Link>
           }
         />
         <Button
+          nativeButton={false}
           render={
             <Link href="/musteriler?quickCreate=contact">
               <Plus data-icon="inline-start" />
-              Yeni Müşteri
+              Yeni Musteri
             </Link>
           }
         />
@@ -50,12 +52,12 @@ export default async function CustomersPage() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Müşteri</TableHead>
+                <TableHead>Musteri</TableHead>
                 <TableHead>Firma</TableHead>
-                <TableHead className="max-lg:hidden">İletişim</TableHead>
+                <TableHead className="max-lg:hidden">Iletisim</TableHead>
                 <TableHead className="max-xl:hidden">Sorumlu</TableHead>
                 <TableHead className="max-lg:hidden">Son Aktivite</TableHead>
-                <TableHead className="text-right">İlgili Deal</TableHead>
+                <TableHead className="text-right">Ilgili Deal</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>

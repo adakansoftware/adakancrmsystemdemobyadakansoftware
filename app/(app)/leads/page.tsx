@@ -31,18 +31,20 @@ export default async function LeadsPage() {
     <>
       <PageHeader
         title="Leads"
-        description="Potansiyel müşterileri gerçek CRM kayıtlarından takip edin"
+        description="Potansiyel musterileri gercek CRM kayitlarindan takip edin"
       >
         <Button
           variant="outline"
+          nativeButton={false}
           render={
             <Link href="/api/export?entity=leads">
               <Download data-icon="inline-start" />
-              Dışa Aktar
+              Disa Aktar
             </Link>
           }
         />
         <Button
+          nativeButton={false}
           render={
             <Link href="/leads?quickCreate=lead">
               <Plus data-icon="inline-start" />
@@ -55,7 +57,7 @@ export default async function LeadsPage() {
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <SummaryCard label="Toplam Lead" value={leads.length} badge="Lead" badgeVariant="info" />
         <SummaryCard
-          label="Açık"
+          label="Acik"
           value={leads.filter((lead) => lead.status === 'OPEN').length}
           badge="Durum"
           badgeVariant="info"
@@ -67,7 +69,7 @@ export default async function LeadsPage() {
           badgeVariant="success"
         />
         <SummaryCard
-          label="Tahmini Değer"
+          label="Tahmini Deger"
           value={formatCurrency(leads.reduce((sum, lead) => sum + lead.estimatedValue, 0))}
           badge="TRY"
           badgeVariant="warning"
@@ -80,13 +82,13 @@ export default async function LeadsPage() {
             <TableHeader>
               <TableRow>
                 <TableHead>Lead</TableHead>
-                <TableHead className="max-lg:hidden">Firma / Kişi</TableHead>
+                <TableHead className="max-lg:hidden">Firma / Kisi</TableHead>
                 <TableHead>Kaynak</TableHead>
-                <TableHead>Sıcaklık</TableHead>
+                <TableHead>Sicaklik</TableHead>
                 <TableHead>Durum</TableHead>
-                <TableHead className="text-right max-md:hidden">Değer</TableHead>
+                <TableHead className="text-right max-md:hidden">Deger</TableHead>
                 <TableHead className="max-xl:hidden">Sorumlu</TableHead>
-                <TableHead className="max-lg:hidden">Aşama</TableHead>
+                <TableHead className="max-lg:hidden">Asama</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>

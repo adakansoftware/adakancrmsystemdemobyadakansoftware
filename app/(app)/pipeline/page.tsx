@@ -18,14 +18,14 @@ export default async function PipelinePage({
   })
 
   if (!boardResult.success || !boardResult.data) {
-    return <PageHeader title="Pipeline" description="Pipeline verisi bulunamadı." />
+    return <PageHeader title="Pipeline" description="Pipeline verisi bulunamadi." />
   }
 
   return (
     <>
       <PageHeader
         title="Pipeline"
-        description="Çoklu pipeline, özel stage ve kalıcı anlaşma hareketleri"
+        description="Coklu pipeline, ozel stage ve kalici anlasma hareketleri"
         actions={
           <>
             <PipelineSwitcher
@@ -36,10 +36,11 @@ export default async function PipelinePage({
               value={boardResult.data.pipeline.id}
             />
             <Button
+              nativeButton={false}
               render={
                 <Link href="/pipeline?quickCreate=deal">
                   <Plus data-icon="inline-start" />
-                  Yeni Anlaşma
+                  Yeni Anlasma
                 </Link>
               }
             />

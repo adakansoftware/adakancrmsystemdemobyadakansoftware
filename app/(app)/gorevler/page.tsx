@@ -16,14 +16,15 @@ export default async function TasksPage() {
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
-        title="Görevler"
-        description={`${openCount} açık görev · ekibinizin yapılacak listesi`}
+        title="Gorevler"
+        description={`${openCount} acik gorev · ekibinizin yapilacak listesi`}
         actions={
           <Button
+            nativeButton={false}
             render={
               <Link href="/gorevler?quickCreate=task">
                 <PlusIcon data-icon="inline-start" />
-                Yeni Görev
+                Yeni Gorev
               </Link>
             }
           />

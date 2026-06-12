@@ -59,14 +59,15 @@ export default async function DashboardPage() {
 
   return (
     <>
-      <PageHeader title="Dashboard" description="CRM operasyonunuzun canlı görünümü">
+      <PageHeader title="Dashboard" description="CRM operasyonunuzun canli gorunumu">
         <Button variant="outline" disabled aria-disabled="true">
           Bu Ay
         </Button>
         <Button
+          nativeButton={false}
           render={
             <Link href="/api/export?entity=dashboard">
-              Rapor İndir
+              Rapor Indir
             </Link>
           }
         />
@@ -74,35 +75,35 @@ export default async function DashboardPage() {
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <StatCard
-          title="Toplam Kişi"
+          title="Toplam Kisi"
           value={String(data.totalContacts)}
           change={`${data.totalCompanies} firma`}
           trend="up"
-          hint="ilişkili kayıt"
+          hint="iliskili kayit"
           icon={Users}
         />
         <StatCard
-          title="Açık Anlaşmalar"
+          title="Acik Anlasmalar"
           value={String(data.openDeals)}
-          change={`${data.openLeads} açık lead`}
+          change={`${data.openLeads} acik lead`}
           trend="up"
-          hint="aktif satış hattı"
+          hint="aktif satis hatti"
           icon={Handshake}
         />
         <StatCard
-          title="Açık Deal Değeri"
+          title="Acik Deal Degeri"
           value={formatCurrency(data.totalOpenDealValue)}
           change={formatCompact(data.totalOpenDealValue)}
           trend="up"
-          hint="toplam pipeline tutarı"
+          hint="toplam pipeline tutari"
           icon={TrendingUp}
         />
         <StatCard
-          title="Bekleyen Görevler"
+          title="Bekleyen Gorevler"
           value={String(data.pendingTasks)}
-          change={`${data.upcomingTasks.length} yakın teslim`}
+          change={`${data.upcomingTasks.length} yakin teslim`}
           trend="down"
-          hint="takip gerektiren iş"
+          hint="takip gerektiren is"
           icon={ListTodo}
         />
       </div>
@@ -110,11 +111,11 @@ export default async function DashboardPage() {
       <div className="grid gap-4 lg:grid-cols-3">
         <Card className="lg:col-span-2">
           <CardHeader>
-            <CardTitle>Gelir Grafiği</CardTitle>
-            <CardDescription>Son 6 ayın anlaşma tutarı görünümü</CardDescription>
+            <CardTitle>Gelir Grafigi</CardTitle>
+            <CardDescription>Son 6 ayin anlasma tutari gorunumu</CardDescription>
             <CardAction>
               <Badge variant={chartDelta >= 0 ? 'success' : 'warning'}>
-                {chartDelta >= 0 ? 'Hedef üstü' : 'Hedefe yakın'}
+                {chartDelta >= 0 ? 'Hedef ustu' : 'Hedefe yakin'}
               </Badge>
             </CardAction>
           </CardHeader>
@@ -125,7 +126,7 @@ export default async function DashboardPage() {
 
         <Card>
           <CardHeader>
-            <CardTitle>Pipeline Değeri</CardTitle>
+            <CardTitle>Pipeline Degeri</CardTitle>
             <CardDescription>Toplam {formatCurrency(totalPipeline)}</CardDescription>
           </CardHeader>
           <CardContent className="flex flex-col gap-4">
@@ -139,7 +140,7 @@ export default async function DashboardPage() {
                       {stage.count} · {formatCompact(stage.value)} ₺
                     </span>
                   </div>
-                  <Progress value={percentage} aria-label={`${stage.stage} yüzde ${percentage}`} />
+                  <Progress value={percentage} aria-label={`${stage.stage} yuzde ${percentage}`} />
                 </div>
               )
             })}
@@ -150,18 +151,18 @@ export default async function DashboardPage() {
       <div className="grid gap-4 lg:grid-cols-3">
         <Card className="lg:col-span-2">
           <CardHeader>
-            <CardTitle>Personel Performansı</CardTitle>
-            <CardDescription>Atanan deal ve görev yükü görünümü</CardDescription>
+            <CardTitle>Personel Performansi</CardTitle>
+            <CardDescription>Atanan deal ve gorev yuku gorunumu</CardDescription>
           </CardHeader>
           <CardContent className="overflow-x-auto">
             <Table>
               <TableHeader>
                 <TableRow>
                   <TableHead>Temsilci</TableHead>
-                  <TableHead className="text-center">Açık Deal</TableHead>
-                  <TableHead className="text-right">Kazanılan Tutar</TableHead>
-                  <TableHead className="text-right max-sm:hidden">Açık Görev</TableHead>
-                  <TableHead className="text-right max-sm:hidden">Kapanış</TableHead>
+                  <TableHead className="text-center">Acik Deal</TableHead>
+                  <TableHead className="text-right">Kazanilan Tutar</TableHead>
+                  <TableHead className="text-right max-sm:hidden">Acik Gorev</TableHead>
+                  <TableHead className="text-right max-sm:hidden">Kapanis</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -221,15 +222,16 @@ export default async function DashboardPage() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Yaklaşan Görevler</CardTitle>
-          <CardDescription>Önümüzdeki günlerde planlanan işler</CardDescription>
+          <CardTitle>Yaklasan Gorevler</CardTitle>
+          <CardDescription>Onumuzdeki gunlerde planlanan isler</CardDescription>
           <CardAction>
             <Button
               variant="ghost"
               size="sm"
+              nativeButton={false}
               render={
                 <Link href="/gorevler">
-                  Tüm görevler <ArrowRight data-icon="inline-end" />
+                  Tum gorevler <ArrowRight data-icon="inline-end" />
                 </Link>
               }
             />

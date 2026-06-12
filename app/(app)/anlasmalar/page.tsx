@@ -26,33 +26,35 @@ export default async function DealsPage() {
   return (
     <>
       <PageHeader
-        title="Anlaşmalar"
-        description="Tüm satış anlaşmalarınızı veritabanından yönetin"
+        title="Anlasmalar"
+        description="Tum satis anlasmalarinizi veritabanindan yonetin"
       >
         <Button
           variant="outline"
+          nativeButton={false}
           render={
             <Link href="/pipeline">
               <KanbanSquare data-icon="inline-start" />
-              Pipeline Görünümü
+              Pipeline Gorunumu
             </Link>
           }
         />
         <Button
+          nativeButton={false}
           render={
             <Link href="/anlasmalar?quickCreate=deal">
               <Plus data-icon="inline-start" />
-              Yeni Anlaşma
+              Yeni Anlasma
             </Link>
           }
         />
       </PageHeader>
 
       <div className="grid gap-4 sm:grid-cols-3">
-        <SummaryCard label="Toplam Anlaşma" value={deals.length} />
-        <SummaryCard label="Açık Deal Değeri" value={formatCurrency(openValue)} />
+        <SummaryCard label="Toplam Anlasma" value={deals.length} />
+        <SummaryCard label="Acik Deal Degeri" value={formatCurrency(openValue)} />
         <SummaryCard
-          label="Kazanılan Değer"
+          label="Kazanilan Deger"
           value={formatCurrency(wonValue)}
           valueClassName="text-2xl font-semibold text-success"
         />
@@ -63,14 +65,14 @@ export default async function DealsPage() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Anlaşma</TableHead>
-                <TableHead className="max-lg:hidden">Firma / Kişi</TableHead>
+                <TableHead>Anlasma</TableHead>
+                <TableHead className="max-lg:hidden">Firma / Kisi</TableHead>
                 <TableHead>Durum</TableHead>
-                <TableHead className="max-lg:hidden">Aşama</TableHead>
+                <TableHead className="max-lg:hidden">Asama</TableHead>
                 <TableHead className="text-right">Tutar</TableHead>
-                <TableHead className="text-right max-md:hidden">Olasılık</TableHead>
+                <TableHead className="text-right max-md:hidden">Olasilik</TableHead>
                 <TableHead className="max-xl:hidden">Sorumlu</TableHead>
-                <TableHead className="text-right max-sm:hidden">Kapanış</TableHead>
+                <TableHead className="text-right max-sm:hidden">Kapanis</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>

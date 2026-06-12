@@ -37,26 +37,26 @@ import { SidebarTrigger } from '@/components/ui/sidebar'
 
 const notifications = [
   {
-    title: 'Yeni lead atandı',
-    description: 'Takip bekleyen kayıtlar güncellendi',
+    title: 'Yeni lead atandi',
+    description: 'Takip bekleyen kayitlar guncellendi',
     time: '5 dk',
   },
   {
-    title: 'Pipeline hareketi işlendi',
-    description: 'Aşama değişiklikleri veritabanına kaydedildi',
+    title: 'Pipeline hareketi islendi',
+    description: 'Asama degisiklikleri veritabanina kaydedildi',
     time: '1 saat',
   },
   {
-    title: 'Görev teslim tarihi yaklaşıyor',
-    description: 'Bugün kapanacak görevler takvimde görünüyor',
+    title: 'Gorev teslim tarihi yaklasiyor',
+    description: 'Bugun kapanacak gorevler takvimde gorunuyor',
     time: '3 saat',
   },
 ] as const
 
 const quickCreateItems = [
-  { label: 'Yeni Kişi', icon: UserPlus, kind: 'contact' },
-  { label: 'Yeni Anlaşma', icon: Handshake, kind: 'deal' },
-  { label: 'Yeni Görev', icon: CheckSquare, kind: 'task' },
+  { label: 'Yeni Kisi', icon: UserPlus, kind: 'contact' },
+  { label: 'Yeni Anlasma', icon: Handshake, kind: 'deal' },
+  { label: 'Yeni Gorev', icon: CheckSquare, kind: 'task' },
   { label: 'Yeni Firma', icon: FileText, kind: 'company' },
 ] as const
 
@@ -121,7 +121,7 @@ export function Topbar({ currentUser, quickCreateOptions }: TopbarProps) {
       <SearchInput
         value=""
         onChange={() => undefined}
-        placeholder="Müşteri, anlaşma veya lead ara..."
+        placeholder="Musteri, anlasma veya lead ara..."
         className="max-w-md max-md:hidden"
         inputClassName="h-9 rounded-lg"
       />
@@ -135,7 +135,7 @@ export function Topbar({ currentUser, quickCreateOptions }: TopbarProps) {
           variant="ghost"
           size="icon"
           className="rounded-lg"
-          aria-label="Temayı değiştir"
+          aria-label="Temayi degistir"
           onClick={() => setTheme(resolvedTheme === 'dark' ? 'light' : 'dark')}
         >
           <Sun className="hidden dark:block" />
@@ -152,12 +152,12 @@ export function Topbar({ currentUser, quickCreateOptions }: TopbarProps) {
             }
           />
           <DropdownMenuContent align="end" className="w-80">
-            <DropdownMenuLabel className="flex items-center justify-between">
-              Bildirimler
-              <Badge variant="info">3 yeni</Badge>
-            </DropdownMenuLabel>
-            <DropdownMenuSeparator />
             <DropdownMenuGroup>
+              <DropdownMenuLabel className="flex items-center justify-between">
+                Bildirimler
+                <Badge variant="info">3 yeni</Badge>
+              </DropdownMenuLabel>
+              <DropdownMenuSeparator />
               {notifications.map((notification) => (
                 <DropdownMenuItem
                   key={notification.title}
@@ -165,7 +165,7 @@ export function Topbar({ currentUser, quickCreateOptions }: TopbarProps) {
                 >
                   <span className="text-sm font-medium">{notification.title}</span>
                   <span className="text-xs text-muted-foreground">{notification.description}</span>
-                  <span className="text-[11px] text-muted-foreground">{notification.time} önce</span>
+                  <span className="text-[11px] text-muted-foreground">{notification.time} once</span>
                 </DropdownMenuItem>
               ))}
             </DropdownMenuGroup>
@@ -177,14 +177,14 @@ export function Topbar({ currentUser, quickCreateOptions }: TopbarProps) {
             render={
               <Button className="rounded-lg max-sm:size-9 max-sm:p-0">
                 <Plus data-icon="inline-start" />
-                <span className="max-sm:hidden">Hızlı Oluştur</span>
+                <span className="max-sm:hidden">Hizli Olustur</span>
               </Button>
             }
           />
           <DropdownMenuContent align="end" className="w-52">
-            <DropdownMenuLabel>Yeni kayıt</DropdownMenuLabel>
-            <DropdownMenuSeparator />
             <DropdownMenuGroup>
+              <DropdownMenuLabel>Yeni kayit</DropdownMenuLabel>
+              <DropdownMenuSeparator />
               {quickCreateItems.map((item) => (
                 <DropdownMenuItem key={item.label} onClick={() => openQuickCreate(item.kind)}>
                   <item.icon />
@@ -211,14 +211,14 @@ export function Topbar({ currentUser, quickCreateOptions }: TopbarProps) {
             }
           />
           <DropdownMenuContent align="end" className="w-56">
-            <DropdownMenuLabel className="flex flex-col">
-              <span>{currentUser.name}</span>
-              <span className="text-xs font-normal text-muted-foreground">
-                {currentUser.email}
-              </span>
-            </DropdownMenuLabel>
-            <DropdownMenuSeparator />
             <DropdownMenuGroup>
+              <DropdownMenuLabel className="flex flex-col">
+                <span>{currentUser.name}</span>
+                <span className="text-xs font-normal text-muted-foreground">
+                  {currentUser.email}
+                </span>
+              </DropdownMenuLabel>
+              <DropdownMenuSeparator />
               <DropdownMenuItem onClick={() => router.push('/ayarlar')}>
                 <User />
                 Profil
@@ -231,7 +231,7 @@ export function Topbar({ currentUser, quickCreateOptions }: TopbarProps) {
             <DropdownMenuSeparator />
             <DropdownMenuItem variant="destructive" onClick={() => logoutAction()}>
               <LogOut />
-              Çıkış Yap
+              Cikis Yap
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

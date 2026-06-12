@@ -22,13 +22,15 @@ export default async function CompaniesPage() {
     <>
       <PageHeader
         title="Firmalar"
-        description="Kurumsal hesapların tüm özet görünümü"
+        description="Kurumsal hesaplarin tum ozet gorunumu"
       >
         <Button
           variant="outline"
-          render={<Link href="/api/export?entity=companies">CSV İndir</Link>}
+          nativeButton={false}
+          render={<Link href="/api/export?entity=companies">CSV Indir</Link>}
         />
         <Button
+          nativeButton={false}
           render={
             <Link href="/firmalar?quickCreate=company">
               <Plus data-icon="inline-start" />
@@ -65,7 +67,7 @@ export default async function CompaniesPage() {
                   <Users className="size-4 text-muted-foreground" />
                   <div className="flex flex-col leading-tight">
                     <span className="text-sm font-semibold">{company.relatedCustomers}</span>
-                    <span className="text-xs text-muted-foreground">Kişi</span>
+                    <span className="text-xs text-muted-foreground">Kisi</span>
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
