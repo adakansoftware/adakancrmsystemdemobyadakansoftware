@@ -1,11 +1,13 @@
 import {
+  BarChart3,
   Building2,
   CalendarDays,
   CheckSquare,
+  FileText,
   Handshake,
   KanbanSquare,
   LayoutDashboard,
-  FileText,
+  Settings,
   UserPlus,
   Users,
   type LucideIcon,
@@ -28,4 +30,6 @@ export const navItems: NavItem[] = [
   { title: 'Görevler', href: '/gorevler', icon: CheckSquare, badge: '5' },
   { title: 'Takvim', href: '/takvim', icon: CalendarDays },
   { title: 'Teklifler', href: '/teklifler', icon: FileText },
+  { title: 'Raporlar', href: '/raporlar', icon: BarChart3 },
+  { title: 'Ayarlar', href: '/ayarlar', icon: Settings },
 ]

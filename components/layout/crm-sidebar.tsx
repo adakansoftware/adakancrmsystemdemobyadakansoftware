@@ -29,12 +29,8 @@ export function CrmSidebar() {
             <Sparkles className="size-5" />
           </span>
           <div className="flex flex-col leading-tight">
-            <span className="text-sm font-semibold tracking-tight">
-              Adakan CRM
-            </span>
-            <span className="text-xs text-muted-foreground">
-              İşletme Yönetimi
-            </span>
+            <span className="text-sm font-semibold tracking-tight">Adakan CRM</span>
+            <span className="text-xs text-muted-foreground">İşletme Yönetimi</span>
           </div>
         </Link>
       </SidebarHeader>
@@ -45,9 +41,7 @@ export function CrmSidebar() {
             <SidebarMenu>
               {navItems.map((item) => {
                 const isActive =
-                  item.href === '/'
-                    ? pathname === '/'
-                    : pathname.startsWith(item.href)
+                  item.href === '/' ? pathname === '/' : pathname.startsWith(item.href)
 
                 return (
                   <SidebarMenuItem key={item.href}>
@@ -61,9 +55,7 @@ export function CrmSidebar() {
                         </Link>
                       }
                     />
-                    {item.badge ? (
-                      <SidebarMenuBadge>{item.badge}</SidebarMenuBadge>
-                    ) : null}
+                    {item.badge ? <SidebarMenuBadge>{item.badge}</SidebarMenuBadge> : null}
                   </SidebarMenuItem>
                 )
               })}
@@ -73,11 +65,9 @@ export function CrmSidebar() {
       </SidebarContent>
       <SidebarFooter className="border-t border-sidebar-border">
         <div className="rounded-xl bg-sidebar-accent p-3">
-          <p className="text-xs font-medium text-sidebar-accent-foreground">
-            Pro plana geçin
-          </p>
+          <p className="text-xs font-medium text-sidebar-accent-foreground">Operasyon durumu</p>
           <p className="mt-1 text-xs text-muted-foreground">
-            Sınırsız kullanıcı ve gelişmiş raporlar.
+            Temel CRM modülleri aktif ve veritabanına bağlı çalışıyor.
           </p>
         </div>
       </SidebarFooter>

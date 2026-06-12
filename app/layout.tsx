@@ -15,8 +15,8 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: 'Adakan CRM - Müşteri İlişkileri Yönetimi',
   description:
-    'Küçük işletmeler için modern, sade ve güçlü CRM. Lead takibi, satış hattı ve teklifler tek panelde.',
-  generator: 'v0.app',
+    'Küçük işletmeler için modern, sade ve güçlü CRM. Lead takibi, satış hattı ve görev yönetimi tek panelde.',
+  generator: 'Codex',
 }
 
 export default function RootLayout({
