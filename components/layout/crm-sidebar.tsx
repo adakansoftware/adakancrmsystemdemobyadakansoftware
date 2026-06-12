@@ -1,0 +1,86 @@
+'use client'
+
+import Link from 'next/link'
+import { usePathname } from 'next/navigation'
+import { Sparkles } from 'lucide-react'
+import {
+  Sidebar,
+  SidebarContent,
+  SidebarFooter,
+  SidebarGroup,
+  SidebarGroupContent,
+  SidebarGroupLabel,
+  SidebarHeader,
+  SidebarMenu,
+  SidebarMenuBadge,
+  SidebarMenuButton,
+  SidebarMenuItem,
+} from '@/components/ui/sidebar'
+import { navItems } from '@/lib/nav'
+
+export function CrmSidebar() {
+  const pathname = usePathname()
+
+  return (
+    <Sidebar>
+      <SidebarHeader className="border-b border-sidebar-border">
+        <Link href="/" className="flex items-center gap-2.5 px-2 py-1.5">
+          <span className="flex size-9 items-center justify-center rounded-xl bg-sidebar-primary text-sidebar-primary-foreground shadow-sm">
+            <Sparkles className="size-5" />
+          </span>
+          <div className="flex flex-col leading-tight">
+            <span className="text-sm font-semibold tracking-tight">
+              Adakan CRM
+            </span>
+            <span className="text-xs text-muted-foreground">
+              İşletme Yönetimi
+            </span>
+          </div>
+        </Link>
+      </SidebarHeader>
+      <SidebarContent>
+        <SidebarGroup>
+          <SidebarGroupLabel>Menü</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {navItems.map((item) => {
+                const isActive =
+                  item.href === '/'
+                    ? pathname === '/'
+                    : pathname.startsWith(item.href)
+
+                return (
+                  <SidebarMenuItem key={item.href}>
+                    <SidebarMenuButton
+                      isActive={isActive}
+                      tooltip={item.title}
+                      render={
+                        <Link href={item.href} aria-current={isActive ? 'page' : undefined}>
+                          <item.icon />
+                          <span>{item.title}</span>
+                        </Link>
+                      }
+                    />
+                    {item.badge ? (
+                      <SidebarMenuBadge>{item.badge}</SidebarMenuBadge>
+                    ) : null}
+                  </SidebarMenuItem>
+                )
+              })}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+      </SidebarContent>
+      <SidebarFooter className="border-t border-sidebar-border">
+        <div className="rounded-xl bg-sidebar-accent p-3">
+          <p className="text-xs font-medium text-sidebar-accent-foreground">
+            Pro plana geçin
+          </p>
+          <p className="mt-1 text-xs text-muted-foreground">
+            Sınırsız kullanıcı ve gelişmiş raporlar.
+          </p>
+        </div>
+      </SidebarFooter>
+    </Sidebar>
+  )
+}
