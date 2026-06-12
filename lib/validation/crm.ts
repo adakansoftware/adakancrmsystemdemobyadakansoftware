@@ -101,6 +101,37 @@ export const setupSchema = z.object({
   password: z.string().min(8).max(128),
 })
 
+export const updateProfileSchema = z.object({
+  firstName: z.string().trim().min(1).max(100),
+  lastName: z.string().trim().min(1).max(100),
+  email: z.email(),
+})
+
+export const changePasswordSchema = z
+  .object({
+    currentPassword: z.string().min(8).max(128),
+    nextPassword: z.string().min(8).max(128),
+    confirmPassword: z.string().min(8).max(128),
+  })
+  .refine((value) => value.nextPassword === value.confirmPassword, {
+    message: 'Passwords do not match',
+    path: ['confirmPassword'],
+  })
+
+export const createUserAccountSchema = z.object({
+  firstName: z.string().trim().min(1).max(100),
+  lastName: z.string().trim().min(1).max(100),
+  email: z.email(),
+  password: z.string().min(8).max(128),
+  roleId: cuidOrUuid,
+  status: userStatusSchema.optional(),
+})
+
+export const updateUserStatusSchema = z.object({
+  userId: cuidOrUuid,
+  status: userStatusSchema,
+})
+
 export const companySchema = z.object({
   name: z.string().trim().min(2).max(160),
   legalName: nullableText,

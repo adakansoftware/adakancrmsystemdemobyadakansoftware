@@ -1,5 +1,6 @@
 'use server'
 
+import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { db } from '@/lib/db/prisma'
 import { createAuditLog } from '@/lib/audit/log'
@@ -8,11 +9,21 @@ import { clearSession, createSession, getCurrentSession } from '@/lib/auth/sessi
 import { hashPassword, verifyPassword } from '@/lib/auth/password'
 import { createValidatedAction } from '@/lib/actions/create-validated-action'
 import {
+  changePasswordSchema,
+  createUserAccountSchema,
   loginSchema,
   setupSchema,
+  updateProfileSchema,
+  updateUserStatusSchema,
   userRoleAssignmentSchema,
 } from '@/lib/validation/crm'
-import { requirePermission } from '@/lib/auth/rbac'
+import { getRoleSlugs, requireAuthenticatedUser, requirePermission } from '@/lib/auth/rbac'
+
+function revalidateAuthPaths() {
+  for (const path of ['/', '/ayarlar', '/admin']) {
+    revalidatePath(path)
+  }
+}
 
 export const loginAction = createValidatedAction(loginSchema, async (input) => {
   await ensureSystemRoles()
@@ -168,6 +179,188 @@ export async function listUsersWithRoles() {
     },
   })
 }
+
+export const updateProfileAction = createValidatedAction(
+  updateProfileSchema,
+  async (input) => {
+    const session = await requireAuthenticatedUser()
+
+    const existingUser = await db.user.findFirst({
+      where: {
+        email: input.email.toLowerCase(),
+        id: {
+          not: session.userId,
+        },
+      },
+      select: { id: true },
+    })
+
+    if (existingUser) {
+      throw new Error('Bu e-posta adresi zaten kullanılıyor')
+    }
+
+    const user = await db.user.update({
+      where: { id: session.userId },
+      data: {
+        firstName: input.firstName,
+        lastName: input.lastName,
+        email: input.email.toLowerCase(),
+      },
+    })
+
+    await createAuditLog({
+      actorId: session.userId,
+      action: 'UPDATE',
+      entityType: 'User',
+      entityId: user.id,
+      summary: `Profile updated for ${user.email}`,
+    })
+
+    revalidateAuthPaths()
+    return { id: user.id }
+  },
+)
+
+export const changePasswordAction = createValidatedAction(
+  changePasswordSchema,
+  async (input) => {
+    const session = await requireAuthenticatedUser()
+
+    const user = await db.user.findUniqueOrThrow({
+      where: { id: session.userId },
+      select: {
+        id: true,
+        email: true,
+        passwordHash: true,
+      },
+    })
+
+    const passwordMatches = await verifyPassword(
+      input.currentPassword,
+      user.passwordHash,
+    )
+
+    if (!passwordMatches) {
+      throw new Error('Mevcut şifre doğrulanamadı')
+    }
+
+    const nextPasswordMatchesCurrent = await verifyPassword(
+      input.nextPassword,
+      user.passwordHash,
+    )
+
+    if (nextPasswordMatchesCurrent) {
+      throw new Error('Yeni şifre mevcut şifreyle aynı olamaz')
+    }
+
+    await db.user.update({
+      where: { id: user.id },
+      data: {
+        passwordHash: await hashPassword(input.nextPassword),
+      },
+    })
+
+    await createAuditLog({
+      actorId: session.userId,
+      action: 'UPDATE',
+      entityType: 'User',
+      entityId: user.id,
+      summary: `Password updated for ${user.email}`,
+    })
+
+    return { id: user.id }
+  },
+)
+
+export const createUserAccountAction = createValidatedAction(
+  createUserAccountSchema,
+  async (input) => {
+    const session = await requirePermission('users:manage')
+    const actorRoleSlugs = getRoleSlugs(session)
+
+    if (!actorRoleSlugs.includes('owner')) {
+      throw new Error('Sadece owner kullanıcılar yeni kullanıcı ekleyebilir')
+    }
+
+    const existingUser = await db.user.findUnique({
+      where: {
+        email: input.email.toLowerCase(),
+      },
+      select: { id: true },
+    })
+
+    if (existingUser) {
+      throw new Error('Bu e-posta adresiyle kayıtlı kullanıcı zaten var')
+    }
+
+    const user = await db.user.create({
+      data: {
+        firstName: input.firstName,
+        lastName: input.lastName,
+        email: input.email.toLowerCase(),
+        passwordHash: await hashPassword(input.password),
+        status: input.status ?? 'INVITED',
+        roles: {
+          create: {
+            roleId: input.roleId,
+          },
+        },
+      },
+      include: {
+        roles: {
+          include: {
+            role: true,
+          },
+        },
+      },
+    })
+
+    await createAuditLog({
+      actorId: session.userId,
+      action: 'CREATE',
+      entityType: 'User',
+      entityId: user.id,
+      summary: `User created: ${user.email}`,
+    })
+
+    revalidateAuthPaths()
+    return { id: user.id }
+  },
+)
+
+export const updateUserStatusAction = createValidatedAction(
+  updateUserStatusSchema,
+  async (input) => {
+    const session = await requirePermission('users:manage')
+    const actorRoleSlugs = getRoleSlugs(session)
+
+    if (!actorRoleSlugs.includes('owner')) {
+      throw new Error('Sadece owner kullanıcılar durum güncelleyebilir')
+    }
+
+    if (input.userId === session.userId && input.status !== 'ACTIVE') {
+      throw new Error('Kendi hesabınızı pasifleştiremezsiniz')
+    }
+
+    const user = await db.user.update({
+      where: { id: input.userId },
+      data: {
+        status: input.status,
+      },
+    })
+
+    await createAuditLog({
+      actorId: session.userId,
+      action: 'UPDATE',
+      entityType: 'User',
+      entityId: user.id,
+      summary: `User status updated to ${input.status} for ${user.email}`,
+    })
+
+    revalidateAuthPaths()
+    return { id: user.id }
+  },
+)
 
 export const assignRoleAction = createValidatedAction(
   userRoleAssignmentSchema,
