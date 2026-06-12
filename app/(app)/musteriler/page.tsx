@@ -1,4 +1,5 @@
 import { Download, Mail, MapPin, Phone, Plus } from 'lucide-react'
+import Link from 'next/link'
 import { PageHeader } from '@/components/shared/page-header'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
@@ -25,14 +26,23 @@ export default async function CustomersPage() {
         title="Müşteriler"
         description="Tüm müşteri ilişkilerini gerçek verilerle yönetin"
       >
-        <Button variant="outline">
-          <Download data-icon="inline-start" />
-          Dışa Aktar
-        </Button>
-        <Button>
-          <Plus data-icon="inline-start" />
-          Yeni Müşteri
-        </Button>
+        <Button
+          variant="outline"
+          render={
+            <Link href="/api/export?entity=contacts">
+              <Download data-icon="inline-start" />
+              Dışa Aktar
+            </Link>
+          }
+        />
+        <Button
+          render={
+            <Link href="/musteriler?quickCreate=contact">
+              <Plus data-icon="inline-start" />
+              Yeni Müşteri
+            </Link>
+          }
+        />
       </PageHeader>
 
       <Card className="gap-0 overflow-hidden py-0">

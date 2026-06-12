@@ -20,12 +20,8 @@ import { dealStatusLabels, dealStatusMeta } from '@/lib/ui-meta'
 
 export default async function DealsPage() {
   const deals = await getDealsPageData()
-  const openValue = deals
-    .filter((deal) => deal.status === 'OPEN')
-    .reduce((sum, deal) => sum + deal.amount, 0)
-  const wonValue = deals
-    .filter((deal) => deal.status === 'WON')
-    .reduce((sum, deal) => sum + deal.amount, 0)
+  const openValue = deals.filter((deal) => deal.status === 'OPEN').reduce((sum, deal) => sum + deal.amount, 0)
+  const wonValue = deals.filter((deal) => deal.status === 'WON').reduce((sum, deal) => sum + deal.amount, 0)
 
   return (
     <>
@@ -42,10 +38,14 @@ export default async function DealsPage() {
             </Link>
           }
         />
-        <Button>
-          <Plus data-icon="inline-start" />
-          Yeni Anlaşma
-        </Button>
+        <Button
+          render={
+            <Link href="/anlasmalar?quickCreate=deal">
+              <Plus data-icon="inline-start" />
+              Yeni Anlaşma
+            </Link>
+          }
+        />
       </PageHeader>
 
       <div className="grid gap-4 sm:grid-cols-3">

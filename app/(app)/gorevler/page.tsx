@@ -1,4 +1,5 @@
 import { PlusIcon } from 'lucide-react'
+import Link from 'next/link'
 import { PageHeader } from '@/components/shared/page-header'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
@@ -18,10 +19,14 @@ export default async function TasksPage() {
         title="Görevler"
         description={`${openCount} açık görev · ekibinizin yapılacak listesi`}
         actions={
-          <Button>
-            <PlusIcon data-icon="inline-start" />
-            Yeni Görev
-          </Button>
+          <Button
+            render={
+              <Link href="/gorevler?quickCreate=task">
+                <PlusIcon data-icon="inline-start" />
+                Yeni Görev
+              </Link>
+            }
+          />
         }
       />
 

@@ -1,5 +1,6 @@
 'use client'
 
+import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import { useState } from 'react'
 import { useTheme } from 'next-themes'
 import {
@@ -53,10 +54,10 @@ const notifications = [
 ] as const
 
 const quickCreateItems = [
-  { label: 'Yeni Kişi', icon: UserPlus },
-  { label: 'Yeni Anlaşma', icon: Handshake },
-  { label: 'Yeni Görev', icon: CheckSquare },
-  { label: 'Yeni Firma', icon: FileText },
+  { label: 'Yeni Kişi', icon: UserPlus, kind: 'contact' },
+  { label: 'Yeni Anlaşma', icon: Handshake, kind: 'deal' },
+  { label: 'Yeni Görev', icon: CheckSquare, kind: 'task' },
+  { label: 'Yeni Firma', icon: FileText, kind: 'company' },
 ] as const
 
 type TopbarProps = {
@@ -80,7 +81,37 @@ type TopbarProps = {
 
 export function Topbar({ currentUser, quickCreateOptions }: TopbarProps) {
   const { resolvedTheme, setTheme } = useTheme()
+  const router = useRouter()
+  const pathname = usePathname()
+  const searchParams = useSearchParams()
   const [quickOpen, setQuickOpen] = useState(false)
+
+  const initialKind =
+    (searchParams.get('quickCreate') as
+      | 'company'
+      | 'contact'
+      | 'lead'
+      | 'deal'
+      | 'task'
+      | null) ?? 'lead'
+  const shouldOpenFromQuery = Boolean(searchParams.get('quickCreate'))
+
+  function closeQuickCreate(nextOpen: boolean) {
+    setQuickOpen(nextOpen)
+    if (!nextOpen && shouldOpenFromQuery) {
+      const nextParams = new URLSearchParams(searchParams.toString())
+      nextParams.delete('quickCreate')
+      const nextQuery = nextParams.toString()
+      router.replace(nextQuery ? `${pathname}?${nextQuery}` : pathname)
+    }
+  }
+
+  function openQuickCreate(kind: (typeof quickCreateItems)[number]['kind']) {
+    const nextParams = new URLSearchParams(searchParams.toString())
+    nextParams.set('quickCreate', kind)
+    router.push(`${pathname}?${nextParams.toString()}`)
+    setQuickOpen(true)
+  }
 
   return (
     <header className="sticky top-0 z-30 flex h-16 shrink-0 items-center gap-2 border-b bg-background/80 px-4 backdrop-blur-md md:px-6">
@@ -155,7 +186,7 @@ export function Topbar({ currentUser, quickCreateOptions }: TopbarProps) {
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
               {quickCreateItems.map((item) => (
-                <DropdownMenuItem key={item.label} onClick={() => setQuickOpen(true)}>
+                <DropdownMenuItem key={item.label} onClick={() => openQuickCreate(item.kind)}>
                   <item.icon />
                   {item.label}
                 </DropdownMenuItem>
@@ -188,11 +219,11 @@ export function Topbar({ currentUser, quickCreateOptions }: TopbarProps) {
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
-              <DropdownMenuItem>
+              <DropdownMenuItem onClick={() => router.push('/ayarlar')}>
                 <User />
                 Profil
               </DropdownMenuItem>
-              <DropdownMenuItem>
+              <DropdownMenuItem onClick={() => router.push('/ayarlar')}>
                 <Settings />
                 Ayarlar
               </DropdownMenuItem>
@@ -207,8 +238,10 @@ export function Topbar({ currentUser, quickCreateOptions }: TopbarProps) {
       </div>
 
       <QuickCreateDialog
-        open={quickOpen}
-        onOpenChange={setQuickOpen}
+        key={`${initialKind}-${shouldOpenFromQuery ? 'open' : 'closed'}`}
+        open={quickOpen || shouldOpenFromQuery}
+        onOpenChange={closeQuickCreate}
+        initialKind={initialKind}
         options={quickCreateOptions}
       />
     </header>

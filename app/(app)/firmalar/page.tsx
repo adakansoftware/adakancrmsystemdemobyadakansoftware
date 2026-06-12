@@ -1,4 +1,5 @@
 import { Building2, Handshake, MapPin, Plus, Users } from 'lucide-react'
+import Link from 'next/link'
 import { PageHeader } from '@/components/shared/page-header'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
@@ -23,10 +24,18 @@ export default async function CompaniesPage() {
         title="Firmalar"
         description="Kurumsal hesapların tüm özet görünümü"
       >
-        <Button>
-          <Plus data-icon="inline-start" />
-          Yeni Firma
-        </Button>
+        <Button
+          variant="outline"
+          render={<Link href="/api/export?entity=companies">CSV İndir</Link>}
+        />
+        <Button
+          render={
+            <Link href="/firmalar?quickCreate=company">
+              <Plus data-icon="inline-start" />
+              Yeni Firma
+            </Link>
+          }
+        />
       </PageHeader>
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">

@@ -1,4 +1,5 @@
 import { Download, Plus } from 'lucide-react'
+import Link from 'next/link'
 import { PageHeader } from '@/components/shared/page-header'
 import { SummaryCard } from '@/components/shared/summary-card'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
@@ -32,14 +33,23 @@ export default async function LeadsPage() {
         title="Leads"
         description="Potansiyel müşterileri gerçek CRM kayıtlarından takip edin"
       >
-        <Button variant="outline">
-          <Download data-icon="inline-start" />
-          Dışa Aktar
-        </Button>
-        <Button>
-          <Plus data-icon="inline-start" />
-          Yeni Lead
-        </Button>
+        <Button
+          variant="outline"
+          render={
+            <Link href="/api/export?entity=leads">
+              <Download data-icon="inline-start" />
+              Dışa Aktar
+            </Link>
+          }
+        />
+        <Button
+          render={
+            <Link href="/leads?quickCreate=lead">
+              <Plus data-icon="inline-start" />
+              Yeni Lead
+            </Link>
+          }
+        />
       </PageHeader>
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -58,9 +68,7 @@ export default async function LeadsPage() {
         />
         <SummaryCard
           label="Tahmini Değer"
-          value={formatCurrency(
-            leads.reduce((sum, lead) => sum + lead.estimatedValue, 0),
-          )}
+          value={formatCurrency(leads.reduce((sum, lead) => sum + lead.estimatedValue, 0))}
           badge="TRY"
           badgeVariant="warning"
         />

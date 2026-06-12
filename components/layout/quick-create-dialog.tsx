@@ -1,7 +1,7 @@
 'use client'
 
 import { useMemo, useState, useTransition } from 'react'
-import { useRouter } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 import {
   createCompanyAction,
@@ -34,6 +34,7 @@ import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 type QuickCreateDialogProps = {
   open: boolean
   onOpenChange: (open: boolean) => void
+  initialKind?: QuickCreateKind
   options: {
     users: Array<{ id: string; name: string }>
     companies: Array<{ id: string; name: string }>
@@ -89,10 +90,12 @@ const initialState: FormState = {
 export function QuickCreateDialog({
   open,
   onOpenChange,
+  initialKind = 'lead',
   options,
 }: QuickCreateDialogProps) {
   const router = useRouter()
-  const [activeTab, setActiveTab] = useState<QuickCreateKind>('lead')
+  const pathname = usePathname()
+  const [activeTab, setActiveTab] = useState<QuickCreateKind>(initialKind)
   const [form, setForm] = useState<FormState>(initialState)
   const [isPending, startTransition] = useTransition()
 
@@ -199,6 +202,7 @@ export function QuickCreateDialog({
           description: 'Yeni kayıt veritabanına başarıyla kaydedildi.',
         })
         onOpenChange(false)
+        router.replace(pathname)
         router.refresh()
       } catch (error) {
         toast.error('İşlem başarısız', {

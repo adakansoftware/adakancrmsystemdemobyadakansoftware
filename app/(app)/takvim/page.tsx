@@ -1,4 +1,5 @@
 import { PlusIcon } from 'lucide-react'
+import Link from 'next/link'
 import { PageHeader } from '@/components/shared/page-header'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -18,10 +19,14 @@ export default async function CalendarPage() {
         title="Takvim"
         description="Yaklaşan görevler ve anlaşma kapanış tarihleri"
         actions={
-          <Button>
-            <PlusIcon data-icon="inline-start" />
-            Etkinlik Ekle
-          </Button>
+          <Button
+            render={
+              <Link href="/takvim?quickCreate=task">
+                <PlusIcon data-icon="inline-start" />
+                Etkinlik Ekle
+              </Link>
+            }
+          />
         }
       />
 

@@ -1,5 +1,6 @@
 'use client'
 
+import Link from 'next/link'
 import { useMemo, useOptimistic, useState, useTransition } from 'react'
 import { Building2, Calendar, GripVertical, Plus } from 'lucide-react'
 import { moveDealToStageAction } from '@/app/actions/crm'
@@ -246,10 +247,17 @@ export function PipelineBoardClient({
                     </article>
                   ))}
 
-                  <Button variant="outline" size="sm" className="justify-center">
-                    <Plus data-icon="inline-start" />
-                    Anlaşma ekle
-                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="justify-center"
+                    render={
+                      <Link href="/pipeline?quickCreate=deal">
+                        <Plus data-icon="inline-start" />
+                        Anlaşma ekle
+                      </Link>
+                    }
+                  />
                 </div>
               </section>
             )

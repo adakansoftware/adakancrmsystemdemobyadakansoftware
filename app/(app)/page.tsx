@@ -59,12 +59,17 @@ export default async function DashboardPage() {
 
   return (
     <>
-      <PageHeader
-        title="Dashboard"
-        description="CRM operasyonunuzun canlı görünümü"
-      >
-        <Button variant="outline">Bu Ay</Button>
-        <Button>Rapor İndir</Button>
+      <PageHeader title="Dashboard" description="CRM operasyonunuzun canlı görünümü">
+        <Button variant="outline" disabled aria-disabled="true">
+          Bu Ay
+        </Button>
+        <Button
+          render={
+            <Link href="/api/export?entity=dashboard">
+              Rapor İndir
+            </Link>
+          }
+        />
       </PageHeader>
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
@@ -121,15 +126,11 @@ export default async function DashboardPage() {
         <Card>
           <CardHeader>
             <CardTitle>Pipeline Değeri</CardTitle>
-            <CardDescription>
-              Toplam {formatCurrency(totalPipeline)}
-            </CardDescription>
+            <CardDescription>Toplam {formatCurrency(totalPipeline)}</CardDescription>
           </CardHeader>
           <CardContent className="flex flex-col gap-4">
             {data.pipelineValueByStage.map((stage) => {
-              const percentage =
-                totalPipeline === 0 ? 0 : Math.round((stage.value / totalPipeline) * 100)
-
+              const percentage = totalPipeline === 0 ? 0 : Math.round((stage.value / totalPipeline) * 100)
               return (
                 <div key={stage.id} className="flex flex-col gap-1.5">
                   <div className="flex items-center justify-between text-sm">
@@ -180,13 +181,9 @@ export default async function DashboardPage() {
                     <TableCell className="text-right font-medium">
                       {formatCurrency(person.revenue)}
                     </TableCell>
+                    <TableCell className="text-right max-sm:hidden">{person.taskLoad}</TableCell>
                     <TableCell className="text-right max-sm:hidden">
-                      {person.taskLoad}
-                    </TableCell>
-                    <TableCell className="text-right max-sm:hidden">
-                      <Badge variant={person.rate >= 50 ? 'success' : 'secondary'}>
-                        %{person.rate}
-                      </Badge>
+                      <Badge variant={person.rate >= 50 ? 'success' : 'secondary'}>%{person.rate}</Badge>
                     </TableCell>
                   </TableRow>
                 ))}
@@ -202,7 +199,6 @@ export default async function DashboardPage() {
           <CardContent className="flex flex-col gap-4">
             {data.recentActivities.map((activity) => {
               const Icon = activityIcon[activity.type]
-
               return (
                 <div key={activity.id} className="flex items-start gap-3">
                   <span className="mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground">
@@ -210,8 +206,7 @@ export default async function DashboardPage() {
                   </span>
                   <div className="flex flex-col gap-0.5">
                     <p className="text-sm leading-snug">
-                      <span className="font-medium">{activity.who}</span>{' '}
-                      {activity.subject}
+                      <span className="font-medium">{activity.who}</span> {activity.subject}
                     </p>
                     <span className="text-xs text-muted-foreground">
                       {activityTypeMeta[activity.type].label} · {formatRelativeDate(activity.occurredAt)}
@@ -258,12 +253,8 @@ export default async function DashboardPage() {
                 </div>
               </div>
               <div className="flex shrink-0 items-center gap-2 self-end sm:self-auto">
-                <Badge variant={priorityMeta[task.priority].variant}>
-                  {task.priority}
-                </Badge>
-                <span className="text-xs text-muted-foreground">
-                  {formatDate(task.dueAt)}
-                </span>
+                <Badge variant={priorityMeta[task.priority].variant}>{task.priority}</Badge>
+                <span className="text-xs text-muted-foreground">{formatDate(task.dueAt)}</span>
               </div>
             </div>
           ))}

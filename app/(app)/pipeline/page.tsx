@@ -1,9 +1,6 @@
 import Link from 'next/link'
 import { Plus } from 'lucide-react'
-import {
-  getDealPipelineBoardAction,
-  listDealPipelines,
-} from '@/app/actions/crm'
+import { getDealPipelineBoardAction, listDealPipelines } from '@/app/actions/crm'
 import { PipelineBoardClient } from '@/app/(app)/pipeline/pipeline-board-client'
 import { PipelineSwitcher } from '@/app/(app)/pipeline/pipeline-switcher'
 import { PageHeader } from '@/components/shared/page-header'
@@ -21,14 +18,7 @@ export default async function PipelinePage({
   })
 
   if (!boardResult.success || !boardResult.data) {
-    return (
-      <>
-        <PageHeader
-          title="Pipeline"
-          description="Pipeline verisi bulunamadı."
-        />
-      </>
-    )
+    return <PageHeader title="Pipeline" description="Pipeline verisi bulunamadı." />
   }
 
   return (
@@ -47,7 +37,7 @@ export default async function PipelinePage({
             />
             <Button
               render={
-                <Link href="/anlasmalar">
+                <Link href="/pipeline?quickCreate=deal">
                   <Plus data-icon="inline-start" />
                   Yeni Anlaşma
                 </Link>
