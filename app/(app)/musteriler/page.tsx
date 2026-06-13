@@ -1,24 +1,17 @@
-import { Download, Mail, MapPin, Phone, Plus } from 'lucide-react'
+import { Download, Plus } from 'lucide-react'
 import Link from 'next/link'
+import { ContactsTableClient } from '@/app/(app)/musteriler/contacts-table-client'
 import { PageHeader } from '@/components/shared/page-header'
-import { Avatar, AvatarFallback } from '@/components/ui/avatar'
-import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { Card } from '@/components/ui/card'
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table'
-import { getContactsPageData } from '@/lib/crm/queries'
-import { formatCurrency, formatRelativeDate } from '@/lib/format'
-import { getInitials } from '@/lib/helpers'
+import { listCompanies } from '@/app/actions/crm'
+import { getAssignableUsers, getContactsManagementPageData } from '@/lib/crm/queries'
 
 export default async function CustomersPage() {
-  const contacts = await getContactsPageData()
+  const [contacts, users, companies] = await Promise.all([
+    getContactsManagementPageData(),
+    getAssignableUsers(),
+    listCompanies(),
+  ])
 
   return (
     <>
@@ -47,79 +40,11 @@ export default async function CustomersPage() {
         />
       </PageHeader>
 
-      <Card className="gap-0 overflow-hidden py-0">
-        <div className="overflow-x-auto">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Musteri</TableHead>
-                <TableHead>Firma</TableHead>
-                <TableHead className="max-lg:hidden">Iletisim</TableHead>
-                <TableHead className="max-xl:hidden">Sorumlu</TableHead>
-                <TableHead className="max-lg:hidden">Son Aktivite</TableHead>
-                <TableHead className="text-right">Ilgili Deal</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {contacts.map((contact) => (
-                <TableRow key={contact.id}>
-                  <TableCell>
-                    <div className="flex items-center gap-3">
-                      <Avatar className="size-9">
-                        <AvatarFallback className="bg-primary/12 text-xs font-semibold text-primary">
-                          {getInitials(contact.name)}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div className="flex flex-col">
-                        <span className="font-medium">{contact.name}</span>
-                        <span className="text-xs text-muted-foreground">
-                          {contact.industry}
-                        </span>
-                      </div>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex flex-col">
-                      <span>{contact.company}</span>
-                      <span className="text-xs text-muted-foreground">{contact.city}</span>
-                    </div>
-                  </TableCell>
-                  <TableCell className="max-lg:hidden">
-                    <div className="space-y-1 text-sm text-muted-foreground">
-                      <div className="flex items-center gap-2">
-                        <Mail className="size-3.5" />
-                        <span>{contact.email}</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Phone className="size-3.5" />
-                        <span>{contact.phone}</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <MapPin className="size-3.5" />
-                        <span>{contact.city}</span>
-                      </div>
-                    </div>
-                  </TableCell>
-                  <TableCell className="max-xl:hidden">{contact.owner}</TableCell>
-                  <TableCell className="max-lg:hidden">
-                    <div className="flex flex-col">
-                      <span className="text-sm">{contact.lastActivitySubject}</span>
-                      <span className="text-xs text-muted-foreground">
-                        {formatRelativeDate(contact.lastActivityAt)}
-                      </span>
-                    </div>
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <Badge variant="secondary">
-                      {formatCurrency(contact.relatedDealValue)}
-                    </Badge>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </div>
-      </Card>
+      <ContactsTableClient
+        contacts={contacts}
+        users={users}
+        companies={companies.map((company) => ({ id: company.id, name: company.name }))}
+      />
     </>
   )
 }

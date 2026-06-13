@@ -202,13 +202,22 @@ export const updateContactAction = createValidatedAction(
       data: input,
     })
 
-    await createAuditLog({
-      actorId: session.userId,
-      action: 'UPDATE',
-      entityType: 'Contact',
-      entityId: contact.id,
-      summary: `Contact updated: ${contact.firstName} ${contact.lastName}`,
-    })
+    await Promise.all([
+      createAuditLog({
+        actorId: session.userId,
+        action: 'UPDATE',
+        entityType: 'Contact',
+        entityId: contact.id,
+        summary: `Contact updated: ${contact.firstName} ${contact.lastName}`,
+      }),
+      recordTimelineActivity({
+        actorId: session.userId,
+        type: 'STATUS_CHANGE',
+        subject: `Contact updated: ${contact.firstName} ${contact.lastName}`,
+        companyId: contact.companyId,
+        contactId: contact.id,
+      }),
+    ])
 
     revalidateCrmPaths()
     return contact
@@ -224,13 +233,22 @@ export const deleteContactAction = createValidatedAction(
       data: { archivedAt: new Date() },
     })
 
-    await createAuditLog({
-      actorId: session.userId,
-      action: 'DELETE',
-      entityType: 'Contact',
-      entityId: contact.id,
-      summary: `Contact archived: ${contact.firstName} ${contact.lastName}`,
-    })
+    await Promise.all([
+      createAuditLog({
+        actorId: session.userId,
+        action: 'DELETE',
+        entityType: 'Contact',
+        entityId: contact.id,
+        summary: `Contact archived: ${contact.firstName} ${contact.lastName}`,
+      }),
+      recordTimelineActivity({
+        actorId: session.userId,
+        type: 'SYSTEM',
+        subject: `Contact archived: ${contact.firstName} ${contact.lastName}`,
+        companyId: contact.companyId,
+        contactId: contact.id,
+      }),
+    ])
 
     revalidateCrmPaths()
     return contact

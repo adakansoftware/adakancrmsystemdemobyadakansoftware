@@ -85,12 +85,13 @@ test.describe('CRM smoke flows', () => {
     const firstLeadRow = page.locator('[data-testid^="lead-row-"]').first()
     await expect(firstLeadRow).toBeVisible()
 
-    const statusTrigger = firstLeadRow.locator('[data-testid^="lead-status-"]')
+    const statusTestId = await firstLeadRow.locator('[data-testid^="lead-status-"]').getAttribute('data-testid')
+    const statusTrigger = page.locator(`[data-testid="${statusTestId}"]`)
     const currentStatus = ((await statusTrigger.textContent()) ?? '').trim()
     const nextStatus = currentStatus === 'Nitelikli' ? 'Kaybedildi' : 'Nitelikli'
 
     await chooseSelectOption(page, statusTrigger, nextStatus)
-    await expect(firstLeadRow).toContainText(nextStatus)
+    await expect(statusTrigger).toContainText(nextStatus)
   })
 
   test('updates a deal stage from the deals table', async ({ page }) => {
@@ -121,5 +122,35 @@ test.describe('CRM smoke flows', () => {
 
     await chooseSelectOption(page, statusTrigger, nextStatus)
     await expect(firstTaskRow).toContainText(nextStatus)
+  })
+
+  test('opens the company management dialog and saves a note', async ({ page }) => {
+    await login(page)
+    await page.goto('/firmalar')
+
+    await page.getByRole('button', { name: 'Detay' }).first().click()
+    await expect(page.getByRole('tab', { name: 'Notlar' })).toBeVisible()
+    await page.getByRole('tab', { name: 'Notlar' }).click()
+
+    const noteText = `Smoke firma notu ${Date.now()}`
+    await page.getByPlaceholder('Kayda eklemek istedigin notu yaz').fill(noteText)
+    await page.getByRole('button', { name: 'Not Ekle' }).click()
+
+    await expect(page.locator('p').filter({ hasText: noteText })).toBeVisible()
+  })
+
+  test('opens the customer management dialog and updates the job title', async ({ page }) => {
+    await login(page)
+    await page.goto('/musteriler')
+
+    const row = page.locator('tbody tr').first()
+    await row.getByRole('button', { name: 'Yonet' }).click()
+    await expect(page.getByRole('tab', { name: 'Genel' })).toBeVisible()
+
+    const titleField = page.getByRole('textbox', { name: 'Unvan' })
+    await titleField.fill(`Smoke Unvan ${Date.now()}`)
+    await page.getByRole('button', { name: 'Kaydet' }).click()
+
+    await expect(page.getByText(/Smoke Unvan/)).toBeVisible()
   })
 })

@@ -1,6 +1,54 @@
 import { db } from '@/lib/db/prisma'
 import { requireAuthenticatedUser, requirePermission } from '@/lib/auth/rbac'
 import { toNumber } from '@/lib/format'
+import type {
+  CompanyRow,
+  ContactRow,
+  EntityActivityViewModel,
+  EntityNoteViewModel,
+} from '@/lib/crm/view-models'
+
+function mapEntityNotes(
+  notes: Array<{
+    id: string
+    title: string | null
+    body: string
+    isPinned: boolean
+    createdAt: Date
+    author: { firstName: string; lastName: string } | null
+  }>,
+): EntityNoteViewModel[] {
+  return notes.map((note) => ({
+    id: note.id,
+    title: note.title,
+    body: note.body,
+    isPinned: note.isPinned,
+    createdAt: note.createdAt,
+    authorName: note.author ? `${note.author.firstName} ${note.author.lastName}` : 'Sistem',
+  }))
+}
+
+function mapEntityActivities(
+  activities: Array<{
+    id: string
+    type: import('@prisma/client').ActivityType
+    subject: string
+    description: string | null
+    occurredAt: Date
+    actor: { firstName: string; lastName: string } | null
+  }>,
+): EntityActivityViewModel[] {
+  return activities.map((activity) => ({
+    id: activity.id,
+    type: activity.type,
+    subject: activity.subject,
+    description: activity.description,
+    occurredAt: activity.occurredAt,
+    actorName: activity.actor
+      ? `${activity.actor.firstName} ${activity.actor.lastName}`
+      : 'Sistem',
+  }))
+}
 
 export async function getDashboardData() {
   await requirePermission('deals:read')
@@ -485,5 +533,157 @@ export async function getAssignableUsers() {
   return users.map((user) => ({
     id: user.id,
     name: `${user.firstName} ${user.lastName}`,
+  }))
+}
+
+export async function getContactsManagementPageData() {
+  await requirePermission('contacts:read')
+
+  const contacts = await db.contact.findMany({
+    where: { archivedAt: null },
+    include: {
+      company: { select: { name: true, city: true, industry: true } },
+      owner: { select: { firstName: true, lastName: true } },
+      activities: {
+        orderBy: { occurredAt: 'desc' },
+        take: 6,
+        select: {
+          id: true,
+          type: true,
+          subject: true,
+          description: true,
+          occurredAt: true,
+          actor: {
+            select: {
+              firstName: true,
+              lastName: true,
+            },
+          },
+        },
+      },
+      deals: {
+        where: { archivedAt: null },
+        select: { amount: true, status: true },
+      },
+      notes: {
+        orderBy: [{ isPinned: 'desc' }, { createdAt: 'desc' }],
+        take: 6,
+        select: {
+          id: true,
+          title: true,
+          body: true,
+          isPinned: true,
+          createdAt: true,
+          author: {
+            select: {
+              firstName: true,
+              lastName: true,
+            },
+          },
+        },
+      },
+    },
+    orderBy: [{ firstName: 'asc' }, { lastName: 'asc' }],
+  })
+
+  return contacts.map((contact): ContactRow => ({
+    id: contact.id,
+    companyId: contact.companyId,
+    ownerId: contact.ownerId,
+    firstName: contact.firstName,
+    lastName: contact.lastName,
+    name: `${contact.firstName} ${contact.lastName}`,
+    company: contact.company?.name ?? '-',
+    city: contact.company?.city ?? '-',
+    industry: contact.company?.industry ?? '-',
+    jobTitle: contact.jobTitle ?? '',
+    email: contact.email ?? '-',
+    phone: contact.mobilePhone ?? contact.phone ?? '-',
+    mobilePhone: contact.mobilePhone ?? '',
+    owner: contact.owner
+      ? `${contact.owner.firstName} ${contact.owner.lastName}`
+      : 'Atanmamis',
+    lastActivityAt: contact.activities[0]?.occurredAt ?? null,
+    lastActivitySubject: contact.activities[0]?.subject ?? 'Henuz aktivite yok',
+    relatedDealValue: contact.deals
+      .filter((deal) => deal.status === 'OPEN')
+      .reduce((sum, deal) => sum + toNumber(deal.amount), 0),
+    notes: mapEntityNotes(contact.notes),
+    activities: mapEntityActivities(contact.activities),
+  }))
+}
+
+export async function getCompaniesManagementPageData() {
+  await requirePermission('companies:read')
+
+  const companies = await db.company.findMany({
+    where: { archivedAt: null },
+    include: {
+      owner: { select: { firstName: true, lastName: true } },
+      _count: { select: { contacts: true } },
+      deals: {
+        where: { archivedAt: null },
+        select: { amount: true, status: true },
+      },
+      notes: {
+        orderBy: [{ isPinned: 'desc' }, { createdAt: 'desc' }],
+        take: 6,
+        select: {
+          id: true,
+          title: true,
+          body: true,
+          isPinned: true,
+          createdAt: true,
+          author: {
+            select: {
+              firstName: true,
+              lastName: true,
+            },
+          },
+        },
+      },
+      activities: {
+        orderBy: { occurredAt: 'desc' },
+        take: 6,
+        select: {
+          id: true,
+          type: true,
+          subject: true,
+          description: true,
+          occurredAt: true,
+          actor: {
+            select: {
+              firstName: true,
+              lastName: true,
+            },
+          },
+        },
+      },
+    },
+    orderBy: { name: 'asc' },
+  })
+
+  return companies.map((company): CompanyRow => ({
+    id: company.id,
+    name: company.name,
+    legalName: company.legalName ?? '',
+    email: company.email ?? '',
+    phone: company.phone ?? '',
+    website: company.website ?? '',
+    sector: company.industry ?? '-',
+    status: company.status,
+    city: company.city ?? '-',
+    country: company.country ?? '',
+    addressLine1: company.addressLine1 ?? '',
+    employeeCount: company.employeeCount,
+    ownerId: company.ownerId,
+    owner: company.owner
+      ? `${company.owner.firstName} ${company.owner.lastName}`
+      : 'Atanmamis',
+    relatedCustomers: company._count.contacts,
+    activeDeals: company.deals.filter((deal) => deal.status === 'OPEN').length,
+    totalValue: company.deals.reduce((sum, deal) => sum + toNumber(deal.amount), 0),
+    notes: mapEntityNotes(company.notes),
+    activities: mapEntityActivities(company.activities),
   }))
 }

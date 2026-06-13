@@ -1,4 +1,6 @@
 import type {
+  ActivityType,
+  CompanyStatus,
   DealStatus,
   LeadSource,
   LeadStatus,
@@ -28,6 +30,24 @@ export const taskStatuses = [
 export type UserOption = {
   id: string
   name: string
+}
+
+export type EntityNoteViewModel = {
+  id: string
+  title: string | null
+  body: string
+  isPinned: boolean
+  createdAt: Date
+  authorName: string
+}
+
+export type EntityActivityViewModel = {
+  id: string
+  type: ActivityType
+  subject: string
+  description: string | null
+  occurredAt: Date
+  actorName: string
 }
 
 export type LeadRow = {
@@ -79,4 +99,48 @@ export type TaskRow = {
   dueAt: Date | null
   assigneeId?: string | null
   assigneeInitials: string
+}
+
+export type ContactRow = {
+  id: string
+  companyId?: string | null
+  ownerId?: string | null
+  firstName: string
+  lastName: string
+  name: string
+  company: string
+  city: string
+  industry: string
+  jobTitle: string
+  email: string
+  phone: string
+  mobilePhone: string
+  owner: string
+  lastActivityAt: Date | null
+  lastActivitySubject: string
+  relatedDealValue: number
+  notes: EntityNoteViewModel[]
+  activities: EntityActivityViewModel[]
+}
+
+export type CompanyRow = {
+  id: string
+  name: string
+  legalName: string
+  email: string
+  phone: string
+  website: string
+  sector: string
+  status: CompanyStatus
+  city: string
+  country: string
+  addressLine1: string
+  employeeCount: number | null
+  ownerId?: string | null
+  owner: string
+  relatedCustomers: number
+  activeDeals: number
+  totalValue: number
+  notes: EntityNoteViewModel[]
+  activities: EntityActivityViewModel[]
 }
