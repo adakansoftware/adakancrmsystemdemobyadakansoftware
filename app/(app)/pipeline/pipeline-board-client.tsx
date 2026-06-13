@@ -2,7 +2,8 @@
 
 import Link from 'next/link'
 import { useMemo, useOptimistic, useState, useTransition } from 'react'
-import { Building2, Calendar, GripVertical, Plus } from 'lucide-react'
+import { Building2, Calendar, ChevronLeft, ChevronRight, GripVertical, Plus } from 'lucide-react'
+import { toast } from 'sonner'
 import { moveDealToStageAction } from '@/app/actions/crm'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
@@ -48,6 +49,16 @@ function formatCompactCurrency(amount: number, currency: string) {
     notation: 'compact',
     maximumFractionDigits: 1,
   }).format(amount)} ${currency}`
+}
+
+function getStageMoveLabel(dealTitle: string, stageName: string | undefined, direction: 'next' | 'previous') {
+  if (!stageName) {
+    return direction === 'previous'
+      ? `${dealTitle} kaydi icin onceki asama yok`
+      : `${dealTitle} kaydi icin sonraki asama yok`
+  }
+
+  return `${dealTitle} kaydini ${stageName} asamasina tasi`
 }
 
 const priorityVariant: Record<string, 'secondary' | 'info' | 'warning'> = {
@@ -113,25 +124,42 @@ export function PipelineBoardClient({
     return { totalValue, wonValue, lostValue }
   }, [optimisticBoard])
 
+  function findStageForDeal(dealId: string) {
+    return optimisticBoard.stages.find((stage) => stage.deals.some((deal) => deal.id === dealId))
+  }
+
+  function moveDeal(dealId: string, targetStageId: string, note: string) {
+    const currentStage = findStageForDeal(dealId)
+
+    if (!currentStage || currentStage.id === targetStageId) {
+      return
+    }
+
+    moveOptimisticDeal({ dealId, stageId: targetStageId })
+    const targetStage = optimisticBoard.stages.find((stage) => stage.id === targetStageId)
+
+    if (targetStage) {
+      startTransition(async () => {
+        const result = await moveDealToStageAction({
+          dealId,
+          toPipelineId: optimisticBoard.pipeline.id,
+          toStageId: targetStage.id,
+          note,
+        })
+
+        if (!result.success) {
+          toast.error('Pipeline hareketi kaydedilemedi')
+        }
+      })
+    }
+  }
+
   function handleDrop(stageId: string) {
     if (!dragId) {
       return
     }
 
-    moveOptimisticDeal({ dealId: dragId, stageId })
-    const targetStage = optimisticBoard.stages.find((stage) => stage.id === stageId)
-
-    if (targetStage) {
-      startTransition(async () => {
-        await moveDealToStageAction({
-          dealId: dragId,
-          toPipelineId: optimisticBoard.pipeline.id,
-          toStageId: targetStage.id,
-          note: 'Drag and drop pipeline move',
-        })
-      })
-    }
-
+    moveDeal(dragId, stageId, 'Drag and drop pipeline move')
     setDragId(null)
     setOverStage(null)
   }
@@ -163,6 +191,9 @@ export function PipelineBoardClient({
         <div className="flex min-w-max gap-4">
           {optimisticBoard.stages.map((stage) => {
             const stageTotal = stage.deals.reduce((sum, deal) => sum + deal.amount, 0)
+            const stageIndex = optimisticBoard.stages.findIndex((entry) => entry.id === stage.id)
+            const previousStage = optimisticBoard.stages[stageIndex - 1]
+            const nextStage = optimisticBoard.stages[stageIndex + 1]
 
             return (
               <section
@@ -243,6 +274,44 @@ export function PipelineBoardClient({
                           <Calendar className="size-3.5" />
                           {deal.dueDate ? deal.dueDate.slice(0, 10) : '-'}
                         </span>
+                      </div>
+
+                      <div className="flex items-center justify-between gap-2 border-t pt-2">
+                        <span className="text-[11px] text-muted-foreground">
+                          Klavye veya dokunmatik icin asama degistirme
+                        </span>
+                        <div className="flex items-center gap-1">
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="icon"
+                            className="size-7"
+                            disabled={!previousStage || isPending}
+                            aria-label={getStageMoveLabel(deal.title, previousStage?.name, 'previous')}
+                            onClick={() =>
+                              previousStage
+                                ? moveDeal(deal.id, previousStage.id, 'Pipeline button move backward')
+                                : undefined
+                            }
+                          >
+                            <ChevronLeft className="size-4" />
+                          </Button>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="icon"
+                            className="size-7"
+                            disabled={!nextStage || isPending}
+                            aria-label={getStageMoveLabel(deal.title, nextStage?.name, 'next')}
+                            onClick={() =>
+                              nextStage
+                                ? moveDeal(deal.id, nextStage.id, 'Pipeline button move forward')
+                                : undefined
+                            }
+                          >
+                            <ChevronRight className="size-4" />
+                          </Button>
+                        </div>
                       </div>
                     </article>
                   ))}

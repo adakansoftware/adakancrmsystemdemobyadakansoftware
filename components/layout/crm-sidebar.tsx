@@ -30,13 +30,13 @@ export function CrmSidebar() {
           </span>
           <div className="flex flex-col leading-tight">
             <span className="text-sm font-semibold tracking-tight">Adakan CRM</span>
-            <span className="text-xs text-muted-foreground">İşletme Yönetimi</span>
+            <span className="text-xs text-muted-foreground">Isletme Yonetimi</span>
           </div>
         </Link>
       </SidebarHeader>
       <SidebarContent>
         <SidebarGroup>
-          <SidebarGroupLabel>Menü</SidebarGroupLabel>
+          <SidebarGroupLabel>Menu</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {navItems.map((item) => {
@@ -67,7 +67,7 @@ export function CrmSidebar() {
         <div className="rounded-xl bg-sidebar-accent p-3">
           <p className="text-xs font-medium text-sidebar-accent-foreground">Operasyon durumu</p>
           <p className="mt-1 text-xs text-muted-foreground">
-            Temel CRM modülleri aktif ve veritabanına bağlı çalışıyor.
+            Temel CRM modulleri aktif ve veritabanina bagli calisiyor.
           </p>
         </div>
       </SidebarFooter>

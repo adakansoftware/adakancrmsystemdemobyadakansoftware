@@ -22,12 +22,12 @@ export type NavItem = {
 
 export const navItems: NavItem[] = [
   { title: 'Dashboard', href: '/', icon: LayoutDashboard },
-  { title: 'Leads', href: '/leads', icon: UserPlus, badge: '12' },
-  { title: 'Müşteriler', href: '/musteriler', icon: Users },
+  { title: 'Leads', href: '/leads', icon: UserPlus },
+  { title: 'Musteriler', href: '/musteriler', icon: Users },
   { title: 'Firmalar', href: '/firmalar', icon: Building2 },
-  { title: 'Anlaşmalar', href: '/anlasmalar', icon: Handshake },
+  { title: 'Anlasmalar', href: '/anlasmalar', icon: Handshake },
   { title: 'Pipeline', href: '/pipeline', icon: KanbanSquare },
-  { title: 'Görevler', href: '/gorevler', icon: CheckSquare, badge: '5' },
+  { title: 'Gorevler', href: '/gorevler', icon: CheckSquare },
   { title: 'Takvim', href: '/takvim', icon: CalendarDays },
   { title: 'Teklifler', href: '/teklifler', icon: FileText },
   { title: 'Raporlar', href: '/raporlar', icon: BarChart3 },

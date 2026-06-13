@@ -30,24 +30,13 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
-
-type QuickCreateKind = 'company' | 'contact' | 'lead' | 'deal' | 'task'
+import type { QuickCreateKind, QuickCreateOptions } from '@/lib/crm/view-models'
 
 type QuickCreateDialogProps = {
   open: boolean
   onOpenChange: (open: boolean) => void
   initialKind?: QuickCreateKind
-  options: {
-    users: Array<{ id: string; name: string }>
-    companies: Array<{ id: string; name: string }>
-    contacts: Array<{ id: string; name: string }>
-    leads: Array<{ id: string; title: string }>
-    pipelines: Array<{
-      id: string
-      name: string
-      stages: Array<{ id: string; name: string }>
-    }>
-  }
+  options: QuickCreateOptions
 }
 
 type FormState = {

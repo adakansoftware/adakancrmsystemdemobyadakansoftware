@@ -32,6 +32,32 @@ export type UserOption = {
   name: string
 }
 
+export type NamedEntityOption = {
+  id: string
+  name: string
+}
+
+export type LeadOption = {
+  id: string
+  title: string
+}
+
+export type PipelineOption = {
+  id: string
+  name: string
+  stages: Array<{ id: string; name: string }>
+}
+
+export type QuickCreateKind = 'company' | 'contact' | 'lead' | 'deal' | 'task'
+
+export type QuickCreateOptions = {
+  users: UserOption[]
+  companies: NamedEntityOption[]
+  contacts: NamedEntityOption[]
+  leads: LeadOption[]
+  pipelines: PipelineOption[]
+}
+
 export type EntityNoteViewModel = {
   id: string
   title: string | null

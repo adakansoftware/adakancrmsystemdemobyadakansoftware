@@ -34,6 +34,7 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { Separator } from '@/components/ui/separator'
 import { SidebarTrigger } from '@/components/ui/sidebar'
+import type { QuickCreateKind, QuickCreateOptions } from '@/lib/crm/view-models'
 
 const notifications = [
   {
@@ -60,25 +61,13 @@ const quickCreateItems = [
   { label: 'Yeni Firma', icon: FileText, kind: 'company' },
 ] as const
 
-type QuickCreateKind = 'company' | 'contact' | 'lead' | 'deal' | 'task'
-
 type TopbarProps = {
   currentUser: {
     name: string
     email: string
     initials: string
   }
-  quickCreateOptions: {
-    users: Array<{ id: string; name: string }>
-    companies: Array<{ id: string; name: string }>
-    contacts: Array<{ id: string; name: string }>
-    leads: Array<{ id: string; title: string }>
-    pipelines: Array<{
-      id: string
-      name: string
-      stages: Array<{ id: string; name: string }>
-    }>
-  }
+  quickCreateOptions: QuickCreateOptions
 }
 
 export function Topbar({ currentUser, quickCreateOptions }: TopbarProps) {

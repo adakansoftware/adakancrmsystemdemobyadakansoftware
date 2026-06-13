@@ -1,5 +1,6 @@
 'use client'
 
+import Link from 'next/link'
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
@@ -496,9 +497,14 @@ export function SettingsClient({
           <CardContent className="space-y-3 text-sm text-muted-foreground">
             <p>Coklu pipeline, stage hareket gecmisi ve deger takibi su anda aktif calisiyor.</p>
             <p>
-              Bir sonraki sertlestirme turunda stage siralama, pipeline kurallari ve gelismis
-              yonetim ekrani genisletilecek.
+              Anlasmalar pipeline ekraninda surukle-birak veya asama dugmeleri ile kalici olarak
+              tasinabilir.
             </p>
+            <Button
+              variant="outline"
+              nativeButton={false}
+              render={<Link href="/pipeline">Pipeline ekranina git</Link>}
+            />
           </CardContent>
         </Card>
       </TabsContent>

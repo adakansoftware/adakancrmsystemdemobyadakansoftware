@@ -8,27 +8,27 @@ export default function QuotesPage() {
     <div className="flex flex-col gap-6">
       <PageHeader
         title="Teklifler"
-        description="Bu modül MVP kapsamı dışında tutuldu"
+        description="Bu modul MVP kapsami disinda tutuldu"
       />
 
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <FileText className="size-5" />
-            Teklif Modülü Hazır Değil
+            Teklif Modulu Hazir Degil
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-3 text-sm text-muted-foreground">
           <p>
-            Bu depo şu anda CRM çekirdeğine odaklanıyor: kimlik doğrulama, şirket,
-            kişi, lead, deal, görev, pipeline ve not/aktivite akışı.
+            Bu depo su anda CRM cekirdegine odaklaniyor: kimlik dogrulama, sirket,
+            kisi, lead, deal, gorev, pipeline ve not/aktivite akisleri.
           </p>
           <div className="flex items-center gap-2">
             <Badge variant="warning">
               <Wrench className="size-3.5" />
               Bilerek ertelendi
             </Badge>
-            <span>Teklif yönetimi sonraki fazda ele alınacak.</span>
+            <span>Teklif yonetimi sonraki fazda ele alinacak.</span>
           </div>
         </CardContent>
       </Card>
