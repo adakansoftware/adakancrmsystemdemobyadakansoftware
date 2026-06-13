@@ -96,15 +96,20 @@ export async function GET(request: NextRequest) {
       orderBy: { createdAt: 'desc' },
     })
 
+    const safeLeads = leads.map((lead) => ({
+  ...lead,
+  estimatedValue: lead.estimatedValue?.toString() ?? "",
+}))
+
     const csv = toCsv(
       ['ID', 'Baslik', 'Firma', 'Kaynak', 'Durum', 'Tahmini Deger', 'Sorumlu', 'Asama'],
-      leads.map((lead) => [
+      safeLeads.map((lead) => [
         lead.id,
         lead.title,
         lead.company?.name ?? '',
         lead.source,
         lead.status,
-        toNumber(lead.estimatedValue),
+        lead.estimatedValue ?? '',
         lead.owner ? `${lead.owner.firstName} ${lead.owner.lastName}` : '',
         lead.stage.name,
       ]),
