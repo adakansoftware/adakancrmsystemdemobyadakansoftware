@@ -41,6 +41,21 @@ test.describe('CRM smoke flows', () => {
     await expect(page.getByText('CRM operasyonunuzun canli gorunumu')).toBeVisible()
   })
 
+  test('searches globally from the topbar and opens filtered company results', async ({ page }) => {
+    await login(page)
+
+    const searchField = page.getByRole('textbox', { name: 'Musteri, anlasma veya lead ara...' })
+    await searchField.fill('Aksoy')
+
+    const companyResult = page.getByRole('link', { name: /Aksoy Ajans/ })
+    await expect(companyResult).toBeVisible()
+    await companyResult.click()
+
+    await expect(page).toHaveURL(/\/firmalar\?q=Aksoy%20Ajans/)
+    await expect(page.getByRole('heading', { name: 'Firmalar' })).toBeVisible()
+    await expect(page.getByText('Aksoy Ajans')).toBeVisible()
+  })
+
   test('closes quick create modal and clears the query string on cancel', async ({ page }) => {
     await login(page)
     await page.goto('/?quickCreate=company')

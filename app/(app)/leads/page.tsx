@@ -8,14 +8,32 @@ import { Card } from '@/components/ui/card'
 import { getAssignableUsers, getLeadsPageData } from '@/lib/crm/queries'
 import { formatCurrency } from '@/lib/format'
 
-export default async function LeadsPage() {
+export default async function LeadsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ q?: string }>
+}) {
+  const { q } = await searchParams
+  const normalizedQuery = q?.trim().toLowerCase() ?? ''
   const [leads, users] = await Promise.all([getLeadsPageData(), getAssignableUsers()])
+  const filteredLeads = normalizedQuery
+    ? leads.filter((lead) =>
+        [lead.title, lead.company, lead.contact, lead.owner, lead.stage, lead.email, lead.phone]
+          .join(' ')
+          .toLowerCase()
+          .includes(normalizedQuery),
+      )
+    : leads
 
   return (
     <>
       <PageHeader
         title="Leads"
-        description="Potansiyel musterileri gercek CRM kayitlarindan takip edin"
+        description={
+          normalizedQuery
+            ? `"${q}" icin lead sonuclari`
+            : 'Potansiyel musterileri gercek CRM kayitlarindan takip edin'
+        }
       >
         <Button
           variant="outline"
@@ -39,22 +57,22 @@ export default async function LeadsPage() {
       </PageHeader>
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <SummaryCard label="Toplam Lead" value={leads.length} badge="Lead" badgeVariant="info" />
+        <SummaryCard label="Toplam Lead" value={filteredLeads.length} badge="Lead" badgeVariant="info" />
         <SummaryCard
           label="Acik"
-          value={leads.filter((lead) => lead.status === 'OPEN').length}
+          value={filteredLeads.filter((lead) => lead.status === 'OPEN').length}
           badge="Durum"
           badgeVariant="info"
         />
         <SummaryCard
           label="Nitelikli"
-          value={leads.filter((lead) => lead.status === 'QUALIFIED').length}
+          value={filteredLeads.filter((lead) => lead.status === 'QUALIFIED').length}
           badge="Durum"
           badgeVariant="success"
         />
         <SummaryCard
           label="Tahmini Deger"
-          value={formatCurrency(leads.reduce((sum, lead) => sum + lead.estimatedValue, 0))}
+          value={formatCurrency(filteredLeads.reduce((sum, lead) => sum + lead.estimatedValue, 0))}
           badge="TRY"
           badgeVariant="warning"
         />
@@ -62,7 +80,7 @@ export default async function LeadsPage() {
 
       <Card className="gap-0 overflow-hidden py-0">
         <div className="overflow-x-auto">
-          <LeadsTableClient leads={leads} users={users} />
+          <LeadsTableClient leads={filteredLeads} users={users} />
         </div>
       </Card>
     </>

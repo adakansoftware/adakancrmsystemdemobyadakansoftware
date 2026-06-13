@@ -9,6 +9,8 @@ type SearchInputProps = {
   className?: string
   inputClassName?: string
   ariaLabel?: string
+  onFocus?: () => void
+  autoFocus?: boolean
 }
 
 export function SearchInput({
@@ -18,6 +20,8 @@ export function SearchInput({
   className,
   inputClassName,
   ariaLabel,
+  onFocus,
+  autoFocus,
 }: SearchInputProps) {
   return (
     <div className={cn('relative w-full', className)}>
@@ -27,6 +31,10 @@ export function SearchInput({
         onChange={(event) => onChange(event.target.value)}
         placeholder={placeholder}
         aria-label={ariaLabel ?? placeholder}
+        onFocus={onFocus}
+        autoFocus={autoFocus}
+        autoComplete="off"
+        spellCheck={false}
         className={cn('pl-9', inputClassName)}
       />
     </div>

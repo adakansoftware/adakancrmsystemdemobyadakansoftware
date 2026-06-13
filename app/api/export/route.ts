@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { db } from '@/lib/db/prisma'
 import { getCurrentSession } from '@/lib/auth/session'
+import { db } from '@/lib/db/prisma'
 import { toNumber } from '@/lib/format'
 
 function csvEscape(value: unknown) {
@@ -66,7 +66,7 @@ export async function GET(request: NextRequest) {
     })
 
     const csv = toCsv(
-      ['ID', 'Firma', 'Sektör', 'Şehir', 'Sorumlu', 'Kişi Sayısı'],
+      ['ID', 'Firma', 'Sektor', 'Sehir', 'Sorumlu', 'Kisi Sayisi'],
       companies.map((company) => [
         company.id,
         company.name,
@@ -97,7 +97,7 @@ export async function GET(request: NextRequest) {
     })
 
     const csv = toCsv(
-      ['ID', 'Başlık', 'Firma', 'Kaynak', 'Durum', 'Tahmini Değer', 'Sorumlu', 'Aşama'],
+      ['ID', 'Baslik', 'Firma', 'Kaynak', 'Durum', 'Tahmini Deger', 'Sorumlu', 'Asama'],
       leads.map((lead) => [
         lead.id,
         lead.title,
@@ -133,14 +133,14 @@ export async function GET(request: NextRequest) {
     ])
 
     const csv = toCsv(
-      ['Metrik', 'Değer'],
+      ['Metrik', 'Deger'],
       [
-        ['Toplam Kişi', contacts],
+        ['Toplam Kisi', contacts],
         ['Toplam Firma', companies],
-        ['Açık Lead', openLeads],
-        ['Açık Deal', openDeals.length],
-        ['Açık Deal Tutarı', openDeals.reduce((sum, deal) => sum + toNumber(deal.amount), 0)],
-        ['Bekleyen Görev', tasks],
+        ['Acik Lead', openLeads],
+        ['Acik Deal', openDeals.length],
+        ['Acik Deal Tutari', openDeals.reduce((sum, deal) => sum + toNumber(deal.amount), 0)],
+        ['Bekleyen Gorev', tasks],
       ],
     )
 

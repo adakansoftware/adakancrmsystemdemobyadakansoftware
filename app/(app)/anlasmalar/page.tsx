@@ -8,16 +8,34 @@ import { Card } from '@/components/ui/card'
 import { getAssignableUsers, getDealsPageData } from '@/lib/crm/queries'
 import { formatCurrency } from '@/lib/format'
 
-export default async function DealsPage() {
+export default async function DealsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ q?: string }>
+}) {
+  const { q } = await searchParams
+  const normalizedQuery = q?.trim().toLowerCase() ?? ''
   const [deals, users] = await Promise.all([getDealsPageData(), getAssignableUsers()])
-  const openValue = deals.filter((deal) => deal.status === 'OPEN').reduce((sum, deal) => sum + deal.amount, 0)
-  const wonValue = deals.filter((deal) => deal.status === 'WON').reduce((sum, deal) => sum + deal.amount, 0)
+  const filteredDeals = normalizedQuery
+    ? deals.filter((deal) =>
+        [deal.title, deal.company, deal.contact, deal.owner, deal.stage]
+          .join(' ')
+          .toLowerCase()
+          .includes(normalizedQuery),
+      )
+    : deals
+  const openValue = filteredDeals.filter((deal) => deal.status === 'OPEN').reduce((sum, deal) => sum + deal.amount, 0)
+  const wonValue = filteredDeals.filter((deal) => deal.status === 'WON').reduce((sum, deal) => sum + deal.amount, 0)
 
   return (
     <>
       <PageHeader
         title="Anlasmalar"
-        description="Tum satis anlasmalarinizi veritabanindan yonetin"
+        description={
+          normalizedQuery
+            ? `"${q}" icin anlasma sonuclari`
+            : 'Tum satis anlasmalarinizi veritabanindan yonetin'
+        }
       >
         <Button
           variant="outline"
@@ -41,7 +59,7 @@ export default async function DealsPage() {
       </PageHeader>
 
       <div className="grid gap-4 sm:grid-cols-3">
-        <SummaryCard label="Toplam Anlasma" value={deals.length} />
+        <SummaryCard label="Toplam Anlasma" value={filteredDeals.length} />
         <SummaryCard label="Acik Deal Degeri" value={formatCurrency(openValue)} />
         <SummaryCard
           label="Kazanilan Deger"
@@ -52,7 +70,7 @@ export default async function DealsPage() {
 
       <Card className="gap-0 overflow-hidden py-0">
         <div className="overflow-x-auto">
-          <DealsTableClient deals={deals} users={users} />
+          <DealsTableClient deals={filteredDeals} users={users} />
         </div>
       </Card>
     </>

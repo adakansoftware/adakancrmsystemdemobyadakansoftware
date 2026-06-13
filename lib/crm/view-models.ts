@@ -58,6 +58,14 @@ export type QuickCreateOptions = {
   pipelines: PipelineOption[]
 }
 
+export type GlobalSearchResultItem = {
+  id: string
+  title: string
+  subtitle: string
+  href: string
+  kind: 'company' | 'contact' | 'lead' | 'deal' | 'task'
+}
+
 export type EntityNoteViewModel = {
   id: string
   title: string | null

@@ -5,17 +5,35 @@ import { PageHeader } from '@/components/shared/page-header'
 import { Button } from '@/components/ui/button'
 import { getAssignableUsers, getCompaniesManagementPageData } from '@/lib/crm/queries'
 
-export default async function CompaniesPage() {
+export default async function CompaniesPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ q?: string }>
+}) {
+  const { q } = await searchParams
+  const normalizedQuery = q?.trim().toLowerCase() ?? ''
   const [companies, users] = await Promise.all([
     getCompaniesManagementPageData(),
     getAssignableUsers(),
   ])
+  const filteredCompanies = normalizedQuery
+    ? companies.filter((company) =>
+        [company.name, company.legalName, company.sector, company.city, company.owner]
+          .join(' ')
+          .toLowerCase()
+          .includes(normalizedQuery),
+      )
+    : companies
 
   return (
     <>
       <PageHeader
         title="Firmalar"
-        description="Kurumsal hesaplarin tum ozet gorunumu"
+        description={
+          normalizedQuery
+            ? `"${q}" icin firma sonuclari`
+            : 'Kurumsal hesaplarin tum ozet gorunumu'
+        }
       >
         <Button
           variant="outline"
@@ -33,7 +51,7 @@ export default async function CompaniesPage() {
         />
       </PageHeader>
 
-      <CompaniesGridClient companies={companies} users={users} />
+      <CompaniesGridClient companies={filteredCompanies} users={users} />
     </>
   )
 }
