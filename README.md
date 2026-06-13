@@ -1,6 +1,6 @@
 # Adakan CRM
 
-Adakan CRM, Next.js App Router uzerinde calisan, Prisma ve PostgreSQL ile gercek veriye bagli bir CRM MVP projesidir. Proje statik bir demo gorunumunden cikarilip, temel CRM operasyonlarini calistiran bir uygulama mimarisine donusturulmustur.
+Adakan CRM, Next.js App Router uzerinde calisan, Prisma ve PostgreSQL ile gercek veriye bagli bir CRM MVP projesidir. Proje statik bir demo gorunumunden cikarilip temel CRM operasyonlarini calistiran, auth, RBAC, audit log ve pipeline gecmisi olan bir uygulama yapisina donusturulmustur.
 
 ## Stack
 
@@ -11,39 +11,25 @@ Adakan CRM, Next.js App Router uzerinde calisan, Prisma ve PostgreSQL ile gercek
 - Zod
 - Server Actions
 - Custom session auth + RBAC
-- Playwright smoke tests
+- Health endpoint + lightweight smoke checks
 
-## Kurulum
+## Ortam Degiskenleri
 
-1. Bagimliliklari yukleyin:
-
-```bash
-npm install
-```
-
-2. Ortam degiskenlerini tanimlayin:
+`.env.example` dosyasini baz alin:
 
 ```env
 DATABASE_URL=postgresql://...
 DIRECT_URL=postgresql://...
 SESSION_SECRET=uzun-guvenli-bir-deger
+APP_URL=http://localhost:3000
 ```
 
-3. Prisma client olusturun:
+## Kurulum
 
 ```bash
+npm install
 npm run prisma:generate
-```
-
-4. Veritabanini senkronize edin:
-
-```bash
 npm run db:push
-```
-
-5. Seed verisini yukleyin:
-
-```bash
 npm run seed
 ```
 
@@ -52,18 +38,35 @@ npm run seed
 - E-posta: `admin@adakancrm.com`
 - Sifre: `Admin123!`
 
-## Dogrulama
-
-Tum temel saglik kontrolleri:
+## Komutlar
 
 ```bash
+npm run lint
+npm run build
+npm run test:smoke
+npm run test:smoke:browser
 npm run verify
 ```
 
-Smoke regresyon testi:
+Anlamlari:
+
+- `test:smoke`: hizli operasyon smoke kontrolu
+- `test:smoke:browser`: tarayici tabanli daha agir regresyon akisi
+- `verify`: prisma schema, lint, build ve hizli smoke kontrolu
+
+## Health Endpoint
+
+`/api/health` endpoint'i su alanlari raporlar:
+
+- env/readiness durumu
+- veritabani baglanti sagligi
+- kullanici/seed hazirligi
+- genel `ok | warn | error` durumu
+
+Beklenen kullanim:
 
 ```bash
-npm run test:smoke
+curl http://localhost:3000/api/health
 ```
 
 ## Mevcut MVP Kapsami
@@ -74,24 +77,25 @@ npm run test:smoke
 - Musteriler, firmalar, leads, anlasmalar, gorevler, takvim ve pipeline sayfalari
 - Quick create ile gercek kayit olusturma
 - Lead, deal ve gorev durum/atama guncellemeleri
-- Drag and drop pipeline persistence
-- Deal stage history ve deal value history
+- Pipeline persistence ve stage movement history
+- Deal value history
 - Audit logging
 - Not ve aktivite timeline altyapisi
-- Firma ve musteri yonetim diyaloglari ile not / aktivite akislarinin ana uygulamaya baglanmasi
+- Firma ve musteri yonetim diyaloglari
+- Global CRM arama ve filtreli sonuc gecisleri
 
 ## Bilerek Ertelenenler
 
-Su an MVP disinda birakildi:
-
 - Fatura, teklif, stok, envanter
 - Otomasyon / workflow motoru
-- Gelismis raporlama ve BI ekranlari
+- Gelismis BI ve raporlama panelleri
 - Tam kapsamli pipeline yonetim paneli
-- Tam kapsamli inline editing formlari tum moduller icin
+- Tum moduller icin tam kapsamli browser regression paketi
 
-## Notlar
+## Operasyon Notlari
 
 - `/setup` sadece sistemde hic kullanici yoksa kullanilabilir.
 - Seed verisi Turkce CRM senaryolari ve pipeline asamalari ile gelir.
-- Uygulama demo veriler yerine gercek Prisma sorgulari kullanir.
+- Ana uygulama sayfalari fake demo array'lerine bagli degildir.
+- `APP_URL`, smoke script ve health kontrolleri icin tanimli olmalidir.
+- Uretim kontrolunde once `/api/health`, sonra `npm run verify` calistirilmasi tavsiye edilir.
