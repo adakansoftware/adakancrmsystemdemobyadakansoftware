@@ -2,11 +2,17 @@
 
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
+import { headers } from 'next/headers'
 import { db } from '@/lib/db/prisma'
 import { createAuditLog } from '@/lib/audit/log'
 import { ensureSystemRoles } from '@/lib/crm/bootstrap'
 import { clearSession, createSession, getCurrentSession } from '@/lib/auth/session'
+import {
+  LOGIN_RATE_LIMIT_MAX_ATTEMPTS,
+  LOGIN_RATE_LIMIT_WINDOW_MS,
+} from '@/lib/auth/constants'
 import { hashPassword, verifyPassword } from '@/lib/auth/password'
+import { checkRateLimit, clearRateLimit } from '@/lib/security/rate-limit'
 import { createValidatedAction } from '@/lib/actions/create-validated-action'
 import {
   changePasswordSchema,
@@ -25,8 +31,25 @@ function revalidateAuthPaths() {
   }
 }
 
+async function getLoginRateLimitKey(email: string) {
+  const headerStore = await headers()
+  const forwardedFor = headerStore.get('x-forwarded-for') ?? 'unknown'
+  const clientIp = forwardedFor.split(',')[0]?.trim() || 'unknown'
+  return `login:${clientIp}:${email.toLowerCase()}`
+}
+
 export const loginAction = createValidatedAction(loginSchema, async (input) => {
   await ensureSystemRoles()
+  const rateLimitKey = await getLoginRateLimitKey(input.email)
+  const rateLimit = checkRateLimit(
+    rateLimitKey,
+    LOGIN_RATE_LIMIT_MAX_ATTEMPTS,
+    LOGIN_RATE_LIMIT_WINDOW_MS,
+  )
+
+  if (!rateLimit.allowed) {
+    throw new Error('Cok fazla giris denemesi yapildi. Lutfen daha sonra tekrar deneyin.')
+  }
 
   const user = await db.user.findUnique({
     where: {
@@ -50,6 +73,7 @@ export const loginAction = createValidatedAction(loginSchema, async (input) => {
   }
 
   await createSession(user.id)
+  clearRateLimit(rateLimitKey)
   await db.user.update({
     where: { id: user.id },
     data: { lastLoginAt: new Date(), status: 'ACTIVE' },

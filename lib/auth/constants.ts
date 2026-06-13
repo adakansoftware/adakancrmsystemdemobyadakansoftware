@@ -1,5 +1,7 @@
 export const SESSION_COOKIE_NAME = 'adakancms_session'
 export const SESSION_TTL_MS = 1000 * 60 * 60 * 24 * 7
+export const LOGIN_RATE_LIMIT_MAX_ATTEMPTS = 8
+export const LOGIN_RATE_LIMIT_WINDOW_MS = 1000 * 60 * 15
 
 export const SYSTEM_ROLE_DEFINITIONS = [
   {

@@ -16,7 +16,8 @@
     "prisma:generate": "prisma generate",
     "db:push": "prisma db push",
     "db:migrate": "prisma migrate dev",
-    "seed": "prisma db seed"
+    "seed": "prisma db seed",
+    "ops:assert": "node scripts/ops-assert.mjs"
   },
   "dependencies": {
     "@base-ui/react": "^1.5.0",
