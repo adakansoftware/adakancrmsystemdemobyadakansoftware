@@ -1,25 +1,15 @@
 import { KanbanSquare, Plus } from 'lucide-react'
 import Link from 'next/link'
+import { DealsTableClient } from '@/app/(app)/anlasmalar/deals-table-client'
 import { PageHeader } from '@/components/shared/page-header'
 import { SummaryCard } from '@/components/shared/summary-card'
-import { Avatar, AvatarFallback } from '@/components/ui/avatar'
-import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table'
-import { getDealsPageData } from '@/lib/crm/queries'
-import { formatCurrency, formatDate } from '@/lib/format'
-import { dealStatusLabels, dealStatusMeta } from '@/lib/ui-meta'
+import { getAssignableUsers, getDealsPageData } from '@/lib/crm/queries'
+import { formatCurrency } from '@/lib/format'
 
 export default async function DealsPage() {
-  const deals = await getDealsPageData()
+  const [deals, users] = await Promise.all([getDealsPageData(), getAssignableUsers()])
   const openValue = deals.filter((deal) => deal.status === 'OPEN').reduce((sum, deal) => sum + deal.amount, 0)
   const wonValue = deals.filter((deal) => deal.status === 'WON').reduce((sum, deal) => sum + deal.amount, 0)
 
@@ -62,61 +52,7 @@ export default async function DealsPage() {
 
       <Card className="gap-0 overflow-hidden py-0">
         <div className="overflow-x-auto">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Anlasma</TableHead>
-                <TableHead className="max-lg:hidden">Firma / Kisi</TableHead>
-                <TableHead>Durum</TableHead>
-                <TableHead className="max-lg:hidden">Asama</TableHead>
-                <TableHead className="text-right">Tutar</TableHead>
-                <TableHead className="text-right max-md:hidden">Olasilik</TableHead>
-                <TableHead className="max-xl:hidden">Sorumlu</TableHead>
-                <TableHead className="text-right max-sm:hidden">Kapanis</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {deals.map((deal) => (
-                <TableRow key={deal.id}>
-                  <TableCell>
-                    <div className="flex flex-col">
-                      <span className="font-medium">{deal.title}</span>
-                      <span className="text-xs text-muted-foreground">{deal.id}</span>
-                    </div>
-                  </TableCell>
-                  <TableCell className="max-lg:hidden">
-                    <div className="flex flex-col">
-                      <span>{deal.company}</span>
-                      <span className="text-xs text-muted-foreground">{deal.contact}</span>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <Badge variant={dealStatusMeta[deal.status].variant}>
-                      {dealStatusLabels[deal.status]}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="max-lg:hidden">{deal.stage}</TableCell>
-                  <TableCell className="text-right font-medium">
-                    {formatCurrency(deal.amount, deal.currency)}
-                  </TableCell>
-                  <TableCell className="text-right max-md:hidden">%{deal.probability}</TableCell>
-                  <TableCell className="max-xl:hidden">
-                    <div className="flex items-center gap-2">
-                      <Avatar className="size-7">
-                        <AvatarFallback className="bg-secondary text-[10px] font-semibold">
-                          {deal.ownerInitials}
-                        </AvatarFallback>
-                      </Avatar>
-                      <span className="text-sm text-muted-foreground">{deal.owner}</span>
-                    </div>
-                  </TableCell>
-                  <TableCell className="text-right text-sm text-muted-foreground max-sm:hidden">
-                    {formatDate(deal.expectedCloseAt)}
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+          <DealsTableClient deals={deals} users={users} />
         </div>
       </Card>
     </>

@@ -1,31 +1,15 @@
 import { Download, Plus } from 'lucide-react'
 import Link from 'next/link'
+import { LeadsTableClient } from '@/app/(app)/leads/leads-table-client'
 import { PageHeader } from '@/components/shared/page-header'
 import { SummaryCard } from '@/components/shared/summary-card'
-import { Avatar, AvatarFallback } from '@/components/ui/avatar'
-import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table'
-import { getLeadsPageData } from '@/lib/crm/queries'
+import { getAssignableUsers, getLeadsPageData } from '@/lib/crm/queries'
 import { formatCurrency } from '@/lib/format'
-import { getInitials } from '@/lib/helpers'
-import {
-  leadSourceLabels,
-  leadStatusLabels,
-  leadStatusMeta,
-  leadTemperatureLabels,
-} from '@/lib/ui-meta'
 
 export default async function LeadsPage() {
-  const leads = await getLeadsPageData()
+  const [leads, users] = await Promise.all([getLeadsPageData(), getAssignableUsers()])
 
   return (
     <>
@@ -78,59 +62,7 @@ export default async function LeadsPage() {
 
       <Card className="gap-0 overflow-hidden py-0">
         <div className="overflow-x-auto">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Lead</TableHead>
-                <TableHead className="max-lg:hidden">Firma / Kisi</TableHead>
-                <TableHead>Kaynak</TableHead>
-                <TableHead>Sicaklik</TableHead>
-                <TableHead>Durum</TableHead>
-                <TableHead className="text-right max-md:hidden">Deger</TableHead>
-                <TableHead className="max-xl:hidden">Sorumlu</TableHead>
-                <TableHead className="max-lg:hidden">Asama</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {leads.map((lead) => (
-                <TableRow key={lead.id}>
-                  <TableCell>
-                    <div className="flex items-center gap-3">
-                      <Avatar className="size-9">
-                        <AvatarFallback className="bg-primary/12 text-xs font-semibold text-primary">
-                          {getInitials(lead.title)}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div className="flex flex-col">
-                        <span className="font-medium">{lead.title}</span>
-                        <span className="text-xs text-muted-foreground">{lead.id}</span>
-                      </div>
-                    </div>
-                  </TableCell>
-                  <TableCell className="max-lg:hidden">
-                    <div className="flex flex-col">
-                      <span>{lead.company}</span>
-                      <span className="text-xs text-muted-foreground">{lead.contact}</span>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <Badge variant="outline">{leadSourceLabels[lead.source]}</Badge>
-                  </TableCell>
-                  <TableCell>{leadTemperatureLabels[lead.temperature]}</TableCell>
-                  <TableCell>
-                    <Badge variant={leadStatusMeta[lead.status].variant}>
-                      {leadStatusLabels[lead.status]}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="text-right font-medium max-md:hidden">
-                    {formatCurrency(lead.estimatedValue)}
-                  </TableCell>
-                  <TableCell className="max-xl:hidden">{lead.owner}</TableCell>
-                  <TableCell className="max-lg:hidden">{lead.stage}</TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+          <LeadsTableClient leads={leads} users={users} />
         </div>
       </Card>
     </>

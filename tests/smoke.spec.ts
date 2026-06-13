@@ -5,12 +5,28 @@ const adminPassword = 'Admin123!'
 
 async function login(page: Page) {
   await page.goto('/login')
-  await page.getByRole('textbox', { name: 'Email' }).fill(adminEmail)
-  await page.getByRole('textbox', { name: 'Password' }).fill(adminPassword)
-  await page.getByRole('button', { name: 'Sign in' }).click()
-  await page.waitForURL('**/', { timeout: 15_000 })
-  await expect(page).toHaveURL(/\/$/)
-  await expect(page.getByRole('heading', { name: 'Dashboard' })).toBeVisible()
+  const emailField = page.getByRole('textbox', { name: 'Email' })
+
+  if (await emailField.count()) {
+    await emailField.fill(adminEmail)
+    await page.getByRole('textbox', { name: 'Password' }).fill(adminPassword)
+    await page.getByRole('button', { name: 'Sign in' }).click()
+  }
+
+  await expect(page.getByRole('heading', { name: 'Dashboard' })).toBeVisible({ timeout: 30_000 })
+  await expect(page).toHaveURL(/\/$/, { timeout: 30_000 })
+}
+
+async function chooseSelectOption(
+  page: Page,
+  trigger: ReturnType<Page['locator']>,
+  optionLabel: string,
+) {
+  await trigger.click()
+  const content = page.locator('[data-slot="select-content"]').last()
+  await expect(content).toBeVisible()
+  const option = content.getByText(optionLabel, { exact: true })
+  await option.click()
 }
 
 test.describe('CRM smoke flows', () => {
@@ -60,5 +76,50 @@ test.describe('CRM smoke flows', () => {
     await expect(page).toHaveURL('/musteriler')
     await expect(page.getByRole('dialog', { name: 'Hızlı Oluştur' })).toHaveCount(0)
     await expect(page.getByRole('heading', { name: 'Musteriler' })).toBeVisible()
+  })
+
+  test('updates a lead status from the leads table', async ({ page }) => {
+    await login(page)
+    await page.goto('/leads')
+
+    const firstLeadRow = page.locator('[data-testid^="lead-row-"]').first()
+    await expect(firstLeadRow).toBeVisible()
+
+    const statusTrigger = firstLeadRow.locator('[data-testid^="lead-status-"]')
+    const currentStatus = ((await statusTrigger.textContent()) ?? '').trim()
+    const nextStatus = currentStatus === 'Nitelikli' ? 'Kaybedildi' : 'Nitelikli'
+
+    await chooseSelectOption(page, statusTrigger, nextStatus)
+    await expect(firstLeadRow).toContainText(nextStatus)
+  })
+
+  test('updates a deal stage from the deals table', async ({ page }) => {
+    await login(page)
+    await page.goto('/anlasmalar')
+
+    const firstDealRow = page.locator('[data-testid^="deal-row-"]').first()
+    await expect(firstDealRow).toBeVisible()
+
+    const stageTrigger = firstDealRow.locator('[data-testid^="deal-stage-"]')
+    const currentStage = ((await stageTrigger.textContent()) ?? '').trim()
+    const nextStage = currentStage === 'Teklif' ? 'Pazarlik' : 'Teklif'
+
+    await chooseSelectOption(page, stageTrigger, nextStage)
+    await expect(firstDealRow).toContainText(nextStage)
+  })
+
+  test('updates a task status from the tasks list', async ({ page }) => {
+    await login(page)
+    await page.goto('/gorevler')
+
+    const firstTaskRow = page.locator('[data-testid^="task-row-"]').first()
+    await expect(firstTaskRow).toBeVisible()
+
+    const statusTrigger = firstTaskRow.locator('[data-testid^="task-status-"]')
+    const currentStatus = ((await statusTrigger.textContent()) ?? '').trim()
+    const nextStatus = currentStatus === 'Bekliyor' ? 'Devam Ediyor' : 'Bekliyor'
+
+    await chooseSelectOption(page, statusTrigger, nextStatus)
+    await expect(firstTaskRow).toContainText(nextStatus)
   })
 })

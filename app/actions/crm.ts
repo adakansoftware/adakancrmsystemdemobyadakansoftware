@@ -44,6 +44,10 @@ function asDecimal(value: number | null | undefined) {
   return value == null ? null : new Prisma.Decimal(value)
 }
 
+function successResult(id: string) {
+  return { id }
+}
+
 function revalidateCrmPaths() {
   for (const path of [
     '/',
@@ -307,7 +311,7 @@ export const updateLeadAction = createValidatedAction(
     ])
 
     revalidateCrmPaths()
-    return lead
+    return successResult(lead.id)
   },
 )
 
@@ -329,7 +333,7 @@ export const deleteLeadAction = createValidatedAction(
     })
 
     revalidateCrmPaths()
-    return lead
+    return successResult(lead.id)
   },
 )
 
@@ -402,7 +406,7 @@ export const createDealAction = createValidatedAction(dealSchema, async (input) 
   ])
 
   revalidateCrmPaths()
-  return deal
+  return successResult(deal.id)
 })
 
 export const updateDealAction = createValidatedAction(
@@ -484,7 +488,7 @@ export const updateDealAction = createValidatedAction(
     ])
 
     revalidateCrmPaths()
-    return deal
+    return successResult(deal.id)
   },
 )
 
@@ -506,7 +510,7 @@ export const deleteDealAction = createValidatedAction(
     })
 
     revalidateCrmPaths()
-    return deal
+    return successResult(deal.id)
   },
 )
 
@@ -932,7 +936,7 @@ export const moveDealToStageAction = createValidatedAction(
     ])
 
     revalidateCrmPaths()
-    return deal
+    return successResult(deal.id)
   },
 )
 

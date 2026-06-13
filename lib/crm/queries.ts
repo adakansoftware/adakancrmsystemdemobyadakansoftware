@@ -1,5 +1,5 @@
 import { db } from '@/lib/db/prisma'
-import { requirePermission } from '@/lib/auth/rbac'
+import { requireAuthenticatedUser, requirePermission } from '@/lib/auth/rbac'
 import { toNumber } from '@/lib/format'
 
 export async function getDashboardData() {
@@ -270,6 +270,7 @@ export async function getLeadsPageData() {
     temperature: lead.temperature,
     status: lead.status,
     estimatedValue: toNumber(lead.estimatedValue),
+    ownerId: lead.ownerId,
     owner: lead.owner
       ? `${lead.owner.firstName} ${lead.owner.lastName}`
       : 'Atanmamış',
@@ -293,7 +294,7 @@ export async function getDealsPageData() {
         include: {
           stages: {
             orderBy: { position: 'asc' },
-            select: { id: true, name: true },
+            select: { id: true, name: true, isClosed: true, isWon: true },
           },
         },
       },
@@ -313,6 +314,7 @@ export async function getDealsPageData() {
     status: deal.status,
     probability: deal.probability,
     expectedCloseAt: deal.expectedCloseAt,
+    ownerId: deal.ownerId,
     owner: deal.owner
       ? `${deal.owner.firstName} ${deal.owner.lastName}`
       : 'Atanmamış',
@@ -322,7 +324,12 @@ export async function getDealsPageData() {
     stage: deal.stage.name,
     stageId: deal.stageId,
     pipelineId: deal.pipelineId,
-    availableStages: deal.pipeline.stages,
+    availableStages: deal.pipeline.stages.map((stage) => ({
+      id: stage.id,
+      name: stage.name,
+      isClosed: stage.isClosed,
+      isWon: stage.isWon,
+    })),
   }))
 }
 
@@ -352,6 +359,7 @@ export async function getTasksPageData() {
     priority: task.priority,
     status: task.status,
     dueAt: task.dueAt,
+    assigneeId: task.assigneeId,
     assignee: task.assignee
       ? `${task.assignee.firstName} ${task.assignee.lastName}`
       : 'Atanmamış',
@@ -463,4 +471,19 @@ export async function getQuickCreateOptions() {
       stages: pipeline.stages,
     })),
   }
+}
+
+export async function getAssignableUsers() {
+  await requireAuthenticatedUser()
+
+  const users = await db.user.findMany({
+    where: { archivedAt: null, status: { in: ['ACTIVE', 'INVITED'] } },
+    select: { id: true, firstName: true, lastName: true },
+    orderBy: [{ firstName: 'asc' }, { lastName: 'asc' }],
+  })
+
+  return users.map((user) => ({
+    id: user.id,
+    name: `${user.firstName} ${user.lastName}`,
+  }))
 }
