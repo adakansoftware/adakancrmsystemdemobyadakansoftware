@@ -1,7 +1,7 @@
 'use client'
 
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useTheme } from 'next-themes'
 import {
   Bell,
@@ -60,6 +60,8 @@ const quickCreateItems = [
   { label: 'Yeni Firma', icon: FileText, kind: 'company' },
 ] as const
 
+type QuickCreateKind = 'company' | 'contact' | 'lead' | 'deal' | 'task'
+
 type TopbarProps = {
   currentUser: {
     name: string
@@ -86,30 +88,41 @@ export function Topbar({ currentUser, quickCreateOptions }: TopbarProps) {
   const searchParams = useSearchParams()
   const [quickOpen, setQuickOpen] = useState(false)
 
-  const initialKind =
-    (searchParams.get('quickCreate') as
-      | 'company'
-      | 'contact'
-      | 'lead'
-      | 'deal'
-      | 'task'
-      | null) ?? 'lead'
-  const shouldOpenFromQuery = Boolean(searchParams.get('quickCreate'))
+  const queryKind = searchParams.get('quickCreate') as QuickCreateKind | null
+  const initialKind = queryKind ?? 'lead'
+
+  useEffect(() => {
+    if (queryKind) {
+      const syncId = window.setTimeout(() => {
+        setQuickOpen(true)
+      }, 0)
+
+      return () => window.clearTimeout(syncId)
+    }
+  }, [queryKind])
+
+  function buildQuickCreateUrl(kind: QuickCreateKind | null) {
+    const nextParams = new URLSearchParams(searchParams.toString())
+
+    if (kind) {
+      nextParams.set('quickCreate', kind)
+    } else {
+      nextParams.delete('quickCreate')
+    }
+
+    const nextQuery = nextParams.toString()
+    return nextQuery ? `${pathname}?${nextQuery}` : pathname
+  }
 
   function closeQuickCreate(nextOpen: boolean) {
     setQuickOpen(nextOpen)
-    if (!nextOpen && shouldOpenFromQuery) {
-      const nextParams = new URLSearchParams(searchParams.toString())
-      nextParams.delete('quickCreate')
-      const nextQuery = nextParams.toString()
-      router.replace(nextQuery ? `${pathname}?${nextQuery}` : pathname)
+    if (!nextOpen) {
+      window.history.replaceState(window.history.state, '', buildQuickCreateUrl(null))
     }
   }
 
   function openQuickCreate(kind: (typeof quickCreateItems)[number]['kind']) {
-    const nextParams = new URLSearchParams(searchParams.toString())
-    nextParams.set('quickCreate', kind)
-    router.push(`${pathname}?${nextParams.toString()}`)
+    window.history.pushState(window.history.state, '', buildQuickCreateUrl(kind))
     setQuickOpen(true)
   }
 
@@ -238,8 +251,8 @@ export function Topbar({ currentUser, quickCreateOptions }: TopbarProps) {
       </div>
 
       <QuickCreateDialog
-        key={`${initialKind}-${shouldOpenFromQuery ? 'open' : 'closed'}`}
-        open={quickOpen || shouldOpenFromQuery}
+        key={`${initialKind}-${quickOpen ? 'open' : 'closed'}`}
+        open={quickOpen}
         onOpenChange={closeQuickCreate}
         initialKind={initialKind}
         options={quickCreateOptions}

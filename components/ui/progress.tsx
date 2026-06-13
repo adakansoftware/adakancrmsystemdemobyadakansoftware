@@ -10,9 +10,12 @@ function Progress({
   value,
   ...props
 }: ProgressPrimitive.Root.Props) {
+  const safeValue = value ?? 0
+
   return (
     <ProgressPrimitive.Root
-      value={value}
+      value={safeValue}
+      aria-valuetext={`${safeValue}%`}
       data-slot="progress"
       className={cn("flex flex-wrap gap-3", className)}
       {...props}

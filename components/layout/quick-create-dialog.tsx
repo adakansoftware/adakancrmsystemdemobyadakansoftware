@@ -1,7 +1,7 @@
 'use client'
 
-import { useMemo, useState, useTransition } from 'react'
-import { usePathname, useRouter } from 'next/navigation'
+import { useEffect, useMemo, useState, useTransition } from 'react'
+import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 import {
   createCompanyAction,
@@ -94,7 +94,6 @@ export function QuickCreateDialog({
   options,
 }: QuickCreateDialogProps) {
   const router = useRouter()
-  const pathname = usePathname()
   const [activeTab, setActiveTab] = useState<QuickCreateKind>(initialKind)
   const [form, setForm] = useState<FormState>(initialState)
   const [isPending, startTransition] = useTransition()
@@ -120,6 +119,22 @@ export function QuickCreateDialog({
   function updateField<K extends keyof FormState>(key: K, value: FormState[K]) {
     setForm((current) => ({ ...current, [key]: value }))
   }
+
+  useEffect(() => {
+    if (open) {
+      const syncId = window.setTimeout(() => {
+        setActiveTab(initialKind)
+        setForm({
+          ...initialState,
+          ownerId: options.users[0]?.id ?? '',
+          pipelineId: options.pipelines[0]?.id ?? '',
+          stageId: options.pipelines[0]?.stages[0]?.id ?? '',
+        })
+      }, 0)
+
+      return () => window.clearTimeout(syncId)
+    }
+  }, [initialKind, open, options.pipelines, options.users])
 
   async function submit() {
     startTransition(async () => {
@@ -202,8 +217,9 @@ export function QuickCreateDialog({
           description: 'Yeni kayıt veritabanına başarıyla kaydedildi.',
         })
         onOpenChange(false)
-        router.replace(pathname)
-        router.refresh()
+        window.setTimeout(() => {
+          router.refresh()
+        }, 0)
       } catch (error) {
         toast.error('İşlem başarısız', {
           description: error instanceof Error ? error.message : 'Beklenmeyen bir hata oluştu.',
@@ -215,12 +231,7 @@ export function QuickCreateDialog({
   return (
     <Dialog
       open={open}
-      onOpenChange={(nextOpen) => {
-        onOpenChange(nextOpen)
-        if (nextOpen) {
-          resetForm(activeTab)
-        }
-      }}
+      onOpenChange={onOpenChange}
     >
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>

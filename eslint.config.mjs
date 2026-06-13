@@ -5,7 +5,7 @@ import tseslint from 'typescript-eslint'
 
 export default tseslint.config(
   {
-    ignores: ['.next/**', 'node_modules/**', 'prisma/generated/**'],
+    ignores: ['.next/**', 'node_modules/**', 'prisma/generated/**', 'test-results/**', 'playwright-report/**'],
   },
   js.configs.recommended,
   ...tseslint.configs.recommended,
