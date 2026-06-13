@@ -31,6 +31,8 @@ import {
 } from '@/components/ui/select'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 
+type QuickCreateKind = 'company' | 'contact' | 'lead' | 'deal' | 'task'
+
 type QuickCreateDialogProps = {
   open: boolean
   onOpenChange: (open: boolean) => void
@@ -47,8 +49,6 @@ type QuickCreateDialogProps = {
     }>
   }
 }
-
-type QuickCreateKind = 'company' | 'contact' | 'lead' | 'deal' | 'task'
 
 type FormState = {
   name: string
@@ -106,14 +106,19 @@ export function QuickCreateDialog({
     [form.pipelineId, options.pipelines],
   )
 
-  function resetForm(kind: QuickCreateKind) {
-    setActiveTab(kind)
-    setForm({
+  const initialForm = useMemo<FormState>(
+    () => ({
       ...initialState,
       ownerId: options.users[0]?.id ?? '',
       pipelineId: options.pipelines[0]?.id ?? '',
       stageId: options.pipelines[0]?.stages[0]?.id ?? '',
-    })
+    }),
+    [options.pipelines, options.users],
+  )
+
+  function resetForm(kind: QuickCreateKind) {
+    setActiveTab(kind)
+    setForm(initialForm)
   }
 
   function updateField<K extends keyof FormState>(key: K, value: FormState[K]) {
@@ -121,20 +126,17 @@ export function QuickCreateDialog({
   }
 
   useEffect(() => {
-    if (open) {
-      const syncId = window.setTimeout(() => {
-        setActiveTab(initialKind)
-        setForm({
-          ...initialState,
-          ownerId: options.users[0]?.id ?? '',
-          pipelineId: options.pipelines[0]?.id ?? '',
-          stageId: options.pipelines[0]?.stages[0]?.id ?? '',
-        })
-      }, 0)
-
-      return () => window.clearTimeout(syncId)
+    if (!open) {
+      return
     }
-  }, [initialKind, open, options.pipelines, options.users])
+
+    const syncId = window.setTimeout(() => {
+      setActiveTab(initialKind)
+      setForm(initialForm)
+    }, 0)
+
+    return () => window.clearTimeout(syncId)
+  }, [initialForm, initialKind, open])
 
   async function submit() {
     startTransition(async () => {
@@ -149,8 +151,7 @@ export function QuickCreateDialog({
             phone: form.phone || null,
             ownerId: form.ownerId || null,
           })
-
-          if (!result.success) throw new Error('Firma oluşturulamadı')
+          if (!result.success) throw new Error('Firma olusturulamadi')
         }
 
         if (activeTab === 'contact') {
@@ -164,8 +165,7 @@ export function QuickCreateDialog({
             phone: form.phone || null,
             mobilePhone: form.phone || null,
           })
-
-          if (!result.success) throw new Error('Kişi oluşturulamadı')
+          if (!result.success) throw new Error('Kisi olusturulamadi')
         }
 
         if (activeTab === 'lead') {
@@ -181,8 +181,7 @@ export function QuickCreateDialog({
             source: (form.source as 'WEBSITE' | 'REFERRAL' | 'WHATSAPP' | 'PHONE') || 'WEBSITE',
             estimatedValue: form.amount ? Number(form.amount) : null,
           })
-
-          if (!result.success) throw new Error('Lead oluşturulamadı')
+          if (!result.success) throw new Error('Lead olusturulamadi')
         }
 
         if (activeTab === 'deal') {
@@ -196,8 +195,7 @@ export function QuickCreateDialog({
             amount: Number(form.amount || 0),
             expectedCloseAt: form.dueAt ? new Date(form.dueAt) : null,
           })
-
-          if (!result.success) throw new Error('Anlaşma oluşturulamadı')
+          if (!result.success) throw new Error('Anlasma olusturulamadi')
         }
 
         if (activeTab === 'task') {
@@ -209,61 +207,52 @@ export function QuickCreateDialog({
             assigneeId: form.ownerId || null,
             dueAt: form.dueAt ? new Date(form.dueAt) : null,
           })
-
-          if (!result.success) throw new Error('Görev oluşturulamadı')
+          if (!result.success) throw new Error('Gorev olusturulamadi')
         }
 
-        toast.success('Kayıt oluşturuldu', {
-          description: 'Yeni kayıt veritabanına başarıyla kaydedildi.',
+        toast.success('Kayit olusturuldu', {
+          description: 'Yeni kayit veritabanina basariyla kaydedildi.',
         })
         onOpenChange(false)
         window.setTimeout(() => {
           router.refresh()
         }, 0)
       } catch (error) {
-        toast.error('İşlem başarısız', {
-          description: error instanceof Error ? error.message : 'Beklenmeyen bir hata oluştu.',
+        toast.error('Islem basarisiz', {
+          description: error instanceof Error ? error.message : 'Beklenmeyen bir hata olustu.',
         })
       }
     })
   }
 
   return (
-    <Dialog
-      open={open}
-      onOpenChange={onOpenChange}
-    >
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
-          <DialogTitle>Hızlı Oluştur</DialogTitle>
+          <DialogTitle>Hizli Olustur</DialogTitle>
           <DialogDescription>
-            Şirket, kişi, lead, anlaşma veya görev kaydını doğrudan CRM veritabanına ekleyin.
+            Sirket, kisi, lead, anlasma veya gorev kaydini dogrudan CRM veritabanina ekleyin.
           </DialogDescription>
         </DialogHeader>
 
-        <Tabs
-          value={activeTab}
-          onValueChange={(value) => resetForm(value as QuickCreateKind)}
-        >
+        <Tabs value={activeTab} onValueChange={(value) => resetForm(value as QuickCreateKind)}>
           <TabsList className="grid w-full grid-cols-5">
             <TabsTrigger value="company">Firma</TabsTrigger>
-            <TabsTrigger value="contact">Kişi</TabsTrigger>
+            <TabsTrigger value="contact">Kisi</TabsTrigger>
             <TabsTrigger value="lead">Lead</TabsTrigger>
             <TabsTrigger value="deal">Deal</TabsTrigger>
-            <TabsTrigger value="task">Görev</TabsTrigger>
+            <TabsTrigger value="task">Gorev</TabsTrigger>
           </TabsList>
         </Tabs>
 
         <FieldGroup>
           <Field>
-            <FieldLabel htmlFor="qc-name">Başlık / Ad Soyad</FieldLabel>
+            <FieldLabel htmlFor="qc-name">Baslik / Ad Soyad</FieldLabel>
             <Input
               id="qc-name"
               value={form.name}
               onChange={(event) => updateField('name', event.target.value)}
-              placeholder={
-                activeTab === 'company' ? 'Örn. Aydın Hafriyat' : 'Örn. Caner Aydın'
-              }
+              placeholder={activeTab === 'company' ? 'Orn. Aydin Hafriyat' : 'Orn. Caner Aydin'}
             />
           </Field>
 
@@ -272,7 +261,7 @@ export function QuickCreateDialog({
               <FieldLabel>Firma</FieldLabel>
               <Select value={form.companyId} onValueChange={(value) => updateField('companyId', value ?? '')}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Firma seçin" />
+                  <SelectValue placeholder="Firma secin" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectGroup>
@@ -289,7 +278,7 @@ export function QuickCreateDialog({
               <FieldLabel>Sorumlu</FieldLabel>
               <Select value={form.ownerId} onValueChange={(value) => updateField('ownerId', value ?? '')}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Sorumlu seçin" />
+                  <SelectValue placeholder="Sorumlu secin" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectGroup>
@@ -307,10 +296,10 @@ export function QuickCreateDialog({
           {activeTab !== 'company' ? (
             <div className="grid gap-4 sm:grid-cols-2">
               <Field>
-                <FieldLabel>Kişi</FieldLabel>
+                <FieldLabel>Kisi</FieldLabel>
                 <Select value={form.contactId} onValueChange={(value) => updateField('contactId', value ?? '')}>
                   <SelectTrigger>
-                    <SelectValue placeholder="Kişi seçin" />
+                    <SelectValue placeholder="Kisi secin" />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectGroup>
@@ -344,7 +333,7 @@ export function QuickCreateDialog({
               />
             </Field>
             <Field>
-              <FieldLabel>Tutar / Değer</FieldLabel>
+              <FieldLabel>Tutar / Deger</FieldLabel>
               <Input
                 type="number"
                 value={form.amount}
@@ -387,7 +376,7 @@ export function QuickCreateDialog({
                   }}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Pipeline seçin" />
+                    <SelectValue placeholder="Pipeline secin" />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectGroup>
@@ -401,10 +390,10 @@ export function QuickCreateDialog({
                 </Select>
               </Field>
               <Field>
-                <FieldLabel>Aşama</FieldLabel>
+                <FieldLabel>Asama</FieldLabel>
                 <Select value={form.stageId || selectedPipeline?.stages[0]?.id} onValueChange={(value) => updateField('stageId', value ?? '')}>
                   <SelectTrigger>
-                    <SelectValue placeholder="Aşama seçin" />
+                    <SelectValue placeholder="Asama secin" />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectGroup>
@@ -426,7 +415,7 @@ export function QuickCreateDialog({
                 <FieldLabel>Lead</FieldLabel>
                 <Select value={form.leadId} onValueChange={(value) => updateField('leadId', value ?? '')}>
                   <SelectTrigger>
-                    <SelectValue placeholder="Lead seçin" />
+                    <SelectValue placeholder="Lead secin" />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectGroup>
@@ -452,7 +441,7 @@ export function QuickCreateDialog({
 
           {activeTab === 'deal' ? (
             <Field>
-              <FieldLabel>Beklenen Kapanış</FieldLabel>
+              <FieldLabel>Beklenen Kapanis</FieldLabel>
               <Input
                 type="date"
                 value={form.dueAt}
@@ -464,7 +453,7 @@ export function QuickCreateDialog({
 
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>
-            İptal
+            Iptal
           </Button>
           <Button onClick={submit} disabled={isPending || !form.name.trim()}>
             {isPending ? 'Kaydediliyor...' : 'Kaydet'}

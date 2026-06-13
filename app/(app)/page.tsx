@@ -65,11 +65,7 @@ export default async function DashboardPage() {
         </Button>
         <Button
           nativeButton={false}
-          render={
-            <Link href="/api/export?entity=dashboard">
-              Rapor Indir
-            </Link>
-          }
+          render={<Link href="/api/export?entity=dashboard">Rapor Indir</Link>}
         />
       </PageHeader>
 
@@ -137,7 +133,7 @@ export default async function DashboardPage() {
                   <div className="flex items-center justify-between text-sm">
                     <span className="font-medium">{stage.stage}</span>
                     <span className="text-muted-foreground">
-                      {stage.count} · {formatCompact(stage.value)} ₺
+                      {stage.count} / {formatCompact(stage.value)} TL
                     </span>
                   </div>
                   <Progress value={percentage} aria-label={`${stage.stage} yuzde ${percentage}`} />
@@ -210,7 +206,7 @@ export default async function DashboardPage() {
                       <span className="font-medium">{activity.who}</span> {activity.subject}
                     </p>
                     <span className="text-xs text-muted-foreground">
-                      {activityTypeMeta[activity.type].label} · {formatRelativeDate(activity.occurredAt)}
+                      {activityTypeMeta[activity.type].label} / {formatRelativeDate(activity.occurredAt)}
                     </span>
                   </div>
                 </div>

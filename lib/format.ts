@@ -40,7 +40,7 @@ export function formatDateTime(value: Date | string | null | undefined) {
 
 export function formatRelativeDate(value: Date | string | null | undefined) {
   if (!value) {
-    return 'Henüz yok'
+    return 'Henuz yok'
   }
 
   const date = typeof value === 'string' ? new Date(value) : value
@@ -50,16 +50,14 @@ export function formatRelativeDate(value: Date | string | null | undefined) {
 
   if (Math.abs(diffHours) < 24) {
     if (diffHours === 0) {
-      return 'Bugün'
+      return 'Bugun'
     }
 
-    return diffHours > 0
-      ? `${diffHours} saat sonra`
-      : `${Math.abs(diffHours)} saat önce`
+    return diffHours > 0 ? `${diffHours} saat sonra` : `${Math.abs(diffHours)} saat once`
   }
 
   if (Math.abs(diffDays) < 7) {
-    return diffDays > 0 ? `${diffDays} gün sonra` : `${Math.abs(diffDays)} gün önce`
+    return diffDays > 0 ? `${diffDays} gun sonra` : `${Math.abs(diffDays)} gun once`
   }
 
   return formatDate(date)

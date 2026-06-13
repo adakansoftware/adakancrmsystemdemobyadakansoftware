@@ -4,8 +4,11 @@ import { toNumber } from '@/lib/format'
 import type {
   CompanyRow,
   ContactRow,
+  DealRow,
   EntityActivityViewModel,
   EntityNoteViewModel,
+  LeadRow,
+  TaskRow,
 } from '@/lib/crm/view-models'
 
 function mapEntityNotes(
@@ -161,10 +164,7 @@ export async function getDashboardData() {
     pendingTasks,
     recentActivities: recentActivities.map((activity) => ({
       id: activity.id,
-      who:
-        activity.actor == null
-          ? 'Sistem'
-          : `${activity.actor.firstName} ${activity.actor.lastName}`,
+      who: activity.actor ? `${activity.actor.firstName} ${activity.actor.lastName}` : 'Sistem',
       subject: activity.subject,
       description: activity.description,
       type: activity.type,
@@ -201,13 +201,11 @@ export async function getDashboardData() {
       title: task.title,
       related:
         task.company?.name ??
-        (task.contact
-          ? `${task.contact.firstName} ${task.contact.lastName}`
-          : 'İlişki yok'),
+        (task.contact ? `${task.contact.firstName} ${task.contact.lastName}` : 'Iliski yok'),
       dueAt: task.dueAt,
       assigneeName: task.assignee
         ? `${task.assignee.firstName} ${task.assignee.lastName}`
-        : 'Atanmamış',
+        : 'Atanmamis',
       assigneeInitials: task.assignee
         ? `${task.assignee.firstName[0] ?? ''}${task.assignee.lastName[0] ?? ''}`
         : '--',
@@ -215,82 +213,6 @@ export async function getDashboardData() {
     })),
     revenueData: chartData,
   }
-}
-
-export async function getContactsPageData() {
-  await requirePermission('contacts:read')
-
-  const contacts = await db.contact.findMany({
-    where: { archivedAt: null },
-    include: {
-      company: { select: { name: true, city: true, industry: true } },
-      owner: { select: { firstName: true, lastName: true } },
-      activities: {
-        orderBy: { occurredAt: 'desc' },
-        take: 1,
-        select: { occurredAt: true, subject: true },
-      },
-      deals: {
-        where: { archivedAt: null },
-        select: { amount: true, status: true },
-      },
-      notes: {
-        orderBy: [{ isPinned: 'desc' }, { createdAt: 'desc' }],
-        take: 3,
-        select: { id: true, body: true, title: true },
-      },
-    },
-    orderBy: [{ firstName: 'asc' }, { lastName: 'asc' }],
-  })
-
-  return contacts.map((contact) => ({
-    id: contact.id,
-    name: `${contact.firstName} ${contact.lastName}`,
-    company: contact.company?.name ?? '-',
-    city: contact.company?.city ?? '-',
-    industry: contact.company?.industry ?? '-',
-    email: contact.email ?? '-',
-    phone: contact.mobilePhone ?? contact.phone ?? '-',
-    owner: contact.owner
-      ? `${contact.owner.firstName} ${contact.owner.lastName}`
-      : 'Atanmamış',
-    lastActivityAt: contact.activities[0]?.occurredAt ?? null,
-    lastActivitySubject: contact.activities[0]?.subject ?? 'Henüz aktivite yok',
-    relatedDealValue: contact.deals
-      .filter((deal) => deal.status === 'OPEN')
-      .reduce((sum, deal) => sum + toNumber(deal.amount), 0),
-    notes: contact.notes,
-  }))
-}
-
-export async function getCompaniesPageData() {
-  await requirePermission('companies:read')
-
-  const companies = await db.company.findMany({
-    where: { archivedAt: null },
-    include: {
-      owner: { select: { firstName: true, lastName: true } },
-      _count: { select: { contacts: true } },
-      deals: {
-        where: { archivedAt: null },
-        select: { amount: true, status: true },
-      },
-    },
-    orderBy: { name: 'asc' },
-  })
-
-  return companies.map((company) => ({
-    id: company.id,
-    name: company.name,
-    sector: company.industry ?? '-',
-    city: company.city ?? '-',
-    owner: company.owner
-      ? `${company.owner.firstName} ${company.owner.lastName}`
-      : 'Atanmamış',
-    relatedCustomers: company._count.contacts,
-    activeDeals: company.deals.filter((deal) => deal.status === 'OPEN').length,
-    totalValue: company.deals.reduce((sum, deal) => sum + toNumber(deal.amount), 0),
-  }))
 }
 
 export async function getLeadsPageData() {
@@ -307,21 +229,17 @@ export async function getLeadsPageData() {
     orderBy: { createdAt: 'desc' },
   })
 
-  return leads.map((lead) => ({
+  return leads.map((lead): LeadRow => ({
     id: lead.id,
     title: lead.title,
     company: lead.company?.name ?? '-',
-    contact: lead.contact
-      ? `${lead.contact.firstName} ${lead.contact.lastName}`
-      : '-',
+    contact: lead.contact ? `${lead.contact.firstName} ${lead.contact.lastName}` : '-',
     source: lead.source,
     temperature: lead.temperature,
     status: lead.status,
     estimatedValue: toNumber(lead.estimatedValue),
     ownerId: lead.ownerId,
-    owner: lead.owner
-      ? `${lead.owner.firstName} ${lead.owner.lastName}`
-      : 'Atanmamış',
+    owner: lead.owner ? `${lead.owner.firstName} ${lead.owner.lastName}` : 'Atanmamis',
     stage: lead.stage.name,
     email: lead.email ?? '-',
     phone: lead.phone ?? '-',
@@ -350,22 +268,18 @@ export async function getDealsPageData() {
     orderBy: { createdAt: 'desc' },
   })
 
-  return deals.map((deal) => ({
+  return deals.map((deal): DealRow => ({
     id: deal.id,
     title: deal.title,
     company: deal.company?.name ?? '-',
-    contact: deal.contact
-      ? `${deal.contact.firstName} ${deal.contact.lastName}`
-      : '-',
+    contact: deal.contact ? `${deal.contact.firstName} ${deal.contact.lastName}` : '-',
     amount: toNumber(deal.amount),
     currency: deal.currency,
     status: deal.status,
     probability: deal.probability,
     expectedCloseAt: deal.expectedCloseAt,
     ownerId: deal.ownerId,
-    owner: deal.owner
-      ? `${deal.owner.firstName} ${deal.owner.lastName}`
-      : 'Atanmamış',
+    owner: deal.owner ? `${deal.owner.firstName} ${deal.owner.lastName}` : 'Atanmamis',
     ownerInitials: deal.owner
       ? `${deal.owner.firstName[0] ?? ''}${deal.owner.lastName[0] ?? ''}`
       : '--',
@@ -396,21 +310,21 @@ export async function getTasksPageData() {
     orderBy: [{ dueAt: 'asc' }, { createdAt: 'desc' }],
   })
 
-  return tasks.map((task) => ({
+  return tasks.map((task): TaskRow => ({
     id: task.id,
     title: task.title,
     related:
       task.company?.name ??
       (task.contact
         ? `${task.contact.firstName} ${task.contact.lastName}`
-        : task.lead?.title ?? task.deal?.title ?? 'Bağlı kayıt yok'),
+        : task.lead?.title ?? task.deal?.title ?? 'Bagli kayit yok'),
     priority: task.priority,
     status: task.status,
     dueAt: task.dueAt,
     assigneeId: task.assigneeId,
     assignee: task.assignee
       ? `${task.assignee.firstName} ${task.assignee.lastName}`
-      : 'Atanmamış',
+      : 'Atanmamis',
     assigneeInitials: task.assignee
       ? `${task.assignee.firstName[0] ?? ''}${task.assignee.lastName[0] ?? ''}`
       : '--',
@@ -451,16 +365,14 @@ export async function getCalendarPageData() {
       date: task.dueAt!,
       title: task.title,
       type: 'TASK' as const,
-      with: task.assignee
-        ? `${task.assignee.firstName} ${task.assignee.lastName}`
-        : 'Atanmamış',
+      with: task.assignee ? `${task.assignee.firstName} ${task.assignee.lastName}` : 'Atanmamis',
     })),
     deals: deals.map((deal) => ({
       id: deal.id,
       date: deal.expectedCloseAt!,
       title: deal.title,
       type: 'DEAL' as const,
-      with: deal.company?.name ?? 'Şirket yok',
+      with: deal.company?.name ?? 'Sirket yok',
     })),
   }
 }
@@ -600,9 +512,7 @@ export async function getContactsManagementPageData() {
     email: contact.email ?? '-',
     phone: contact.mobilePhone ?? contact.phone ?? '-',
     mobilePhone: contact.mobilePhone ?? '',
-    owner: contact.owner
-      ? `${contact.owner.firstName} ${contact.owner.lastName}`
-      : 'Atanmamis',
+    owner: contact.owner ? `${contact.owner.firstName} ${contact.owner.lastName}` : 'Atanmamis',
     lastActivityAt: contact.activities[0]?.occurredAt ?? null,
     lastActivitySubject: contact.activities[0]?.subject ?? 'Henuz aktivite yok',
     relatedDealValue: contact.deals
@@ -677,9 +587,7 @@ export async function getCompaniesManagementPageData() {
     addressLine1: company.addressLine1 ?? '',
     employeeCount: company.employeeCount,
     ownerId: company.ownerId,
-    owner: company.owner
-      ? `${company.owner.firstName} ${company.owner.lastName}`
-      : 'Atanmamis',
+    owner: company.owner ? `${company.owner.firstName} ${company.owner.lastName}` : 'Atanmamis',
     relatedCustomers: company._count.contacts,
     activeDeals: company.deals.filter((deal) => deal.status === 'OPEN').length,
     totalValue: company.deals.reduce((sum, deal) => sum + toNumber(deal.amount), 0),

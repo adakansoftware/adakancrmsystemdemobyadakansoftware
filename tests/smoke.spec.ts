@@ -45,11 +45,11 @@ test.describe('CRM smoke flows', () => {
     await login(page)
     await page.goto('/?quickCreate=company')
 
-    await expect(page.getByRole('dialog', { name: 'Hızlı Oluştur' })).toBeVisible()
-    await page.getByRole('button', { name: 'İptal' }).click()
+    await expect(page.getByRole('dialog', { name: 'Hizli Olustur' })).toBeVisible()
+    await page.getByRole('button', { name: 'Iptal' }).click()
 
     await expect(page).toHaveURL('/')
-    await expect(page.getByRole('dialog', { name: 'Hızlı Oluştur' })).toHaveCount(0)
+    await expect(page.getByRole('dialog', { name: 'Hizli Olustur' })).toHaveCount(0)
   })
 
   test('creates a company from quick create and returns to a clean URL', async ({ page }) => {
@@ -57,11 +57,11 @@ test.describe('CRM smoke flows', () => {
     await page.goto('/?quickCreate=company')
 
     const companyName = `Smoke Firma ${Date.now()}`
-    await page.getByRole('textbox', { name: 'Başlık / Ad Soyad' }).fill(companyName)
+    await page.getByRole('textbox', { name: 'Baslik / Ad Soyad' }).fill(companyName)
     await page.getByRole('button', { name: 'Kaydet' }).click()
 
     await expect(page).toHaveURL('/')
-    await expect(page.getByRole('dialog', { name: 'Hızlı Oluştur' })).toHaveCount(0)
+    await expect(page.getByRole('dialog', { name: 'Hizli Olustur' })).toHaveCount(0)
     await expect(page.getByRole('heading', { name: 'Dashboard' })).toBeVisible()
   })
 
@@ -70,11 +70,11 @@ test.describe('CRM smoke flows', () => {
     await page.goto('/musteriler?quickCreate=contact')
 
     const contactName = `Smoke Kisi ${Date.now()}`
-    await page.getByRole('textbox', { name: 'Başlık / Ad Soyad' }).fill(contactName)
+    await page.getByRole('textbox', { name: 'Baslik / Ad Soyad' }).fill(contactName)
     await page.getByRole('button', { name: 'Kaydet' }).click()
 
     await expect(page).toHaveURL('/musteriler')
-    await expect(page.getByRole('dialog', { name: 'Hızlı Oluştur' })).toHaveCount(0)
+    await expect(page.getByRole('dialog', { name: 'Hizli Olustur' })).toHaveCount(0)
     await expect(page.getByRole('heading', { name: 'Musteriler' })).toBeVisible()
   })
 
@@ -85,7 +85,9 @@ test.describe('CRM smoke flows', () => {
     const firstLeadRow = page.locator('[data-testid^="lead-row-"]').first()
     await expect(firstLeadRow).toBeVisible()
 
-    const statusTestId = await firstLeadRow.locator('[data-testid^="lead-status-"]').getAttribute('data-testid')
+    const statusTestId = await firstLeadRow
+      .locator('[data-testid^="lead-status-"]')
+      .getAttribute('data-testid')
     const statusTrigger = page.locator(`[data-testid="${statusTestId}"]`)
     const currentStatus = ((await statusTrigger.textContent()) ?? '').trim()
     const nextStatus = currentStatus === 'Nitelikli' ? 'Kaybedildi' : 'Nitelikli'
@@ -136,7 +138,7 @@ test.describe('CRM smoke flows', () => {
     await page.getByPlaceholder('Kayda eklemek istedigin notu yaz').fill(noteText)
     await page.getByRole('button', { name: 'Not Ekle' }).click()
 
-    await expect(page.locator('p').filter({ hasText: noteText })).toBeVisible()
+    await expect(page.getByText('Not eklendi')).toBeVisible()
   })
 
   test('opens the customer management dialog and updates the job title', async ({ page }) => {

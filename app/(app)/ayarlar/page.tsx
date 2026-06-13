@@ -30,7 +30,7 @@ export default async function SettingsPage() {
     <div className="flex flex-col gap-6">
       <PageHeader
         title="Ayarlar"
-        description="Profil, güvenlik ve kullanıcı yönetimi ayarları"
+        description="Profil, guvenlik ve kullanici yonetimi ayarlari"
       />
       <SettingsClient
         currentUser={{

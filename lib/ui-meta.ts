@@ -29,10 +29,10 @@ export const leadSourceLabels: Record<LeadSource, string> = {
 }
 
 export const leadStatusLabels: Record<LeadStatus, string> = {
-  OPEN: 'Açık',
+  OPEN: 'Acik',
   QUALIFIED: 'Nitelikli',
-  DISQUALIFIED: 'Uygun Değil',
-  CONVERTED: 'Dönüştü',
+  DISQUALIFIED: 'Uygun Degil',
+  CONVERTED: 'Donustu',
   LOST: 'Kaybedildi',
 }
 
@@ -45,16 +45,16 @@ export const leadStatusMeta: Record<LeadStatus, { variant: BadgeVariant }> = {
 }
 
 export const leadTemperatureLabels: Record<LeadTemperature, string> = {
-  COLD: 'Soğuk',
-  WARM: 'Ilık',
-  HOT: 'Sıcak',
+  COLD: 'Soguk',
+  WARM: 'Ilik',
+  HOT: 'Sicak',
 }
 
 export const dealStatusLabels: Record<DealStatus, string> = {
-  OPEN: 'Açık',
-  WON: 'Kazanıldı',
+  OPEN: 'Acik',
+  WON: 'Kazanildi',
   LOST: 'Kaybedildi',
-  ABANDONED: 'Vazgeçildi',
+  ABANDONED: 'Vazgecildi',
 }
 
 export const dealStatusMeta: Record<DealStatus, { variant: BadgeVariant }> = {
@@ -68,8 +68,8 @@ export const taskStatusLabels: Record<TaskStatus, string> = {
   TODO: 'Bekliyor',
   IN_PROGRESS: 'Devam Ediyor',
   BLOCKED: 'Blokeli',
-  DONE: 'Tamamlandı',
-  CANCELED: 'İptal Edildi',
+  DONE: 'Tamamlandi',
+  CANCELED: 'Iptal Edildi',
 }
 
 export const taskStatusMeta: Record<TaskStatus, { variant: BadgeVariant }> = {
@@ -81,9 +81,9 @@ export const taskStatusMeta: Record<TaskStatus, { variant: BadgeVariant }> = {
 }
 
 export const taskPriorityLabels: Record<TaskPriority, string> = {
-  LOW: 'Düşük',
+  LOW: 'Dusuk',
   MEDIUM: 'Normal',
-  HIGH: 'Yüksek',
+  HIGH: 'Yuksek',
   URGENT: 'Acil',
 }
 
@@ -100,11 +100,11 @@ export const activityTypeMeta: Record<
 > = {
   CALL: { label: 'Arama', variant: 'success', dot: 'bg-success' },
   EMAIL: { label: 'E-posta', variant: 'info', dot: 'bg-chart-1' },
-  MEETING: { label: 'Toplantı', variant: 'info', dot: 'bg-chart-2' },
+  MEETING: { label: 'Toplanti', variant: 'info', dot: 'bg-chart-2' },
   NOTE: { label: 'Not', variant: 'secondary', dot: 'bg-muted-foreground' },
-  TASK: { label: 'Görev', variant: 'warning', dot: 'bg-warning' },
+  TASK: { label: 'Gorev', variant: 'warning', dot: 'bg-warning' },
   STATUS_CHANGE: { label: 'Durum', variant: 'warning', dot: 'bg-chart-4' },
-  STAGE_CHANGE: { label: 'Aşama', variant: 'warning', dot: 'bg-chart-5' },
+  STAGE_CHANGE: { label: 'Asama', variant: 'warning', dot: 'bg-chart-5' },
   COMMENT: { label: 'Yorum', variant: 'secondary', dot: 'bg-secondary' },
   SYSTEM: { label: 'Sistem', variant: 'outline', dot: 'bg-primary' },
 }

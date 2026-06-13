@@ -13,18 +13,18 @@ export default async function ReportsPage() {
     <div className="flex flex-col gap-6">
       <PageHeader
         title="Raporlar"
-        description="Temel performans ve operasyon görünümü"
+        description="Temel performans ve operasyon gorunumu"
       />
 
       <div className="grid gap-4 md:grid-cols-3">
-        <SummaryCard label="Toplam Açık Deal" value={data.openDeals} />
-        <SummaryCard label="Kazanılan Tutar" value={formatCurrency(totalWon)} />
-        <SummaryCard label="Açık Görev Yükü" value={openTasks} />
+        <SummaryCard label="Toplam Acik Deal" value={data.openDeals} />
+        <SummaryCard label="Kazanilan Tutar" value={formatCurrency(totalWon)} />
+        <SummaryCard label="Acik Gorev Yuku" value={openTasks} />
       </div>
 
       <Card>
         <CardHeader>
-          <CardTitle>Personel Performansı Özeti</CardTitle>
+          <CardTitle>Personel Performansi Ozeti</CardTitle>
         </CardHeader>
         <CardContent className="space-y-3">
           {data.staffPerformance.map((person) => (
@@ -34,7 +34,7 @@ export default async function ReportsPage() {
             >
               <span className="font-medium">{person.name}</span>
               <span className="text-muted-foreground">
-                {person.deals} açık deal · {person.taskLoad} görev · %{person.rate} kapanış
+                {person.deals} acik deal / {person.taskLoad} gorev / %{person.rate} kapanis
               </span>
             </div>
           ))}

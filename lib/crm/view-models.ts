@@ -62,6 +62,8 @@ export type LeadRow = {
   ownerId?: string | null
   owner: string
   stage: string
+  email: string
+  phone: string
 }
 
 export type DealStageOption = {
@@ -98,6 +100,7 @@ export type TaskRow = {
   status: TaskStatus
   dueAt: Date | null
   assigneeId?: string | null
+  assignee: string
   assigneeInitials: string
 }
 
