@@ -11,18 +11,11 @@ import {
   updateProfileAction,
   updateUserStatusAction,
 } from '@/app/actions/auth'
+import { InlineSelectField } from '@/components/crm/inline-select-field'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
-import {
-  Select,
-  SelectContent,
-  SelectGroup,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
 import {
   Table,
   TableBody,
@@ -116,15 +109,14 @@ export function SettingsClient({
           userId,
           roleId: nextRole.id,
         })
+
         if (!assignResult.success) {
-          throw new Error('Yeni rol atanamadı')
+          throw new Error('Yeni rol atanamadi')
         }
 
-        refreshWithSuccess('Kullanıcı rolü güncellendi')
+        refreshWithSuccess('Kullanici rolu guncellendi')
       } catch (error) {
-        toast.error(
-          error instanceof Error ? error.message : 'Rol güncellemesi başarısız oldu',
-        )
+        toast.error(error instanceof Error ? error.message : 'Rol guncellemesi basarisiz oldu')
       } finally {
         setPendingUserId(null)
       }
@@ -137,13 +129,11 @@ export function SettingsClient({
         setPendingUserId(userId)
         const result = await updateUserStatusAction({ userId, status })
         if (!result.success) {
-          throw new Error('Kullanıcı durumu doğrulanamadı')
+          throw new Error('Kullanici durumu dogrulanamadi')
         }
-        refreshWithSuccess('Kullanıcı durumu güncellendi')
+        refreshWithSuccess('Kullanici durumu guncellendi')
       } catch (error) {
-        toast.error(
-          error instanceof Error ? error.message : 'Durum güncellemesi başarısız oldu',
-        )
+        toast.error(error instanceof Error ? error.message : 'Durum guncellemesi basarisiz oldu')
       } finally {
         setPendingUserId(null)
       }
@@ -155,13 +145,11 @@ export function SettingsClient({
       try {
         const result = await updateProfileAction(profileForm)
         if (!result.success) {
-          throw new Error('Profil bilgileri doğrulanamadı')
+          throw new Error('Profil bilgileri dogrulanamadi')
         }
-        refreshWithSuccess('Profil bilgileri güncellendi')
+        refreshWithSuccess('Profil bilgileri guncellendi')
       } catch (error) {
-        toast.error(
-          error instanceof Error ? error.message : 'Profil güncellenemedi',
-        )
+        toast.error(error instanceof Error ? error.message : 'Profil guncellenemedi')
       }
     })
   }
@@ -171,16 +159,16 @@ export function SettingsClient({
       try {
         const result = await changePasswordAction(passwordForm)
         if (!result.success) {
-          throw new Error('Şifre alanları doğrulanamadı')
+          throw new Error('Sifre alanlari dogrulanamadi')
         }
         setPasswordForm({
           currentPassword: '',
           nextPassword: '',
           confirmPassword: '',
         })
-        refreshWithSuccess('Şifre başarıyla değiştirildi')
+        refreshWithSuccess('Sifre basariyla degistirildi')
       } catch (error) {
-        toast.error(error instanceof Error ? error.message : 'Şifre değiştirilemedi')
+        toast.error(error instanceof Error ? error.message : 'Sifre degistirilemedi')
       }
     })
   }
@@ -193,7 +181,7 @@ export function SettingsClient({
           status: createUserForm.status as 'ACTIVE' | 'INVITED' | 'SUSPENDED' | 'ARCHIVED',
         })
         if (!result.success) {
-          throw new Error('Yeni kullanıcı bilgileri doğrulanamadı')
+          throw new Error('Yeni kullanici bilgileri dogrulanamadi')
         }
         setCreateUserForm({
           firstName: '',
@@ -203,11 +191,9 @@ export function SettingsClient({
           roleId: roles[0]?.id ?? '',
           status: 'INVITED',
         })
-        refreshWithSuccess('Yeni kullanıcı oluşturuldu')
+        refreshWithSuccess('Yeni kullanici olusturuldu')
       } catch (error) {
-        toast.error(
-          error instanceof Error ? error.message : 'Kullanıcı oluşturulamadı',
-        )
+        toast.error(error instanceof Error ? error.message : 'Kullanici olusturulamadi')
       }
     })
   }
@@ -216,9 +202,9 @@ export function SettingsClient({
     <Tabs defaultValue="profile" className="gap-6">
       <TabsList className="grid w-full grid-cols-2 md:grid-cols-4">
         <TabsTrigger value="profile">Profil</TabsTrigger>
-        <TabsTrigger value="security">Güvenlik</TabsTrigger>
+        <TabsTrigger value="security">Guvenlik</TabsTrigger>
         <TabsTrigger value="users" disabled={!canManageUsers}>
-          Kullanıcılar
+          Kullanicilar
         </TabsTrigger>
         <TabsTrigger value="pipeline">Pipeline</TabsTrigger>
       </TabsList>
@@ -266,7 +252,7 @@ export function SettingsClient({
                 }
               />
             </label>
-            <div className="md:col-span-2 flex items-center justify-between gap-3">
+            <div className="flex items-center justify-between gap-3 md:col-span-2">
               <div className="flex flex-wrap gap-2">
                 {currentUser.roles.map((role) => (
                   <Badge key={role} variant="secondary">
@@ -285,11 +271,11 @@ export function SettingsClient({
       <TabsContent value="security">
         <Card>
           <CardHeader>
-            <CardTitle>Şifre Değiştir</CardTitle>
+            <CardTitle>Sifre Degistir</CardTitle>
           </CardHeader>
           <CardContent className="grid gap-4 md:grid-cols-2">
             <label className="space-y-2 text-sm md:col-span-2">
-              <span>Mevcut Şifre</span>
+              <span>Mevcut Sifre</span>
               <Input
                 type="password"
                 value={passwordForm.currentPassword}
@@ -302,7 +288,7 @@ export function SettingsClient({
               />
             </label>
             <label className="space-y-2 text-sm">
-              <span>Yeni Şifre</span>
+              <span>Yeni Sifre</span>
               <Input
                 type="password"
                 value={passwordForm.nextPassword}
@@ -315,7 +301,7 @@ export function SettingsClient({
               />
             </label>
             <label className="space-y-2 text-sm">
-              <span>Yeni Şifre Tekrar</span>
+              <span>Yeni Sifre Tekrar</span>
               <Input
                 type="password"
                 value={passwordForm.confirmPassword}
@@ -327,9 +313,9 @@ export function SettingsClient({
                 }
               />
             </label>
-            <div className="md:col-span-2 flex justify-end">
+            <div className="flex justify-end md:col-span-2">
               <Button onClick={handlePasswordSubmit} disabled={isPending}>
-                {isPending ? 'Güncelleniyor...' : 'Şifreyi Değiştir'}
+                {isPending ? 'Guncelleniyor...' : 'Sifreyi Degistir'}
               </Button>
             </div>
           </CardContent>
@@ -340,82 +326,64 @@ export function SettingsClient({
         <div className="grid gap-6 xl:grid-cols-[1.25fr_0.9fr]">
           <Card>
             <CardHeader>
-              <CardTitle>Kullanıcı Yönetimi</CardTitle>
+              <CardTitle>Kullanici Yonetimi</CardTitle>
             </CardHeader>
             <CardContent className="overflow-x-auto">
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Kullanıcı</TableHead>
+                    <TableHead>Kullanici</TableHead>
                     <TableHead>Durum</TableHead>
                     <TableHead>Rol</TableHead>
-                    <TableHead className="text-right">İşlem</TableHead>
+                    <TableHead className="text-right">Guncelleme</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {users.map((user) => (
-                    <TableRow key={user.id}>
-                      <TableCell>
-                        <div className="flex flex-col">
-                          <span className="font-medium">{user.name}</span>
-                          <span className="text-xs text-muted-foreground">{user.email}</span>
-                        </div>
-                      </TableCell>
-                      <TableCell className="min-w-36">
-                        <Select
-                          defaultValue={user.status}
-                          onValueChange={(value) =>
-                            value &&
-                            updateUserStatus(
-                              user.id,
-                              value as (typeof userStatuses)[number],
-                            )
-                          }
-                        >
-                          <SelectTrigger>
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectGroup>
-                              {userStatuses.map((status) => (
-                                <SelectItem key={status} value={status}>
-                                  {status}
-                                </SelectItem>
-                              ))}
-                            </SelectGroup>
-                          </SelectContent>
-                        </Select>
-                      </TableCell>
-                      <TableCell className="min-w-40">
-                        <Select
-                          defaultValue={user.roleSlugs[0]}
-                          onValueChange={(value) => value && updateUserRole(user.id, value)}
-                        >
-                          <SelectTrigger>
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectGroup>
-                              {roles.map((role) => (
-                                <SelectItem key={role.slug} value={role.slug}>
-                                  {role.name}
-                                </SelectItem>
-                              ))}
-                            </SelectGroup>
-                          </SelectContent>
-                        </Select>
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          disabled={isPending && pendingUserId === user.id}
-                        >
-                          {isPending && pendingUserId === user.id ? 'İşleniyor' : 'Hazır'}
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  ))}
+                  {users.map((user) => {
+                    const isRowPending = isPending && pendingUserId === user.id
+
+                    return (
+                      <TableRow key={user.id}>
+                        <TableCell>
+                          <div className="flex flex-col">
+                            <span className="font-medium">{user.name}</span>
+                            <span className="text-xs text-muted-foreground">{user.email}</span>
+                          </div>
+                        </TableCell>
+                        <TableCell className="min-w-36">
+                          <InlineSelectField
+                            value={user.status}
+                            onValueChange={(value) =>
+                              updateUserStatus(user.id, value as (typeof userStatuses)[number])
+                            }
+                            disabled={isRowPending}
+                            ariaLabel={`${user.name} durumunu degistir`}
+                            options={userStatuses.map((status) => ({
+                              value: status,
+                              label: status,
+                            }))}
+                          />
+                        </TableCell>
+                        <TableCell className="min-w-40">
+                          <InlineSelectField
+                            value={user.roleSlugs[0] ?? roles[0]?.slug ?? ''}
+                            onValueChange={(value) => updateUserRole(user.id, value)}
+                            disabled={isRowPending}
+                            ariaLabel={`${user.name} rolunu degistir`}
+                            options={roles.map((role) => ({
+                              value: role.slug,
+                              label: role.name,
+                            }))}
+                          />
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <Badge variant={isRowPending ? 'warning' : 'secondary'}>
+                            {isRowPending ? 'Isleniyor' : 'Guncel'}
+                          </Badge>
+                        </TableCell>
+                      </TableRow>
+                    )
+                  })}
                 </TableBody>
               </Table>
             </CardContent>
@@ -423,7 +391,7 @@ export function SettingsClient({
 
           <Card>
             <CardHeader>
-              <CardTitle>Yeni Kullanıcı Oluştur</CardTitle>
+              <CardTitle>Yeni Kullanici Olustur</CardTitle>
             </CardHeader>
             <CardContent className="grid gap-4">
               <label className="space-y-2 text-sm">
@@ -464,7 +432,7 @@ export function SettingsClient({
                 />
               </label>
               <label className="space-y-2 text-sm">
-                <span>Geçici Şifre</span>
+                <span>Gecici Sifre</span>
                 <Input
                   type="password"
                   value={createUserForm.password}
@@ -479,57 +447,41 @@ export function SettingsClient({
               <div className="grid gap-4 md:grid-cols-2">
                 <div className="space-y-2 text-sm">
                   <span>Rol</span>
-                  <Select
+                  <InlineSelectField
                     value={createUserForm.roleId}
                     onValueChange={(value) =>
                       setCreateUserForm((current) => ({
                         ...current,
-                        roleId: value ?? '',
+                        roleId: value,
                       }))
                     }
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectGroup>
-                        {roles.map((role) => (
-                          <SelectItem key={role.id} value={role.id}>
-                            {role.name}
-                          </SelectItem>
-                        ))}
-                      </SelectGroup>
-                    </SelectContent>
-                  </Select>
+                    ariaLabel="Yeni kullanici rolunu sec"
+                    options={roles.map((role) => ({
+                      value: role.id,
+                      label: role.name,
+                    }))}
+                  />
                 </div>
                 <div className="space-y-2 text-sm">
                   <span>Durum</span>
-                  <Select
+                  <InlineSelectField
                     value={createUserForm.status}
                     onValueChange={(value) =>
                       setCreateUserForm((current) => ({
                         ...current,
-                        status: value ?? 'INVITED',
+                        status: value,
                       }))
                     }
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectGroup>
-                        {userStatuses.map((status) => (
-                          <SelectItem key={status} value={status}>
-                            {status}
-                          </SelectItem>
-                        ))}
-                      </SelectGroup>
-                    </SelectContent>
-                  </Select>
+                    ariaLabel="Yeni kullanici durumunu sec"
+                    options={userStatuses.map((status) => ({
+                      value: status,
+                      label: status,
+                    }))}
+                  />
                 </div>
               </div>
               <Button onClick={handleCreateUser} disabled={isPending}>
-                {isPending ? 'Oluşturuluyor...' : 'Kullanıcı Oluştur'}
+                {isPending ? 'Olusturuluyor...' : 'Kullanici Olustur'}
               </Button>
             </CardContent>
           </Card>
@@ -542,13 +494,10 @@ export function SettingsClient({
             <CardTitle>Pipeline Durumu</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3 text-sm text-muted-foreground">
+            <p>Coklu pipeline, stage hareket gecmisi ve deger takibi su anda aktif calisiyor.</p>
             <p>
-              Çoklu pipeline, stage hareket geçmişi ve değer takibi şu anda aktif
-              çalışıyor.
-            </p>
-            <p>
-              Bir sonraki ürünleşme turunda stage sıralama, pipeline kuralları ve
-              gelişmiş yönetim ekranı genişletilecek.
+              Bir sonraki sertlestirme turunda stage siralama, pipeline kurallari ve gelismis
+              yonetim ekrani genisletilecek.
             </p>
           </CardContent>
         </Card>

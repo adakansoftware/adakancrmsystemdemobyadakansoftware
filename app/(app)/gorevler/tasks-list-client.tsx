@@ -4,37 +4,13 @@ import { useRouter } from 'next/navigation'
 import { useState, useTransition } from 'react'
 import { toast } from 'sonner'
 import { updateTaskAction } from '@/app/actions/crm'
+import { InlineSelectField } from '@/components/crm/inline-select-field'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
-import {
-  Select,
-  SelectContent,
-  SelectGroup,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
 import { Card, CardContent } from '@/components/ui/card'
+import { taskStatuses, type TaskRow, type UserOption } from '@/lib/crm/view-models'
 import { formatDate } from '@/lib/format'
 import { priorityMeta, taskPriorityLabels, taskStatusLabels } from '@/lib/ui-meta'
-
-const taskStatuses = ['TODO', 'IN_PROGRESS', 'BLOCKED', 'DONE', 'CANCELED'] as const
-
-type TaskRow = {
-  id: string
-  title: string
-  related: string
-  priority: keyof typeof taskPriorityLabels
-  status: (typeof taskStatuses)[number]
-  dueAt: Date | null
-  assigneeId?: string | null
-  assigneeInitials: string
-}
-
-type UserOption = {
-  id: string
-  name: string
-}
 
 export function TasksListClient({
   tasks,
@@ -97,38 +73,27 @@ export function TasksListClient({
               <Badge variant={priorityMeta[task.priority].variant}>
                 {taskPriorityLabels[task.priority]}
               </Badge>
-              <Select
+              <InlineSelectField
                 value={task.status}
                 onValueChange={(value) =>
-                  value &&
-                  updateTask(
-                    task.id,
-                    { status: value as TaskRow['status'] },
-                    'Gorev durumu guncellendi',
-                  )
+                  updateTask(task.id, { status: value }, 'Gorev durumu guncellendi')
                 }
                 disabled={isRowPending}
-              >
-                <SelectTrigger size="sm" className="w-40" data-testid={`task-status-${task.id}`}>
-                  <SelectValue>{taskStatusLabels[task.status]}</SelectValue>
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectGroup>
-                    {taskStatuses.map((status) => (
-                      <SelectItem key={status} value={status}>
-                        {taskStatusLabels[status]}
-                      </SelectItem>
-                    ))}
-                  </SelectGroup>
-                </SelectContent>
-              </Select>
+                className="w-40"
+                testId={`task-status-${task.id}`}
+                ariaLabel={`${task.title} durumunu degistir`}
+                options={taskStatuses.map((status) => ({
+                  value: status,
+                  label: taskStatusLabels[status],
+                }))}
+              />
               <div className="flex min-w-44 items-center gap-2">
                 <Avatar className="size-7">
                   <AvatarFallback className="text-[10px]">
                     {task.assigneeInitials}
                   </AvatarFallback>
                 </Avatar>
-                <Select
+                <InlineSelectField
                   value={task.assigneeId ?? 'unassigned'}
                   onValueChange={(value) =>
                     updateTask(
@@ -138,21 +103,14 @@ export function TasksListClient({
                     )
                   }
                   disabled={isRowPending}
-                >
-                  <SelectTrigger size="sm" className="w-full" data-testid={`task-owner-${task.id}`}>
-                    <SelectValue>{task.assigneeId ? users.find((user) => user.id === task.assigneeId)?.name ?? 'Atanmamis' : 'Atanmamis'}</SelectValue>
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectGroup>
-                      <SelectItem value="unassigned">Atanmamis</SelectItem>
-                      {users.map((user) => (
-                        <SelectItem key={user.id} value={user.id}>
-                          {user.name}
-                        </SelectItem>
-                      ))}
-                    </SelectGroup>
-                  </SelectContent>
-                </Select>
+                  className="w-full"
+                  testId={`task-owner-${task.id}`}
+                  ariaLabel={`${task.title} sorumlusunu degistir`}
+                  options={[
+                    { value: 'unassigned', label: 'Atanmamis' },
+                    ...users.map((user) => ({ value: user.id, label: user.name })),
+                  ]}
+                />
               </div>
             </div>
           )

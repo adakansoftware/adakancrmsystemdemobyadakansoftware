@@ -4,15 +4,8 @@ import { useRouter } from 'next/navigation'
 import { useState, useTransition } from 'react'
 import { toast } from 'sonner'
 import { moveDealToStageAction, updateDealAction } from '@/app/actions/crm'
+import { InlineSelectField } from '@/components/crm/inline-select-field'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
-import {
-  Select,
-  SelectContent,
-  SelectGroup,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
 import {
   Table,
   TableBody,
@@ -21,39 +14,9 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
+import { dealStatuses, type DealRow, type UserOption } from '@/lib/crm/view-models'
 import { formatCurrency, formatDate } from '@/lib/format'
 import { dealStatusLabels } from '@/lib/ui-meta'
-
-const dealStatuses = ['OPEN', 'WON', 'LOST', 'ABANDONED'] as const
-
-type DealRow = {
-  id: string
-  title: string
-  company: string
-  contact: string
-  amount: number
-  currency: string
-  status: (typeof dealStatuses)[number]
-  probability: number
-  expectedCloseAt: Date | null
-  ownerId?: string | null
-  owner: string
-  ownerInitials: string
-  stage: string
-  stageId: string
-  pipelineId: string
-  availableStages: Array<{
-    id: string
-    name: string
-    isClosed: boolean
-    isWon: boolean
-  }>
-}
-
-type UserOption = {
-  id: string
-  name: string
-}
 
 export function DealsTableClient({
   deals,
@@ -188,44 +151,30 @@ export function DealsTableClient({
                 </div>
               </TableCell>
               <TableCell className="min-w-40">
-                <Select
+                <InlineSelectField
                   value={deal.status}
-                  onValueChange={(value) => value && updateDealStatus(deal, value as DealRow['status'])}
+                  onValueChange={(value) => updateDealStatus(deal, value)}
                   disabled={isRowPending}
-                >
-                  <SelectTrigger size="sm" className="w-full" data-testid={`deal-status-${deal.id}`}>
-                    <SelectValue>{dealStatusLabels[deal.status]}</SelectValue>
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectGroup>
-                      {dealStatuses.map((status) => (
-                        <SelectItem key={status} value={status}>
-                          {dealStatusLabels[status]}
-                        </SelectItem>
-                      ))}
-                    </SelectGroup>
-                  </SelectContent>
-                </Select>
+                  testId={`deal-status-${deal.id}`}
+                  ariaLabel={`${deal.title} durumunu degistir`}
+                  options={dealStatuses.map((status) => ({
+                    value: status,
+                    label: dealStatusLabels[status],
+                  }))}
+                />
               </TableCell>
               <TableCell className="min-w-44 max-lg:hidden">
-                <Select
+                <InlineSelectField
                   value={deal.stageId}
-                  onValueChange={(value) => value && updateDealStage(deal, value)}
+                  onValueChange={(value) => updateDealStage(deal, value)}
                   disabled={isRowPending}
-                >
-                  <SelectTrigger size="sm" className="w-full" data-testid={`deal-stage-${deal.id}`}>
-                    <SelectValue>{deal.stage}</SelectValue>
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectGroup>
-                      {deal.availableStages.map((stage) => (
-                        <SelectItem key={stage.id} value={stage.id}>
-                          {stage.name}
-                        </SelectItem>
-                      ))}
-                    </SelectGroup>
-                  </SelectContent>
-                </Select>
+                  testId={`deal-stage-${deal.id}`}
+                  ariaLabel={`${deal.title} asamasini degistir`}
+                  options={deal.availableStages.map((stage) => ({
+                    value: stage.id,
+                    label: stage.name,
+                  }))}
+                />
               </TableCell>
               <TableCell className="text-right font-medium">
                 {formatCurrency(deal.amount, deal.currency)}
@@ -238,27 +187,20 @@ export function DealsTableClient({
                       {deal.ownerInitials}
                     </AvatarFallback>
                   </Avatar>
-                  <Select
+                  <InlineSelectField
                     value={deal.ownerId ?? 'unassigned'}
                     onValueChange={(value) =>
                       updateDealOwner(deal.id, value === 'unassigned' ? null : value)
                     }
                     disabled={isRowPending}
-                  >
-                    <SelectTrigger size="sm" className="w-full" data-testid={`deal-owner-${deal.id}`}>
-                      <SelectValue>{deal.ownerId ? deal.owner : 'Atanmamis'}</SelectValue>
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectGroup>
-                        <SelectItem value="unassigned">Atanmamis</SelectItem>
-                        {users.map((user) => (
-                          <SelectItem key={user.id} value={user.id}>
-                            {user.name}
-                          </SelectItem>
-                        ))}
-                      </SelectGroup>
-                    </SelectContent>
-                  </Select>
+                    className="w-full"
+                    testId={`deal-owner-${deal.id}`}
+                    ariaLabel={`${deal.title} sorumlusunu degistir`}
+                    options={[
+                      { value: 'unassigned', label: 'Atanmamis' },
+                      ...users.map((user) => ({ value: user.id, label: user.name })),
+                    ]}
+                  />
                 </div>
               </TableCell>
               <TableCell className="text-right text-sm text-muted-foreground max-sm:hidden">

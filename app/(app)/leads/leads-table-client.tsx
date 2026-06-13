@@ -4,16 +4,9 @@ import { useRouter } from 'next/navigation'
 import { useState, useTransition } from 'react'
 import { toast } from 'sonner'
 import { updateLeadAction } from '@/app/actions/crm'
+import { InlineSelectField } from '@/components/crm/inline-select-field'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
-import {
-  Select,
-  SelectContent,
-  SelectGroup,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
 import {
   Table,
   TableBody,
@@ -22,6 +15,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
+import { leadStatuses, type LeadRow, type UserOption } from '@/lib/crm/view-models'
 import { formatCurrency } from '@/lib/format'
 import { getInitials } from '@/lib/helpers'
 import {
@@ -29,27 +23,6 @@ import {
   leadStatusLabels,
   leadTemperatureLabels,
 } from '@/lib/ui-meta'
-
-const leadStatuses = ['OPEN', 'QUALIFIED', 'DISQUALIFIED', 'CONVERTED', 'LOST'] as const
-
-type LeadRow = {
-  id: string
-  title: string
-  company: string
-  contact: string
-  source: keyof typeof leadSourceLabels
-  temperature: keyof typeof leadTemperatureLabels
-  status: (typeof leadStatuses)[number]
-  estimatedValue: number
-  ownerId?: string | null
-  owner: string
-  stage: string
-}
-
-type UserOption = {
-  id: string
-  name: string
-}
 
 export function LeadsTableClient({
   leads,
@@ -133,37 +106,25 @@ export function LeadsTableClient({
               </TableCell>
               <TableCell>{leadTemperatureLabels[lead.temperature]}</TableCell>
               <TableCell className="min-w-40">
-                <Select
+                <InlineSelectField
                   value={lead.status}
                   onValueChange={(value) =>
-                    value &&
-                    updateLead(
-                      lead.id,
-                      { status: value as LeadRow['status'] },
-                      'Lead durumu guncellendi',
-                    )
+                    updateLead(lead.id, { status: value }, 'Lead durumu guncellendi')
                   }
                   disabled={isRowPending}
-                >
-                  <SelectTrigger size="sm" className="w-full" data-testid={`lead-status-${lead.id}`}>
-                    <SelectValue>{leadStatusLabels[lead.status]}</SelectValue>
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectGroup>
-                      {leadStatuses.map((status) => (
-                        <SelectItem key={status} value={status}>
-                          {leadStatusLabels[status]}
-                        </SelectItem>
-                      ))}
-                    </SelectGroup>
-                  </SelectContent>
-                </Select>
+                  testId={`lead-status-${lead.id}`}
+                  ariaLabel={`${lead.title} durumunu degistir`}
+                  options={leadStatuses.map((status) => ({
+                    value: status,
+                    label: leadStatusLabels[status],
+                  }))}
+                />
               </TableCell>
               <TableCell className="text-right font-medium max-md:hidden">
                 {formatCurrency(lead.estimatedValue)}
               </TableCell>
               <TableCell className="min-w-44">
-                <Select
+                <InlineSelectField
                   value={lead.ownerId ?? 'unassigned'}
                   onValueChange={(value) =>
                     updateLead(
@@ -173,21 +134,13 @@ export function LeadsTableClient({
                     )
                   }
                   disabled={isRowPending}
-                >
-                  <SelectTrigger size="sm" className="w-full" data-testid={`lead-owner-${lead.id}`}>
-                    <SelectValue>{lead.ownerId ? lead.owner : 'Atanmamis'}</SelectValue>
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectGroup>
-                      <SelectItem value="unassigned">Atanmamis</SelectItem>
-                      {users.map((user) => (
-                        <SelectItem key={user.id} value={user.id}>
-                          {user.name}
-                        </SelectItem>
-                      ))}
-                    </SelectGroup>
-                  </SelectContent>
-                </Select>
+                  testId={`lead-owner-${lead.id}`}
+                  ariaLabel={`${lead.title} sorumlusunu degistir`}
+                  options={[
+                    { value: 'unassigned', label: 'Atanmamis' },
+                    ...users.map((user) => ({ value: user.id, label: user.name })),
+                  ]}
+                />
               </TableCell>
               <TableCell className="max-lg:hidden">{lead.stage}</TableCell>
             </TableRow>
