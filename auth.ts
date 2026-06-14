@@ -12,12 +12,17 @@ const credentialsSchema = z.object({
   password: z.string().min(8),
 })
 
+const authSecret =
+  process.env.NEXTAUTH_SECRET ??
+  process.env.AUTH_SECRET ??
+  process.env.SESSION_SECRET ??
+  (process.env.NODE_ENV === 'production'
+    ? undefined
+    : 'adikan-crm-dev-secret-change-in-production')
+
 export const { handlers, signIn, signOut, auth } = NextAuth({
   adapter: PrismaAdapter(db),
-  secret:
-    process.env.NEXTAUTH_SECRET ??
-    process.env.AUTH_SECRET ??
-    process.env.SESSION_SECRET,
+  secret: authSecret,
   session: {
     strategy: 'jwt',
   },

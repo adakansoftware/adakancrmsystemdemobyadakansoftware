@@ -82,10 +82,16 @@ export const loginAction = createValidatedAction(loginSchema, async (input) => {
 })
 
 export async function loginFormAction(formData: FormData) {
-  const result = await loginAction({
-    email: String(formData.get('email') ?? ''),
-    password: String(formData.get('password') ?? ''),
-  })
+  let result: Awaited<ReturnType<typeof loginAction>>
+
+  try {
+    result = await loginAction({
+      email: String(formData.get('email') ?? ''),
+      password: String(formData.get('password') ?? ''),
+    })
+  } catch {
+    redirect('/login?error=invalid_credentials')
+  }
 
   if (!result.success) {
     redirect('/login?error=invalid_credentials')
