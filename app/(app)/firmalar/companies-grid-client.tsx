@@ -1,5 +1,6 @@
 'use client'
 
+import Link from 'next/link'
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { Building2, Handshake, MapPin, SearchX, Users } from 'lucide-react'
@@ -293,7 +294,11 @@ export function CompaniesGridClient({
                   <Building2 className="size-5.5" />
                 </span>
                 <div className="flex flex-col">
-                  <CardTitle className="text-base">{company.name}</CardTitle>
+                  <CardTitle className="text-base">
+                    <Link href={`/firmalar/${company.id}`} className="hover:underline">
+                      {company.name}
+                    </Link>
+                  </CardTitle>
                   <span className="text-xs text-muted-foreground">{company.id}</span>
                 </div>
               </div>

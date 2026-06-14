@@ -14,6 +14,9 @@ import type { EntityNoteViewModel } from '@/lib/crm/view-models'
 type NoteTarget = {
   companyId?: string | null
   contactId?: string | null
+  leadId?: string | null
+  dealId?: string | null
+  taskId?: string | null
 }
 
 export function EntityNotesPanel({

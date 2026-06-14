@@ -596,3 +596,660 @@ export async function getCompaniesManagementPageData() {
     activities: mapEntityActivities(company.activities),
   }))
 }
+
+export async function getContactDetailPageData(contactId: string) {
+  await requirePermission('contacts:read')
+
+  const contact = await db.contact.findUnique({
+    where: { id: contactId },
+    select: {
+      id: true,
+      companyId: true,
+      ownerId: true,
+      firstName: true,
+      lastName: true,
+      email: true,
+      phone: true,
+      mobilePhone: true,
+      jobTitle: true,
+      linkedinUrl: true,
+      createdAt: true,
+      updatedAt: true,
+      company: {
+        select: {
+          id: true,
+          name: true,
+          city: true,
+          industry: true,
+        },
+      },
+      owner: {
+        select: {
+          firstName: true,
+          lastName: true,
+        },
+      },
+      deals: {
+        where: { archivedAt: null },
+        orderBy: { updatedAt: 'desc' },
+        take: 8,
+        select: {
+          id: true,
+          title: true,
+          amount: true,
+          currency: true,
+          status: true,
+          stage: { select: { name: true } },
+          expectedCloseAt: true,
+        },
+      },
+      tasks: {
+        where: { archivedAt: null },
+        orderBy: [{ dueAt: 'asc' }, { updatedAt: 'desc' }],
+        take: 8,
+        select: {
+          id: true,
+          title: true,
+          status: true,
+          priority: true,
+          dueAt: true,
+        },
+      },
+      activities: {
+        orderBy: { occurredAt: 'desc' },
+        take: 10,
+        select: {
+          id: true,
+          type: true,
+          subject: true,
+          description: true,
+          occurredAt: true,
+          actor: {
+            select: {
+              firstName: true,
+              lastName: true,
+            },
+          },
+        },
+      },
+      notes: {
+        orderBy: [{ isPinned: 'desc' }, { createdAt: 'desc' }],
+        take: 10,
+        select: {
+          id: true,
+          title: true,
+          body: true,
+          isPinned: true,
+          createdAt: true,
+          author: {
+            select: {
+              firstName: true,
+              lastName: true,
+            },
+          },
+        },
+      },
+    },
+  })
+
+  if (!contact) {
+    return null
+  }
+
+  return {
+    id: contact.id,
+    companyId: contact.companyId,
+    ownerId: contact.ownerId,
+    name: `${contact.firstName} ${contact.lastName}`,
+    firstName: contact.firstName,
+    lastName: contact.lastName,
+    email: contact.email ?? '-',
+    phone: contact.mobilePhone ?? contact.phone ?? '-',
+    mobilePhone: contact.mobilePhone ?? '',
+    jobTitle: contact.jobTitle ?? '-',
+    linkedinUrl: contact.linkedinUrl ?? '',
+    createdAt: contact.createdAt,
+    updatedAt: contact.updatedAt,
+    company: contact.company,
+    owner: contact.owner
+      ? `${contact.owner.firstName} ${contact.owner.lastName}`
+      : 'Atanmamis',
+    deals: contact.deals.map((deal) => ({
+      id: deal.id,
+      title: deal.title,
+      amount: toNumber(deal.amount),
+      currency: deal.currency,
+      status: deal.status,
+      stage: deal.stage.name,
+      expectedCloseAt: deal.expectedCloseAt,
+    })),
+    tasks: contact.tasks,
+    activities: mapEntityActivities(contact.activities),
+    notes: mapEntityNotes(contact.notes),
+  }
+}
+
+export async function getCompanyDetailPageData(companyId: string) {
+  await requirePermission('companies:read')
+
+  const company = await db.company.findUnique({
+    where: { id: companyId },
+    select: {
+      id: true,
+      name: true,
+      legalName: true,
+      email: true,
+      phone: true,
+      website: true,
+      industry: true,
+      status: true,
+      city: true,
+      country: true,
+      addressLine1: true,
+      employeeCount: true,
+      ownerId: true,
+      createdAt: true,
+      updatedAt: true,
+      owner: {
+        select: {
+          firstName: true,
+          lastName: true,
+        },
+      },
+      contacts: {
+        where: { archivedAt: null },
+        orderBy: [{ firstName: 'asc' }, { lastName: 'asc' }],
+        take: 10,
+        select: {
+          id: true,
+          firstName: true,
+          lastName: true,
+          email: true,
+          phone: true,
+          mobilePhone: true,
+          jobTitle: true,
+        },
+      },
+      deals: {
+        where: { archivedAt: null },
+        orderBy: { updatedAt: 'desc' },
+        take: 10,
+        select: {
+          id: true,
+          title: true,
+          amount: true,
+          currency: true,
+          status: true,
+          expectedCloseAt: true,
+          contact: {
+            select: {
+              firstName: true,
+              lastName: true,
+            },
+          },
+          stage: { select: { name: true } },
+        },
+      },
+      tasks: {
+        where: { archivedAt: null },
+        orderBy: [{ dueAt: 'asc' }, { updatedAt: 'desc' }],
+        take: 8,
+        select: {
+          id: true,
+          title: true,
+          status: true,
+          priority: true,
+          dueAt: true,
+        },
+      },
+      activities: {
+        orderBy: { occurredAt: 'desc' },
+        take: 10,
+        select: {
+          id: true,
+          type: true,
+          subject: true,
+          description: true,
+          occurredAt: true,
+          actor: {
+            select: {
+              firstName: true,
+              lastName: true,
+            },
+          },
+        },
+      },
+      notes: {
+        orderBy: [{ isPinned: 'desc' }, { createdAt: 'desc' }],
+        take: 10,
+        select: {
+          id: true,
+          title: true,
+          body: true,
+          isPinned: true,
+          createdAt: true,
+          author: {
+            select: {
+              firstName: true,
+              lastName: true,
+            },
+          },
+        },
+      },
+    },
+  })
+
+  if (!company) {
+    return null
+  }
+
+  return {
+    ...company,
+    ownerName: company.owner
+      ? `${company.owner.firstName} ${company.owner.lastName}`
+      : 'Atanmamis',
+    contacts: company.contacts.map((contact) => ({
+      id: contact.id,
+      name: `${contact.firstName} ${contact.lastName}`,
+      email: contact.email ?? '-',
+      phone: contact.mobilePhone ?? contact.phone ?? '-',
+      jobTitle: contact.jobTitle ?? '-',
+    })),
+    deals: company.deals.map((deal) => ({
+      id: deal.id,
+      title: deal.title,
+      amount: toNumber(deal.amount),
+      currency: deal.currency,
+      status: deal.status,
+      stage: deal.stage.name,
+      contact: deal.contact
+        ? `${deal.contact.firstName} ${deal.contact.lastName}`
+        : '-',
+      expectedCloseAt: deal.expectedCloseAt,
+    })),
+    tasks: company.tasks,
+    activities: mapEntityActivities(company.activities),
+    notes: mapEntityNotes(company.notes),
+  }
+}
+
+export async function getDealDetailPageData(dealId: string) {
+  await requirePermission('deals:read')
+
+  const deal = await db.deal.findUnique({
+    where: { id: dealId },
+    select: {
+      id: true,
+      title: true,
+      description: true,
+      amount: true,
+      currency: true,
+      status: true,
+      probability: true,
+      expectedCloseAt: true,
+      pipelineId: true,
+      stageId: true,
+      ownerId: true,
+      contactId: true,
+      companyId: true,
+      createdAt: true,
+      updatedAt: true,
+      owner: {
+        select: {
+          firstName: true,
+          lastName: true,
+          email: true,
+        },
+      },
+      company: {
+        select: {
+          id: true,
+          name: true,
+        },
+      },
+      contact: {
+        select: {
+          id: true,
+          firstName: true,
+          lastName: true,
+          email: true,
+        },
+      },
+      stage: {
+        select: {
+          id: true,
+          name: true,
+          isClosed: true,
+          isWon: true,
+        },
+      },
+      pipeline: {
+        select: {
+          id: true,
+          name: true,
+          stages: {
+            orderBy: { position: 'asc' },
+            select: {
+              id: true,
+              name: true,
+              isClosed: true,
+              isWon: true,
+            },
+          },
+        },
+      },
+      activities: {
+        orderBy: { occurredAt: 'desc' },
+        take: 12,
+        select: {
+          id: true,
+          type: true,
+          subject: true,
+          description: true,
+          occurredAt: true,
+          actor: {
+            select: {
+              firstName: true,
+              lastName: true,
+            },
+          },
+        },
+      },
+      tasks: {
+        where: { archivedAt: null },
+        orderBy: [{ dueAt: 'asc' }, { updatedAt: 'desc' }],
+        take: 8,
+        select: {
+          id: true,
+          title: true,
+          status: true,
+          priority: true,
+          dueAt: true,
+          assignee: {
+            select: {
+              firstName: true,
+              lastName: true,
+            },
+          },
+        },
+      },
+      notes: {
+        orderBy: [{ isPinned: 'desc' }, { createdAt: 'desc' }],
+        take: 10,
+        select: {
+          id: true,
+          title: true,
+          body: true,
+          isPinned: true,
+          createdAt: true,
+          author: {
+            select: {
+              firstName: true,
+              lastName: true,
+            },
+          },
+        },
+      },
+      stageHistory: {
+        orderBy: { movedAt: 'desc' },
+        take: 10,
+        select: {
+          id: true,
+          movedAt: true,
+          note: true,
+          fromStage: { select: { name: true } },
+          toStage: { select: { name: true } },
+          actor: {
+            select: {
+              firstName: true,
+              lastName: true,
+            },
+          },
+        },
+      },
+    },
+  })
+
+  if (!deal) {
+    return null
+  }
+
+  return {
+    id: deal.id,
+    title: deal.title,
+    description: deal.description ?? '',
+    amount: toNumber(deal.amount),
+    currency: deal.currency,
+    status: deal.status,
+    probability: deal.probability,
+    expectedCloseAt: deal.expectedCloseAt,
+    pipelineId: deal.pipelineId,
+    stageId: deal.stageId,
+    ownerId: deal.ownerId,
+    contactId: deal.contactId,
+    companyId: deal.companyId,
+    createdAt: deal.createdAt,
+    updatedAt: deal.updatedAt,
+    owner: deal.owner
+      ? {
+          name: `${deal.owner.firstName} ${deal.owner.lastName}`,
+          email: deal.owner.email,
+        }
+      : null,
+    company: deal.company,
+    contact: deal.contact
+      ? {
+          id: deal.contact.id,
+          name: `${deal.contact.firstName} ${deal.contact.lastName}`,
+          email: deal.contact.email ?? '-',
+        }
+      : null,
+    stage: deal.stage,
+    pipeline: {
+      id: deal.pipeline.id,
+      name: deal.pipeline.name,
+      stages: deal.pipeline.stages,
+    },
+    activities: mapEntityActivities(deal.activities),
+    notes: mapEntityNotes(deal.notes),
+    tasks: deal.tasks.map((task) => ({
+      ...task,
+      assigneeName: task.assignee
+        ? `${task.assignee.firstName} ${task.assignee.lastName}`
+        : 'Atanmamis',
+    })),
+    history: deal.stageHistory.map((entry) => ({
+      id: entry.id,
+      movedAt: entry.movedAt,
+      fromStage: entry.fromStage?.name ?? 'Baslangic',
+      toStage: entry.toStage.name,
+      note: entry.note ?? '',
+      actorName: entry.actor
+        ? `${entry.actor.firstName} ${entry.actor.lastName}`
+        : 'Sistem',
+    })),
+  }
+}
+
+export async function getReportsPageData() {
+  await requirePermission('deals:read')
+
+  const [users, stageHistory, activities] = await Promise.all([
+    db.user.findMany({
+      where: { archivedAt: null },
+      select: {
+        id: true,
+        firstName: true,
+        lastName: true,
+        ownedDeals: {
+          where: { archivedAt: null },
+          select: {
+            status: true,
+            amount: true,
+            wonAt: true,
+          },
+        },
+      },
+      orderBy: [{ firstName: 'asc' }, { lastName: 'asc' }],
+    }),
+    db.dealStageHistory.findMany({
+      orderBy: [{ dealId: 'asc' }, { movedAt: 'asc' }],
+      select: {
+        dealId: true,
+        movedAt: true,
+        fromStageId: true,
+        toStageId: true,
+        fromStage: { select: { name: true } },
+        toStage: { select: { name: true } },
+      },
+    }),
+    db.activity.findMany({
+      where: {
+        occurredAt: {
+          gte: new Date(Date.now() - 14 * 24 * 60 * 60 * 1000),
+        },
+      },
+      select: {
+        type: true,
+        occurredAt: true,
+        actor: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+          },
+        },
+      },
+    }),
+  ])
+
+  const salesPerformance = users.map((user) => {
+    const totalDeals = user.ownedDeals.length
+    const wonDeals = user.ownedDeals.filter((deal) => deal.status === 'WON')
+    const last6Months = Array.from({ length: 6 }, (_, index) => {
+      const date = new Date()
+      date.setMonth(date.getMonth() - (5 - index), 1)
+      const month = new Intl.DateTimeFormat('tr-TR', { month: 'short' }).format(date)
+      const count = wonDeals.filter((deal) => {
+        if (!deal.wonAt) {
+          return false
+        }
+
+        return (
+          deal.wonAt.getMonth() === date.getMonth() &&
+          deal.wonAt.getFullYear() === date.getFullYear()
+        )
+      }).length
+
+      return { month, count }
+    })
+
+    return {
+      id: user.id,
+      chartKey: `user_${user.id.replace(/[^a-zA-Z0-9_-]/g, '').slice(0, 8)}`,
+      name: `${user.firstName} ${user.lastName}`,
+      totalDeals,
+      wonDeals: wonDeals.length,
+      winRate: totalDeals === 0 ? 0 : Math.round((wonDeals.length / totalDeals) * 100),
+      revenue: wonDeals.reduce((sum, deal) => sum + toNumber(deal.amount), 0),
+      monthlyClosed: last6Months,
+    }
+  })
+
+  const monthlyClosedByUser = Array.from({ length: 6 }, (_, index) => {
+    const date = new Date()
+    date.setMonth(date.getMonth() - (5 - index), 1)
+    const month = new Intl.DateTimeFormat('tr-TR', { month: 'short' }).format(date)
+    const entry: Record<string, number | string> = { month }
+
+    for (const person of salesPerformance) {
+      entry[person.chartKey] =
+        person.monthlyClosed.find((item) => item.month === month)?.count ?? 0
+    }
+
+    return entry
+  })
+
+  const stageDurations = new Map<string, { name: string; totalMs: number; count: number }>()
+
+  for (let index = 1; index < stageHistory.length; index += 1) {
+    const previous = stageHistory[index - 1]
+    const current = stageHistory[index]
+
+    if (previous.dealId !== current.dealId || !previous.toStageId) {
+      continue
+    }
+
+    const diffMs = current.movedAt.getTime() - previous.movedAt.getTime()
+    const bucket = stageDurations.get(previous.toStageId) ?? {
+      name: previous.toStage?.name ?? 'Bilinmeyen Asama',
+      totalMs: 0,
+      count: 0,
+    }
+
+    bucket.totalMs += Math.max(diffMs, 0)
+    bucket.count += 1
+    stageDurations.set(previous.toStageId, bucket)
+  }
+
+  const pipelineAnalysis = Array.from(stageDurations.entries())
+    .map(([, value]) => ({
+      stage: value.name,
+      avgDays: value.count === 0 ? 0 : Math.round(value.totalMs / value.count / (1000 * 60 * 60 * 24)),
+      transitions: value.count,
+    }))
+    .sort((left, right) => right.avgDays - left.avgDays)
+
+  const now = Date.now()
+  const weekStart = now - 7 * 24 * 60 * 60 * 1000
+  const previousWeekStart = now - 14 * 24 * 60 * 60 * 1000
+  const userActivityMap = new Map<
+    string,
+    {
+      name: string
+      call: number
+      email: number
+      meeting: number
+      thisWeek: number
+      lastWeek: number
+    }
+  >()
+
+  for (const activity of activities) {
+    if (!activity.actor?.id) {
+      continue
+    }
+
+    const actorId = activity.actor.id
+
+    const bucket = userActivityMap.get(actorId) ?? {
+      name: `${activity.actor.firstName} ${activity.actor.lastName}`,
+      call: 0,
+      email: 0,
+      meeting: 0,
+      thisWeek: 0,
+      lastWeek: 0,
+    }
+
+    if (activity.type === 'CALL') bucket.call += 1
+    if (activity.type === 'EMAIL') bucket.email += 1
+    if (activity.type === 'MEETING') bucket.meeting += 1
+
+    const occurredAt = activity.occurredAt.getTime()
+    if (occurredAt >= weekStart) bucket.thisWeek += 1
+    if (occurredAt >= previousWeekStart && occurredAt < weekStart) bucket.lastWeek += 1
+
+    userActivityMap.set(actorId, bucket)
+  }
+
+  const activitySummary = Array.from(userActivityMap.values()).sort(
+    (left, right) => right.thisWeek - left.thisWeek,
+  )
+
+  return {
+    salesPerformance,
+    monthlyClosedByUser,
+    pipelineAnalysis,
+    activitySummary,
+  }
+}

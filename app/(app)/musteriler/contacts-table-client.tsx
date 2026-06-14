@@ -1,5 +1,6 @@
 'use client'
 
+import Link from 'next/link'
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
@@ -280,7 +281,9 @@ export function ContactsTableClient({
                       </AvatarFallback>
                     </Avatar>
                     <div className="flex flex-col">
-                      <span className="font-medium">{contact.name}</span>
+                      <Link href={`/musteriler/${contact.id}`} className="font-medium hover:underline">
+                        {contact.name}
+                      </Link>
                       <span className="text-xs text-muted-foreground">{contact.industry}</span>
                     </div>
                   </div>

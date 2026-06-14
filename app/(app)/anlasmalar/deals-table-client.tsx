@@ -1,5 +1,6 @@
 'use client'
 
+import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useState, useTransition } from 'react'
 import { toast } from 'sonner'
@@ -140,7 +141,9 @@ export function DealsTableClient({
             <TableRow key={deal.id} data-testid={`deal-row-${deal.id}`}>
               <TableCell>
                 <div className="flex flex-col">
-                  <span className="font-medium">{deal.title}</span>
+                  <Link href={`/anlasmalar/${deal.id}`} className="font-medium hover:underline">
+                    {deal.title}
+                  </Link>
                   <span className="text-xs text-muted-foreground">{deal.id}</span>
                 </div>
               </TableCell>

@@ -25,6 +25,9 @@ const activityTypes = [
 type ActivityTarget = {
   companyId?: string | null
   contactId?: string | null
+  leadId?: string | null
+  dealId?: string | null
+  taskId?: string | null
 }
 
 export function EntityActivityComposer({
