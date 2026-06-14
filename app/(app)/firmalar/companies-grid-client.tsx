@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
-import { Building2, Handshake, MapPin, Users } from 'lucide-react'
+import { Building2, Handshake, MapPin, SearchX, Users } from 'lucide-react'
 import { toast } from 'sonner'
 import {
   deleteCompanyAction,
@@ -30,6 +30,13 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog'
+import {
+  Empty,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from '@/components/ui/empty'
 import { Input } from '@/components/ui/input'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Textarea } from '@/components/ui/textarea'
@@ -43,6 +50,13 @@ const companyStatusOptions = [
   { value: 'PROSPECT', label: 'Aday' },
   { value: 'ARCHIVED', label: 'Arsiv' },
 ] as const
+
+const companyStatusMeta = {
+  ACTIVE: { label: 'Aktif', variant: 'success' as const },
+  INACTIVE: { label: 'Pasif', variant: 'secondary' as const },
+  PROSPECT: { label: 'Aday', variant: 'warning' as const },
+  ARCHIVED: { label: 'Arsiv', variant: 'outline' as const },
+}
 
 function CompanyManagementDialog({
   company,
@@ -250,19 +264,42 @@ export function CompaniesGridClient({
   companies: CompanyRow[]
   users: UserOption[]
 }) {
+  if (companies.length === 0) {
+    return (
+      <Card>
+        <Empty className="border-0 py-16">
+          <EmptyHeader>
+            <EmptyMedia variant="icon">
+              <SearchX />
+            </EmptyMedia>
+            <EmptyTitle>Eslesen firma bulunamadi</EmptyTitle>
+            <EmptyDescription>
+              Filtreleri gevsetin ya da yeni bir firma kaydi olusturun.
+            </EmptyDescription>
+          </EmptyHeader>
+        </Empty>
+      </Card>
+    )
+  }
+
   return (
     <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
       {companies.map((company) => (
         <Card key={company.id} className="gap-0">
           <CardHeader>
-            <div className="flex items-center gap-3">
-              <span className="flex size-11 items-center justify-center rounded-xl bg-primary/10 text-primary">
-                <Building2 className="size-5.5" />
-              </span>
-              <div className="flex flex-col">
-                <CardTitle className="text-base">{company.name}</CardTitle>
-                <span className="text-xs text-muted-foreground">{company.id}</span>
+            <div className="flex items-start justify-between gap-3">
+              <div className="flex items-center gap-3">
+                <span className="flex size-11 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                  <Building2 className="size-5.5" />
+                </span>
+                <div className="flex flex-col">
+                  <CardTitle className="text-base">{company.name}</CardTitle>
+                  <span className="text-xs text-muted-foreground">{company.id}</span>
+                </div>
               </div>
+              <Badge variant={companyStatusMeta[company.status].variant}>
+                {companyStatusMeta[company.status].label}
+              </Badge>
             </div>
           </CardHeader>
           <CardContent className="flex flex-col gap-3">
