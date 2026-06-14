@@ -108,6 +108,8 @@ async function main() {
     ['Erdoğan İnşaat', 'İnşaat', 'Antalya'],
     ['Aksoy Ajans', 'Pazarlama', 'İstanbul'],
     ['Polat Dental Klinik', 'Sağlık', 'Eskişehir'],
+    ['Mavi Lojistik', 'Lojistik', 'Mersin'],
+    ['Nova Yazilim', 'Yazilim', 'Istanbul'],
   ] as const
 
   const companies = await Promise.all(
@@ -147,6 +149,16 @@ async function main() {
     ['Ayça', 'Güler', 'İK Müdürü'],
     ['Barış', 'Sönmez', 'Operasyon Uzmanı'],
     ['Ece', 'Bulut', 'Satın Alma Uzmanı'],
+    ['Melis', 'Yilmaz', 'Ofis Koordinatoru'],
+    ['Ugur', 'Kalkan', 'Satis Muduru'],
+    ['Sena', 'Demir', 'Musteri Basari Uzm'],
+    ['Onur', 'Kara', 'Finans Yonetici'],
+    ['Derya', 'Acar', 'Pazarlama Uzmani'],
+    ['Murat', 'Keskin', 'Operasyon Sefi'],
+    ['Ceren', 'Yildiz', 'Proje Koordinatoru'],
+    ['Berk', 'Eren', 'Kurumsal Satis Uzm'],
+    ['Elif', 'Tas', 'Raporlama Uzmani'],
+    ['Serkan', 'Bayram', 'Saha Supervisoru'],
   ] as const
 
   const contacts = await Promise.all(
@@ -296,7 +308,7 @@ async function main() {
     'Kapanış sonrası memnuniyet notu ekle',
   ]
 
-  const taskStatuses: TaskStatus[] = ['TODO', 'IN_PROGRESS', 'DONE', 'BLOCKED']
+  const taskStatuses: TaskStatus[] = ['TODO', 'IN_PROGRESS', 'DONE', 'DONE']
   const taskPriorities: TaskPriority[] = ['HIGH', 'MEDIUM', 'URGENT', 'LOW']
 
   const tasks = await Promise.all(
@@ -354,7 +366,7 @@ async function main() {
   )
 
   await Promise.all(
-    Array.from({ length: 32 }).map((_, index) =>
+    Array.from({ length: 30 }).map((_, index) =>
       db.activity.create({
         data: {
           actorId: owners[index % owners.length].id,
