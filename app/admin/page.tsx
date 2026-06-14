@@ -8,7 +8,7 @@ import { getRuntimeHealthSummary } from '@/lib/health-runtime'
 import { formatDateTime } from '@/lib/format'
 
 export default async function AdminPage() {
-  const [users, health, activeSessions, todayAuditCount, recentAuditLogs] = await Promise.all([
+  const [users, health, activeSessions, todayAuditCount, recentAuditLogs, auditActionCounts] = await Promise.all([
     listUsersWithRoles(),
     getRuntimeHealthSummary(),
     db.session.count({
@@ -38,10 +38,27 @@ export default async function AdminPage() {
         },
       },
     }),
+    db.auditLog.groupBy({
+      by: ['action'],
+      _count: {
+        action: true,
+      },
+      orderBy: {
+        _count: {
+          action: 'desc',
+        },
+      },
+    }),
   ])
 
   const activeUsers = users.filter((user) => user.status === 'ACTIVE').length
   const invitedUsers = users.filter((user) => user.status === 'INVITED').length
+  const roleDistribution = users.reduce<Record<string, number>>((accumulator, user) => {
+    for (const entry of user.roles) {
+      accumulator[entry.role.slug] = (accumulator[entry.role.slug] ?? 0) + 1
+    }
+    return accumulator
+  }, {})
 
   return (
     <div className="flex flex-col gap-6">
@@ -119,6 +136,36 @@ export default async function AdminPage() {
                   {log.entityId ? ` / ${log.entityId}` : ''}
                 </p>
                 <p className="mt-1 text-xs text-muted-foreground">{formatDateTime(log.createdAt)}</p>
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+      </div>
+
+      <div className="grid gap-6 xl:grid-cols-2">
+        <Card>
+          <CardHeader>
+            <CardTitle>Rol Dagilimi</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {Object.entries(roleDistribution).map(([role, count]) => (
+              <div key={role} className="flex items-center justify-between rounded-lg border p-3">
+                <span className="font-medium">{role}</span>
+                <Badge variant="secondary">{count}</Badge>
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Audit Aksiyon Ozeti</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {auditActionCounts.map((entry) => (
+              <div key={entry.action} className="flex items-center justify-between rounded-lg border p-3">
+                <span className="font-medium">{entry.action}</span>
+                <Badge variant="outline">{entry._count.action}</Badge>
               </div>
             ))}
           </CardContent>
