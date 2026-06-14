@@ -36,7 +36,7 @@ import {
 } from '@/components/ui/table'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import type { ContactRow, UserOption } from '@/lib/crm/view-models'
-import { formatCurrency, formatRelativeDate } from '@/lib/format'
+import { formatCurrency, formatDate } from '@/lib/format'
 import { getInitials } from '@/lib/helpers'
 
 type CompanyOption = {
@@ -262,9 +262,9 @@ export function ContactsTableClient({
             <TableRow>
               <TableHead>Musteri</TableHead>
               <TableHead>Firma</TableHead>
-              <TableHead className="max-lg:hidden">Iletisim</TableHead>
-              <TableHead className="max-xl:hidden">Sorumlu</TableHead>
-              <TableHead className="max-lg:hidden">Son Aktivite</TableHead>
+              <TableHead>E-posta</TableHead>
+              <TableHead className="max-lg:hidden">Telefon</TableHead>
+              <TableHead className="max-xl:hidden">Eklenme</TableHead>
               <TableHead className="text-right">Ilgili Deal</TableHead>
               <TableHead className="text-right">Islem</TableHead>
             </TableRow>
@@ -288,25 +288,14 @@ export function ContactsTableClient({
                 <TableCell>
                   <div className="flex flex-col">
                     <span>{contact.company}</span>
-                    <span className="text-xs text-muted-foreground">{contact.city}</span>
-                  </div>
-                </TableCell>
-                <TableCell className="max-lg:hidden">
-                  <div className="space-y-1 text-sm text-muted-foreground">
-                    <div>{contact.email}</div>
-                    <div>{contact.phone}</div>
-                    <div>{contact.jobTitle || contact.city}</div>
-                  </div>
-                </TableCell>
-                <TableCell className="max-xl:hidden">{contact.owner}</TableCell>
-                <TableCell className="max-lg:hidden">
-                  <div className="flex flex-col">
-                    <span className="text-sm">{contact.lastActivitySubject}</span>
                     <span className="text-xs text-muted-foreground">
-                      {formatRelativeDate(contact.lastActivityAt)}
+                      {contact.jobTitle || contact.city}
                     </span>
                   </div>
                 </TableCell>
+                <TableCell>{contact.email}</TableCell>
+                <TableCell className="max-lg:hidden">{contact.phone}</TableCell>
+                <TableCell className="max-xl:hidden">{formatDate(contact.createdAt)}</TableCell>
                 <TableCell className="text-right">
                   <Badge variant="secondary">{formatCurrency(contact.relatedDealValue)}</Badge>
                 </TableCell>

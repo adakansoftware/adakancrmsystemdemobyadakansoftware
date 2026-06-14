@@ -142,6 +142,7 @@ export type ContactRow = {
   id: string
   companyId?: string | null
   ownerId?: string | null
+  createdAt: Date
   firstName: string
   lastName: string
   name: string

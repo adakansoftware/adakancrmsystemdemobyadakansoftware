@@ -502,6 +502,7 @@ export async function getContactsManagementPageData() {
     id: contact.id,
     companyId: contact.companyId,
     ownerId: contact.ownerId,
+    createdAt: contact.createdAt,
     firstName: contact.firstName,
     lastName: contact.lastName,
     name: `${contact.firstName} ${contact.lastName}`,

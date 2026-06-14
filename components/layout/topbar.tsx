@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { useDeferredValue, useEffect, useState } from 'react'
+import { startTransition, useDeferredValue, useEffect, useState } from 'react'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import { useTheme } from 'next-themes'
 import {
@@ -24,6 +24,13 @@ import { SearchInput } from '@/components/shared/search-input'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -158,6 +165,7 @@ export function Topbar({ currentUser, quickCreateOptions }: TopbarProps) {
   const [searchOpen, setSearchOpen] = useState(false)
   const [searchLoading, setSearchLoading] = useState(false)
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false)
+  const [commandOpen, setCommandOpen] = useState(false)
 
   const queryKind = searchParams.get('quickCreate') as QuickCreateKind | null
   const initialKind = queryKind ?? 'lead'
@@ -176,6 +184,7 @@ export function Topbar({ currentUser, quickCreateOptions }: TopbarProps) {
     const syncId = window.setTimeout(() => {
       setSearchOpen(false)
       setMobileSearchOpen(false)
+      setCommandOpen(false)
       setSearchValue('')
       setSearchResults([])
       setSearchLoading(false)
@@ -222,6 +231,24 @@ export function Topbar({ currentUser, quickCreateOptions }: TopbarProps) {
     return () => controller.abort()
   }, [deferredSearchValue])
 
+  useEffect(() => {
+    function onKeyDown(event: KeyboardEvent) {
+      if (event.key.toLowerCase() !== 'k' || (!event.metaKey && !event.ctrlKey)) {
+        return
+      }
+
+      event.preventDefault()
+      startTransition(() => {
+        setCommandOpen((current) => !current)
+        setSearchOpen(false)
+        setMobileSearchOpen(false)
+      })
+    }
+
+    window.addEventListener('keydown', onKeyDown)
+    return () => window.removeEventListener('keydown', onKeyDown)
+  }, [])
+
   function buildQuickCreateUrl(kind: QuickCreateKind | null) {
     const nextParams = new URLSearchParams(searchParams.toString())
 
@@ -250,6 +277,17 @@ export function Topbar({ currentUser, quickCreateOptions }: TopbarProps) {
   function closeSearchSurfaces() {
     setSearchOpen(false)
     setMobileSearchOpen(false)
+    setCommandOpen(false)
+  }
+
+  function updateSearchValue(value: string) {
+    setSearchValue(value)
+    const hasQuery = value.trim().length >= 2
+    setSearchLoading(hasQuery)
+
+    if (!hasQuery) {
+      setSearchResults([])
+    }
   }
 
   return (
@@ -262,17 +300,11 @@ export function Topbar({ currentUser, quickCreateOptions }: TopbarProps) {
           <SearchInput
             value={searchValue}
             onChange={(value) => {
-              setSearchValue(value)
+              updateSearchValue(value)
               setSearchOpen(true)
-              if (value.trim().length < 2) {
-                setSearchLoading(false)
-                setSearchResults([])
-              } else {
-                setSearchLoading(true)
-              }
             }}
             onFocus={() => setSearchOpen(true)}
-            placeholder="Musteri, anlasma veya lead ara..."
+            placeholder="Musteri, anlasma veya lead ara... (Ctrl+K)"
             inputClassName="h-9 rounded-lg"
           />
           <SearchResultsPanel
@@ -294,6 +326,7 @@ export function Topbar({ currentUser, quickCreateOptions }: TopbarProps) {
             onClick={() => {
               setMobileSearchOpen((current) => !current)
               setSearchOpen(false)
+              setCommandOpen(false)
             }}
           >
             <Search />
@@ -412,14 +445,8 @@ export function Topbar({ currentUser, quickCreateOptions }: TopbarProps) {
             <SearchInput
               value={searchValue}
               onChange={(value) => {
-                setSearchValue(value)
+                updateSearchValue(value)
                 setMobileSearchOpen(true)
-                if (value.trim().length < 2) {
-                  setSearchLoading(false)
-                  setSearchResults([])
-                } else {
-                  setSearchLoading(true)
-                }
               }}
               onFocus={() => setMobileSearchOpen(true)}
               autoFocus
@@ -437,6 +464,38 @@ export function Topbar({ currentUser, quickCreateOptions }: TopbarProps) {
           </div>
         </div>
       ) : null}
+
+      <Dialog open={commandOpen} onOpenChange={setCommandOpen}>
+        <DialogContent className="max-w-2xl gap-3 p-0" showCloseButton={false}>
+          <DialogHeader className="border-b px-4 py-3">
+            <DialogTitle>Hizli Arama</DialogTitle>
+            <DialogDescription>
+              Kisiler, firmalar, leadler, deal&apos;lar ve gorevler arasinda gezin.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="px-4 pt-1">
+            <SearchInput
+              value={searchValue}
+              onChange={updateSearchValue}
+              onFocus={() => setCommandOpen(true)}
+              autoFocus
+              placeholder="Aramaya baslayin..."
+              ariaLabel="Global arama komut paleti"
+              inputClassName="h-11 rounded-xl"
+            />
+          </div>
+          <div className="px-4 pb-4">
+            <SearchResultsPanel
+              query={searchValue}
+              loading={searchLoading}
+              open
+              results={searchResults}
+              onSelect={closeSearchSurfaces}
+              className="max-h-[50vh] overflow-y-auto rounded-xl border"
+            />
+          </div>
+        </DialogContent>
+      </Dialog>
 
       <QuickCreateDialog
         key={`${initialKind}-${quickOpen ? 'open' : 'closed'}`}
