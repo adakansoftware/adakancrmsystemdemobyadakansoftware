@@ -1,12 +1,14 @@
 'use server'
 
+import { AuthError } from 'next-auth'
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { headers } from 'next/headers'
+import { signIn, signOut } from '@/auth'
 import { db } from '@/lib/db/prisma'
 import { createAuditLog } from '@/lib/audit/log'
 import { ensureSystemRoles } from '@/lib/crm/bootstrap'
-import { clearSession, createSession, getCurrentSession } from '@/lib/auth/session'
+import { getCurrentSession } from '@/lib/auth/session'
 import {
   LOGIN_RATE_LIMIT_MAX_ATTEMPTS,
   LOGIN_RATE_LIMIT_WINDOW_MS,
@@ -72,20 +74,7 @@ export const loginAction = createValidatedAction(loginSchema, async (input) => {
     throw new Error('User account is not active')
   }
 
-  await createSession(user.id)
   clearRateLimit(rateLimitKey)
-  await db.user.update({
-    where: { id: user.id },
-    data: { lastLoginAt: new Date(), status: 'ACTIVE' },
-  })
-
-  await createAuditLog({
-    actorId: user.id,
-    action: 'LOGIN',
-    entityType: 'User',
-    entityId: user.id,
-    summary: `User ${user.email} signed in`,
-  })
 
   return {
     userId: user.id,
@@ -102,7 +91,19 @@ export async function loginFormAction(formData: FormData) {
     redirect('/login?error=invalid_credentials')
   }
 
-  redirect('/')
+  try {
+    await signIn('credentials', {
+      email: String(formData.get('email') ?? ''),
+      password: String(formData.get('password') ?? ''),
+      redirectTo: '/',
+    })
+  } catch (error) {
+    if (error instanceof AuthError) {
+      redirect('/login?error=invalid_credentials')
+    }
+
+    throw error
+  }
 }
 
 export const setupAction = createValidatedAction(setupSchema, async (input) => {
@@ -127,6 +128,7 @@ export const setupAction = createValidatedAction(setupSchema, async (input) => {
   const user = await db.user.create({
     data: {
       email: input.email.toLowerCase(),
+      name: `${input.firstName} ${input.lastName}`.trim(),
       firstName: input.firstName,
       lastName: input.lastName,
       passwordHash: await hashPassword(input.password),
@@ -138,8 +140,6 @@ export const setupAction = createValidatedAction(setupSchema, async (input) => {
       },
     },
   })
-
-  await createSession(user.id)
 
   await createAuditLog({
     actorId: user.id,
@@ -166,13 +166,23 @@ export async function setupFormAction(formData: FormData) {
     redirect('/setup?error=setup_failed')
   }
 
-  redirect('/')
+  try {
+    await signIn('credentials', {
+      email: String(formData.get('email') ?? ''),
+      password: String(formData.get('password') ?? ''),
+      redirectTo: '/',
+    })
+  } catch (error) {
+    if (error instanceof AuthError) {
+      redirect('/setup?error=setup_failed')
+    }
+
+    throw error
+  }
 }
 
 export async function logoutAction() {
   const session = await getCurrentSession()
-
-  await clearSession()
 
   if (session?.userId) {
     await createAuditLog({
@@ -184,7 +194,9 @@ export async function logoutAction() {
     })
   }
 
-  redirect('/login')
+  await signOut({
+    redirectTo: '/login',
+  })
 }
 
 export async function listUsersWithRoles() {
@@ -226,6 +238,7 @@ export const updateProfileAction = createValidatedAction(
     const user = await db.user.update({
       where: { id: session.userId },
       data: {
+        name: `${input.firstName} ${input.lastName}`.trim(),
         firstName: input.firstName,
         lastName: input.lastName,
         email: input.email.toLowerCase(),
@@ -319,6 +332,7 @@ export const createUserAccountAction = createValidatedAction(
 
     const user = await db.user.create({
       data: {
+        name: `${input.firstName} ${input.lastName}`.trim(),
         firstName: input.firstName,
         lastName: input.lastName,
         email: input.email.toLowerCase(),

@@ -287,6 +287,11 @@ export const noteSchema = z.object({
   isPinned: z.boolean().optional(),
 })
 
+export const tagSchema = z.object({
+  name: z.string().trim().min(2).max(60),
+  color: z.string().regex(/^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/),
+})
+
 export const updateCompanySchema = companySchema.partial().extend({
   id: cuidOrUuid,
 })
@@ -308,6 +313,10 @@ export const updateTaskSchema = taskSchema.partial().extend({
 })
 
 export const updateNoteSchema = noteSchema.partial().extend({
+  id: cuidOrUuid,
+})
+
+export const updateTagSchema = tagSchema.partial().extend({
   id: cuidOrUuid,
 })
 

@@ -16,9 +16,22 @@ export default defineConfig({
     },
   ],
   webServer: {
-    command: 'npm run dev -- --port 3000',
+    command: 'npm.cmd run dev -- --port 3000',
     url: 'http://localhost:3000/login',
     reuseExistingServer: true,
     timeout: 120_000,
+    env: {
+      NEXTAUTH_SECRET:
+        process.env.NEXTAUTH_SECRET ??
+        process.env.AUTH_SECRET ??
+        process.env.SESSION_SECRET ??
+        'playwright-dev-secret',
+      NEXTAUTH_URL: process.env.NEXTAUTH_URL ?? 'http://localhost:3000',
+      AUTH_SECRET:
+        process.env.AUTH_SECRET ??
+        process.env.NEXTAUTH_SECRET ??
+        process.env.SESSION_SECRET ??
+        'playwright-dev-secret',
+    },
   },
 })

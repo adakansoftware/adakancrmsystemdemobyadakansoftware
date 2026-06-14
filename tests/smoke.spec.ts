@@ -126,6 +126,74 @@ test.describe('CRM smoke flows', () => {
     await expect(firstTaskRow).toContainText(nextStatus)
   })
 
+  test('filters customers by search and opens a customer detail page', async ({ page }) => {
+    await login(page)
+    await page.goto('/musteriler?q=Caner')
+
+    await expect(page.getByRole('heading', { name: 'Musteriler' })).toBeVisible()
+    await expect(page.getByText('Arama: Caner')).toBeVisible()
+
+    const firstCustomerLink = page.locator('tbody tr a[href^="/musteriler/"]').first()
+    await expect(firstCustomerLink).toBeVisible()
+    await firstCustomerLink.click()
+
+    await expect(page).toHaveURL(/\/musteriler\/.+/)
+    await expect(page.getByText('Kisi Bilgileri')).toBeVisible()
+    await expect(page.getByText('Aktivite Akisi')).toBeVisible()
+  })
+
+  test('opens a deal detail page from the deals table', async ({ page }) => {
+    await login(page)
+    await page.goto('/anlasmalar')
+
+    const firstDealLink = page.locator('tbody tr a[href^="/anlasmalar/"]').first()
+    await expect(firstDealLink).toBeVisible()
+    await firstDealLink.click()
+
+    await expect(page).toHaveURL(/\/anlasmalar\/.+/)
+    await expect(page.getByText('Deal Bilgileri')).toBeVisible()
+    await expect(page.getByText('Stage Gecmisleri')).toBeVisible()
+  })
+
+  test('filters pipeline cards and navigates to a deal detail page', async ({ page }) => {
+    await login(page)
+    await page.goto('/pipeline')
+
+    const firstDealLink = page.locator('section a[href^="/anlasmalar/"]').first()
+    await expect(firstDealLink).toBeVisible()
+    const firstDealTitle = ((await firstDealLink.textContent()) ?? '').trim()
+
+    await page.getByPlaceholder('Deal, firma veya sorumlu ara...').fill(firstDealTitle)
+    await expect(page.locator('section a[href^="/anlasmalar/"]').first()).toContainText(firstDealTitle)
+
+    await firstDealLink.click()
+    await expect(page).toHaveURL(/\/anlasmalar\/.+/)
+  })
+
+  test('shows the quotes workspace with weighted pipeline summary', async ({ page }) => {
+    await login(page)
+    await page.goto('/teklifler')
+
+    await expect(page.getByRole('heading', { name: 'Teklifler' })).toBeVisible()
+    await expect(page.getByText('Weighted Pipeline')).toBeVisible()
+    await expect(page.getByText('Teklif Oncelik Listesi')).toBeVisible()
+  })
+
+  test('opens settings and creates a tag from the real tag management tab', async ({ page }) => {
+    await login(page)
+    await page.goto('/ayarlar')
+
+    await page.getByRole('tab', { name: 'Etiketler' }).click()
+    await expect(page.getByText('Etiket Kutuphanesi')).toBeVisible()
+
+    const tagName = `Smoke Etiket ${Date.now()}`
+    await page.getByRole('textbox', { name: 'Etiket Adi' }).fill(tagName)
+    await page.getByRole('textbox', { name: 'Renk' }).fill('#0f766e')
+    await page.getByRole('button', { name: 'Etiket Olustur' }).click()
+
+    await expect(page.locator(`input[value="${tagName}"]`).first()).toBeVisible()
+  })
+
   test('opens the company management dialog and saves a note', async ({ page }) => {
     await login(page)
     await page.goto('/firmalar')

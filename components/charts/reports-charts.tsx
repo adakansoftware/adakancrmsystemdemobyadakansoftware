@@ -1,6 +1,6 @@
 'use client'
 
-import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from 'recharts'
+import { Bar, BarChart, CartesianGrid, Cell, Pie, PieChart, XAxis, YAxis } from 'recharts'
 import {
   ChartContainer,
   ChartLegend,
@@ -91,6 +91,36 @@ export function ActivityComparisonChart({
         <Bar dataKey="thisWeek" fill="var(--color-thisWeek)" radius={[0, 6, 6, 0]} />
         <Bar dataKey="lastWeek" fill="var(--color-lastWeek)" radius={[0, 6, 6, 0]} />
       </BarChart>
+    </ChartContainer>
+  )
+}
+
+export function ActivityMixChart({
+  data,
+}: {
+  data: Array<{ name: string; value: number }>
+}) {
+  const config = Object.fromEntries(
+    data.map((item, index) => [
+      item.name,
+      {
+        label: item.name,
+        color: palette[index % palette.length],
+      },
+    ]),
+  ) satisfies ChartConfig
+
+  return (
+    <ChartContainer config={config} className="h-[280px] w-full">
+      <PieChart>
+        <ChartTooltip content={<ChartTooltipContent />} />
+        <ChartLegend content={<ChartLegendContent />} />
+        <Pie data={data} dataKey="value" nameKey="name" innerRadius={56} outerRadius={92}>
+          {data.map((entry, index) => (
+            <Cell key={entry.name} fill={palette[index % palette.length]} />
+          ))}
+        </Pie>
+      </PieChart>
     </ChartContainer>
   )
 }

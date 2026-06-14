@@ -1114,7 +1114,7 @@ export async function getDealDetailPageData(dealId: string) {
 export async function getReportsPageData() {
   await requirePermission('deals:read')
 
-  const [users, stageHistory, activities] = await Promise.all([
+  const [users, stageHistory, activities, deals, tags] = await Promise.all([
     db.user.findMany({
       where: { archivedAt: null },
       select: {
@@ -1160,6 +1160,43 @@ export async function getReportsPageData() {
           },
         },
       },
+    }),
+    db.deal.findMany({
+      where: { archivedAt: null },
+      select: {
+        id: true,
+        title: true,
+        amount: true,
+        probability: true,
+        createdAt: true,
+        expectedCloseAt: true,
+        status: true,
+        stage: {
+          select: {
+            name: true,
+          },
+        },
+        tags: {
+          select: {
+            name: true,
+          },
+        },
+      },
+    }),
+    db.tag.findMany({
+      select: {
+        id: true,
+        name: true,
+        color: true,
+        _count: {
+          select: {
+            companies: true,
+            contacts: true,
+            deals: true,
+          },
+        },
+      },
+      orderBy: [{ deals: { _count: 'desc' } }, { name: 'asc' }],
     }),
   ])
 
@@ -1286,18 +1323,83 @@ export async function getReportsPageData() {
     (left, right) => right.thisWeek - left.thisWeek,
   )
 
+  const openDeals = deals.filter((deal) => deal.status === 'OPEN')
+  const weightedPipelineValue = openDeals.reduce(
+    (sum, deal) => sum + toNumber(deal.amount) * (deal.probability / 100),
+    0,
+  )
+  const forecastCoverage =
+    openDeals.length === 0
+      ? 0
+      : Math.round(
+          (openDeals.filter((deal) => {
+            if (!deal.expectedCloseAt) {
+              return false
+            }
+
+            return (
+              deal.expectedCloseAt.getTime() <=
+              Date.now() + 30 * 24 * 60 * 60 * 1000
+            )
+          }).length /
+            openDeals.length) *
+            100,
+        )
+  const stalledDeals = openDeals
+    .filter((deal) => {
+      const referenceDate = deal.expectedCloseAt ?? deal.createdAt
+      return Date.now() - referenceDate.getTime() > 21 * 24 * 60 * 60 * 1000
+    })
+    .sort((left, right) => toNumber(right.amount) - toNumber(left.amount))
+    .slice(0, 5)
+    .map((deal) => ({
+      id: deal.id,
+      title: deal.title,
+      stage: deal.stage.name,
+      amount: toNumber(deal.amount),
+      ageDays: Math.round(
+        (Date.now() - (deal.expectedCloseAt ?? deal.createdAt).getTime()) /
+          (1000 * 60 * 60 * 24),
+      ),
+      tags: deal.tags.map((tag) => tag.name),
+    }))
+  const activityMixTotals = activitySummary.reduce(
+    (totals, item) => ({
+      call: totals.call + item.call,
+      email: totals.email + item.email,
+      meeting: totals.meeting + item.meeting,
+    }),
+    { call: 0, email: 0, meeting: 0 },
+  )
+
   return {
     salesPerformance,
     monthlyClosedByUser,
     pipelineAnalysis,
     activitySummary,
+    weightedPipelineValue,
+    forecastCoverage,
+    stalledDeals,
+    activityMix: [
+      { name: 'Arama', value: activityMixTotals.call },
+      { name: 'E-posta', value: activityMixTotals.email },
+      { name: 'Toplanti', value: activityMixTotals.meeting },
+    ],
+    tagPerformance: tags.map((tag) => ({
+      id: tag.id,
+      name: tag.name,
+      color: tag.color,
+      companyCount: tag._count.companies,
+      contactCount: tag._count.contacts,
+      dealCount: tag._count.deals,
+    })),
   }
 }
 
 export async function getSettingsOverviewData() {
   await requirePermission('deals:read')
 
-  const [companyCount, contactCount, dealCount, taskCount, pipelines] = await Promise.all([
+  const [companyCount, contactCount, dealCount, taskCount, pipelines, tags] = await Promise.all([
     db.company.count({ where: { archivedAt: null } }),
     db.contact.count({ where: { archivedAt: null } }),
     db.deal.count({ where: { archivedAt: null } }),
@@ -1319,6 +1421,18 @@ export async function getSettingsOverviewData() {
       },
       orderBy: [{ isDefault: 'desc' }, { createdAt: 'asc' }],
     }),
+    db.tag.findMany({
+      include: {
+        _count: {
+          select: {
+            companies: true,
+            contacts: true,
+            deals: true,
+          },
+        },
+      },
+      orderBy: [{ name: 'asc' }],
+    }),
   ])
 
   return {
@@ -1329,5 +1443,6 @@ export async function getSettingsOverviewData() {
       tasks: taskCount,
     },
     pipelines,
+    tags,
   }
 }

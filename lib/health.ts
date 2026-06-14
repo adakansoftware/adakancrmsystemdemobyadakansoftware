@@ -23,12 +23,16 @@ export function buildHealthSummary(options: HealthSummaryOptions) {
     {
       key: 'session_secret',
       ok: options.sessionSecretConfigured,
-      detail: options.sessionSecretConfigured ? 'SESSION_SECRET tanimli.' : 'SESSION_SECRET eksik.',
+      detail: options.sessionSecretConfigured
+        ? 'SESSION_SECRET / NEXTAUTH_SECRET tanimli.'
+        : 'SESSION_SECRET / NEXTAUTH_SECRET eksik.',
     },
     {
       key: 'app_url',
       ok: options.appUrlConfigured,
-      detail: options.appUrlConfigured ? 'APP_URL tanimli.' : 'APP_URL eksik.',
+      detail: options.appUrlConfigured
+        ? 'APP_URL / NEXTAUTH_URL tanimli.'
+        : 'APP_URL / NEXTAUTH_URL eksik.',
     },
     {
       key: 'database_connection',

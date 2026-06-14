@@ -13,7 +13,7 @@ export default async function AdminPage() {
     getRuntimeHealthSummary(),
     db.session.count({
       where: {
-        expiresAt: {
+        expires: {
           gt: new Date(),
         },
       },

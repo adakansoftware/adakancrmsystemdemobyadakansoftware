@@ -1,102 +1,44 @@
-import { createHash, randomBytes } from 'node:crypto'
-import { cookies, headers } from 'next/headers'
 import { cache } from 'react'
-import { db } from '@/lib/db/prisma'
-import { SESSION_COOKIE_NAME, SESSION_TTL_MS } from '@/lib/auth/constants'
+import { auth } from '@/auth'
 
-function hashToken(token: string) {
-  return createHash('sha256').update(token).digest('hex')
-}
-
-export async function createSession(userId: string) {
-  const rawToken = randomBytes(32).toString('hex')
-  const tokenHash = hashToken(rawToken)
-  const expiresAt = new Date(Date.now() + SESSION_TTL_MS)
-  const headerStore = await headers()
-
-  await db.session.create({
-    data: {
-      userId,
-      tokenHash,
-      expiresAt,
-      ipAddress: headerStore.get('x-forwarded-for') ?? undefined,
-      userAgent: headerStore.get('user-agent') ?? undefined,
-    },
-  })
-
-  const cookieStore = await cookies()
-  cookieStore.set(SESSION_COOKIE_NAME, rawToken, {
-    httpOnly: true,
-    sameSite: 'lax',
-    secure: process.env.NODE_ENV === 'production',
-    expires: expiresAt,
-    path: '/',
-  })
-}
-
-export async function clearSession() {
-  const cookieStore = await cookies()
-  const rawToken = cookieStore.get(SESSION_COOKIE_NAME)?.value
-
-  if (rawToken) {
-    await db.session.deleteMany({
-      where: {
-        tokenHash: hashToken(rawToken),
-      },
-    })
+type LegacySessionShape = {
+  id: string
+  userId: string
+  expiresAt: Date
+  user: {
+    id: string
+    email: string
+    firstName: string
+    lastName: string
+    roles: Array<{
+      role: {
+        slug: string
+      }
+    }>
   }
-
-  cookieStore.delete(SESSION_COOKIE_NAME)
 }
 
-export const getCurrentSession = cache(async () => {
-  const cookieStore = await cookies()
-  const rawToken = cookieStore.get(SESSION_COOKIE_NAME)?.value
+export const getCurrentSession = cache(async (): Promise<LegacySessionShape | null> => {
+  const session = await auth()
 
-  if (!rawToken) {
+  if (!session?.user?.id || !session.user.email) {
     return null
   }
 
-  const session = await db.session.findUnique({
-    where: {
-      tokenHash: hashToken(rawToken),
+  return {
+    id: `jwt:${session.user.id}`,
+    userId: session.user.id,
+    expiresAt: new Date(Date.now() + 1000 * 60 * 60),
+    user: {
+      id: session.user.id,
+      email: session.user.email,
+      firstName: session.user.firstName ?? '',
+      lastName: session.user.lastName ?? '',
+      roles: (session.user.roleSlugs ?? []).map((slug) => ({
+        role: { slug },
+      })),
     },
-    include: {
-      user: {
-        include: {
-          roles: {
-            include: {
-              role: true,
-            },
-          },
-        },
-      },
-    },
-  })
-
-  if (!session || session.expiresAt <= new Date()) {
-    if (session) {
-      await db.session.delete({
-        where: {
-          id: session.id,
-        },
-      })
-    }
-
-    cookieStore.delete(SESSION_COOKIE_NAME)
-    return null
   }
-
-  await db.session.update({
-    where: {
-      id: session.id,
-    },
-    data: {
-      lastSeenAt: new Date(),
-    },
-  })
-
-  return session
 })
 
 export async function getCurrentUser() {

@@ -16,6 +16,7 @@ async function main() {
   await db.dealValueHistory.deleteMany()
   await db.auditLog.deleteMany()
   await db.session.deleteMany()
+  await db.tag.deleteMany()
   await db.activity.deleteMany()
   await db.note.deleteMany()
   await db.task.deleteMany()
@@ -31,8 +32,16 @@ async function main() {
 
   await Promise.all(
     SYSTEM_ROLE_DEFINITIONS.map((role) =>
-      db.role.create({
-        data: role,
+      db.role.upsert({
+        where: { slug: role.slug },
+        update: {
+          name: role.name,
+          description: role.description,
+          isSystem: role.isSystem,
+        },
+        create: {
+          ...role,
+        },
       }),
     ),
   )
@@ -46,6 +55,7 @@ async function main() {
     db.user.create({
       data: {
         email: 'admin@adakancrm.com',
+        name: 'Ahmet Adakan',
         firstName: 'Ahmet',
         lastName: 'Adakan',
         passwordHash,
@@ -57,6 +67,7 @@ async function main() {
     db.user.create({
       data: {
         email: 'selin.yonetici@adakancrm.com',
+        name: 'Selin Yonetici',
         firstName: 'Selin',
         lastName: 'Yönetici',
         passwordHash: await hashPassword('Manager123!'),
@@ -68,6 +79,7 @@ async function main() {
     db.user.create({
       data: {
         email: 'mert.satis@adakancrm.com',
+        name: 'Mert Sahin',
         firstName: 'Mert',
         lastName: 'Şahin',
         passwordHash: await hashPassword('Staff123!'),
@@ -79,6 +91,7 @@ async function main() {
     db.user.create({
       data: {
         email: 'zeynep.satis@adakancrm.com',
+        name: 'Zeynep Kaya',
         firstName: 'Zeynep',
         lastName: 'Kaya',
         passwordHash: await hashPassword('Staff123!'),
@@ -91,6 +104,20 @@ async function main() {
 
   const [owner, manager, staffOne, staffTwo] = users
   const owners = [owner, manager, staffOne, staffTwo]
+
+  const tags = await Promise.all(
+    [
+      ['Kurumsal', '#2563eb'],
+      ['Sicak Lead', '#dc2626'],
+      ['Yenileme', '#16a34a'],
+      ['VIP', '#7c3aed'],
+      ['Riskli', '#d97706'],
+    ].map(([name, color]) =>
+      db.tag.create({
+        data: { name, color },
+      }),
+    ),
+  )
 
   const pipeline = await ensureDefaultDealPipeline(owner.id)
   const stages = await db.stage.findMany({
@@ -128,6 +155,11 @@ async function main() {
           status: index % 3 === 0 ? 'PROSPECT' : 'ACTIVE',
           employeeCount: 15 + index * 12,
           ownerId: owners[index % owners.length].id,
+          tags: {
+            connect: [tags[index % tags.length], tags[(index + 2) % tags.length]].map((tag) => ({
+              id: tag.id,
+            })),
+          },
         },
       }),
     ),
@@ -176,6 +208,9 @@ async function main() {
           companyId: company.id,
           ownerId: ownerRef.id,
           isPrimary: index < companies.length,
+          tags: {
+            connect: [tags[index % tags.length]].map((tag) => ({ id: tag.id })),
+          },
         },
       })
     }),
@@ -280,6 +315,11 @@ async function main() {
           closedAt: status === 'OPEN' ? null : new Date(2026, 5, 10 + index),
           wonAt: status === 'WON' ? new Date(2026, 5, 10 + index) : null,
           lostAt: status === 'LOST' ? new Date(2026, 5, 10 + index) : null,
+          tags: {
+            connect: [tags[index % tags.length], tags[(index + 1) % tags.length]].map((tag) => ({
+              id: tag.id,
+            })),
+          },
         },
       })
     }),
