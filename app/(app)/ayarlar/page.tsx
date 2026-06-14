@@ -4,13 +4,17 @@ import { SettingsClient } from '@/app/(app)/ayarlar/settings-client'
 import { PageHeader } from '@/components/shared/page-header'
 import { getRoleSlugs, requireAuthenticatedUser } from '@/lib/auth/rbac'
 import { SYSTEM_ROLE_DEFINITIONS } from '@/lib/auth/constants'
+import { getSettingsOverviewData } from '@/lib/crm/queries'
 import { db } from '@/lib/db/prisma'
 
 export default async function SettingsPage() {
   const session = await requireAuthenticatedUser()
   const roleSlugs = getRoleSlugs(session)
   const canManageUsers = roleSlugs.includes('owner')
-  const users = canManageUsers ? await listUsersWithRoles() : []
+  const [users, settingsOverview] = await Promise.all([
+    canManageUsers ? listUsersWithRoles() : Promise.resolve([]),
+    getSettingsOverviewData(),
+  ])
   const roles = canManageUsers
     ? await db.role.findMany({
         where: {
@@ -53,6 +57,7 @@ export default async function SettingsPage() {
           slug: role.slug,
           name: role.name,
         }))}
+        overview={settingsOverview}
       />
     </div>
   )

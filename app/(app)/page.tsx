@@ -8,9 +8,9 @@ import {
   Settings2,
   TrendingUp,
   Trophy,
-  Users,
 } from 'lucide-react'
 import Link from 'next/link'
+import { DashboardFunnelChart } from '@/components/charts/dashboard-funnel-chart'
 import { RevenueChart } from '@/components/charts/revenue-chart'
 import { PageHeader } from '@/components/shared/page-header'
 import { StatCard } from '@/components/shared/stat-card'
@@ -25,7 +25,6 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card'
-import { Progress } from '@/components/ui/progress'
 import {
   Table,
   TableBody,
@@ -35,7 +34,7 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { getDashboardData } from '@/lib/crm/queries'
-import { formatCompact, formatCurrency, formatDate, formatRelativeDate } from '@/lib/format'
+import { formatCurrency, formatDate, formatRelativeDate } from '@/lib/format'
 import { activityTypeMeta, priorityMeta } from '@/lib/ui-meta'
 
 const activityIcon = {
@@ -52,7 +51,6 @@ const activityIcon = {
 
 export default async function DashboardPage() {
   const data = await getDashboardData()
-  const totalPipeline = data.pipelineValueByStage.reduce((sum, stage) => sum + stage.value, 0)
   const chartDelta =
     data.revenueData[data.revenueData.length - 1]?.gelir -
     data.revenueData[data.revenueData.length - 1]?.hedef
@@ -71,44 +69,44 @@ export default async function DashboardPage() {
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <StatCard
-          title="Toplam Kisi"
-          value={String(data.totalContacts)}
-          change={`${data.totalCompanies} firma`}
-          trend="up"
-          hint="iliskili kayit"
-          icon={Users}
-        />
-        <StatCard
-          title="Acik Anlasmalar"
+          title="Aktif Deal"
           value={String(data.openDeals)}
-          change={`${data.openLeads} acik lead`}
+          change={formatCurrency(data.totalOpenDealValue)}
           trend="up"
-          hint="aktif satis hatti"
+          hint="acik pipeline hacmi"
           icon={Handshake}
         />
         <StatCard
-          title="Acik Deal Degeri"
-          value={formatCurrency(data.totalOpenDealValue)}
-          change={formatCompact(data.totalOpenDealValue)}
+          title="Bu Ay Kazanilan"
+          value={String(data.wonThisMonthCount)}
+          change={formatCurrency(data.wonThisMonthValue)}
           trend="up"
-          hint="toplam pipeline tutari"
+          hint="aylik kapanan gelir"
+          icon={Trophy}
+        />
+        <StatCard
+          title="Donusum Orani"
+          value={`%${data.conversionRate}`}
+          change={`${data.openLeads} acik lead`}
+          trend="up"
+          hint="kazanilan / toplam deal"
           icon={TrendingUp}
         />
         <StatCard
-          title="Bekleyen Gorevler"
-          value={String(data.pendingTasks)}
-          change={`${data.upcomingTasks.length} yakin teslim`}
-          trend="down"
-          hint="takip gerektiren is"
-          icon={ListTodo}
+          title="Ortalama Sure"
+          value={`${data.averageDealCycleDays} gun`}
+          change={`${data.pendingTasks} bekleyen gorev`}
+          trend="up"
+          hint="ortalama deal kapanis suresi"
+          icon={CalendarCheck}
         />
       </div>
 
       <div className="grid gap-4 lg:grid-cols-3">
         <Card className="lg:col-span-2">
           <CardHeader>
-            <CardTitle>Gelir Grafigi</CardTitle>
-            <CardDescription>Son 6 ayin anlasma tutari gorunumu</CardDescription>
+            <CardTitle>Pipeline Funnel</CardTitle>
+            <CardDescription>Asama bazli deal sayisi ve toplam deger</CardDescription>
             <CardAction>
               <Badge variant={chartDelta >= 0 ? 'success' : 'warning'}>
                 {chartDelta >= 0 ? 'Hedef ustu' : 'Hedefe yakin'}
@@ -116,30 +114,17 @@ export default async function DashboardPage() {
             </CardAction>
           </CardHeader>
           <CardContent>
-            <RevenueChart data={data.revenueData} />
+            <DashboardFunnelChart data={data.pipelineValueByStage} />
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader>
-            <CardTitle>Pipeline Degeri</CardTitle>
-            <CardDescription>Toplam {formatCurrency(totalPipeline)}</CardDescription>
+            <CardTitle>Aylik Gelir Grafigi</CardTitle>
+            <CardDescription>Son 6 ay CLOSED_WON toplami</CardDescription>
           </CardHeader>
-          <CardContent className="flex flex-col gap-4">
-            {data.pipelineValueByStage.map((stage) => {
-              const percentage = totalPipeline === 0 ? 0 : Math.round((stage.value / totalPipeline) * 100)
-              return (
-                <div key={stage.id} className="flex flex-col gap-1.5">
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="font-medium">{stage.stage}</span>
-                    <span className="text-muted-foreground">
-                      {stage.count} / {formatCompact(stage.value)} TL
-                    </span>
-                  </div>
-                  <Progress value={percentage} aria-label={`${stage.stage} yuzde ${percentage}`} />
-                </div>
-              )
-            })}
+          <CardContent>
+            <RevenueChart data={data.revenueData} />
           </CardContent>
         </Card>
       </div>

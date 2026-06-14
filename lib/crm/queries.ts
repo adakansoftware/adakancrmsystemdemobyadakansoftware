@@ -56,6 +56,9 @@ function mapEntityActivities(
 export async function getDashboardData() {
   await requirePermission('deals:read')
 
+  const now = new Date()
+  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1)
+
   const [
     totalContacts,
     totalCompanies,
@@ -128,16 +131,43 @@ export async function getDashboardData() {
     }),
     db.deal.findMany({
       where: { archivedAt: null },
-      select: { createdAt: true, amount: true },
-      orderBy: { createdAt: 'asc' },
+      select: {
+        createdAt: true,
+        amount: true,
+        status: true,
+        wonAt: true,
+        closedAt: true,
+      },
+      orderBy: { wonAt: 'asc' },
     }),
   ])
 
   const totalOpenDealValue = openDeals.reduce((sum, deal) => sum + toNumber(deal.amount), 0)
   const dealRevenueByMonth = new Map<string, number>()
+  const wonDeals = recentDeals.filter((deal) => deal.status === 'WON')
+  const wonThisMonthDeals = wonDeals.filter(
+    (deal) => deal.wonAt && deal.wonAt >= monthStart,
+  )
+  const closedDeals = recentDeals.filter(
+    (deal) => deal.status === 'WON' || deal.status === 'LOST',
+  )
+  const cycleDays = closedDeals
+    .map((deal) => {
+      if (!deal.closedAt) {
+        return null
+      }
 
-  for (const deal of recentDeals) {
-    const date = new Date(deal.createdAt)
+      const diffMs = deal.closedAt.getTime() - deal.createdAt.getTime()
+      return diffMs > 0 ? diffMs / (1000 * 60 * 60 * 24) : null
+    })
+    .filter((value): value is number => value != null)
+
+  for (const deal of wonDeals) {
+    if (!deal.wonAt) {
+      continue
+    }
+
+    const date = new Date(deal.wonAt)
     const key = `${date.getFullYear()}-${date.getMonth()}`
     dealRevenueByMonth.set(key, (dealRevenueByMonth.get(key) ?? 0) + toNumber(deal.amount))
   }
@@ -161,6 +191,16 @@ export async function getDashboardData() {
     openLeads,
     openDeals: openDeals.length,
     totalOpenDealValue,
+    wonThisMonthCount: wonThisMonthDeals.length,
+    wonThisMonthValue: wonThisMonthDeals.reduce((sum, deal) => sum + toNumber(deal.amount), 0),
+    conversionRate:
+      recentDeals.length === 0
+        ? 0
+        : Math.round((wonDeals.length / recentDeals.length) * 100),
+    averageDealCycleDays:
+      cycleDays.length === 0
+        ? 0
+        : Math.round(cycleDays.reduce((sum, value) => sum + value, 0) / cycleDays.length),
     pendingTasks,
     recentActivities: recentActivities.map((activity) => ({
       id: activity.id,
@@ -1251,5 +1291,43 @@ export async function getReportsPageData() {
     monthlyClosedByUser,
     pipelineAnalysis,
     activitySummary,
+  }
+}
+
+export async function getSettingsOverviewData() {
+  await requirePermission('deals:read')
+
+  const [companyCount, contactCount, dealCount, taskCount, pipelines] = await Promise.all([
+    db.company.count({ where: { archivedAt: null } }),
+    db.contact.count({ where: { archivedAt: null } }),
+    db.deal.count({ where: { archivedAt: null } }),
+    db.task.count({ where: { archivedAt: null } }),
+    db.pipeline.findMany({
+      where: { archivedAt: null, entityType: 'DEAL' },
+      include: {
+        stages: {
+          orderBy: { position: 'asc' },
+          select: {
+            id: true,
+            name: true,
+            position: true,
+            probability: true,
+            isClosed: true,
+            isWon: true,
+          },
+        },
+      },
+      orderBy: [{ isDefault: 'desc' }, { createdAt: 'asc' }],
+    }),
+  ])
+
+  return {
+    counts: {
+      companies: companyCount,
+      contacts: contactCount,
+      deals: dealCount,
+      tasks: taskCount,
+    },
+    pipelines,
   }
 }

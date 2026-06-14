@@ -8,6 +8,7 @@ import { moveDealToStageAction } from '@/app/actions/crm'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 import { cn } from '@/lib/utils'
 
 type PipelineBoardData = {
@@ -75,6 +76,8 @@ export function PipelineBoardClient({
   const [dragId, setDragId] = useState<string | null>(null)
   const [overStage, setOverStage] = useState<string | null>(null)
   const [isPending, startTransition] = useTransition()
+  const [query, setQuery] = useState('')
+  const [visibility, setVisibility] = useState<'ALL' | 'OPEN' | 'CLOSED'>('ALL')
 
   const [optimisticBoard, moveOptimisticDeal] = useOptimistic(
     initialBoard,
@@ -123,6 +126,33 @@ export function PipelineBoardClient({
 
     return { totalValue, wonValue, lostValue }
   }, [optimisticBoard])
+
+  const visibleBoard = useMemo(() => {
+    const normalizedQuery = query.trim().toLowerCase()
+
+    return {
+      ...optimisticBoard,
+      stages: optimisticBoard.stages.map((stage) => ({
+        ...stage,
+        deals: stage.deals.filter((deal) => {
+          const matchesQuery =
+            normalizedQuery.length === 0 ||
+            [deal.title, deal.company, deal.ownerName]
+              .join(' ')
+              .toLowerCase()
+              .includes(normalizedQuery)
+
+          const isClosed = stage.isClosed || deal.status === 'WON' || deal.status === 'LOST'
+          const matchesVisibility =
+            visibility === 'ALL' ||
+            (visibility === 'OPEN' && !isClosed) ||
+            (visibility === 'CLOSED' && isClosed)
+
+          return matchesQuery && matchesVisibility
+        }),
+      })),
+    }
+  }, [optimisticBoard, query, visibility])
 
   function findStageForDeal(dealId: string) {
     return optimisticBoard.stages.find((stage) => stage.deals.some((deal) => deal.id === dealId))
@@ -187,13 +217,30 @@ export function PipelineBoardClient({
         </div>
       </div>
 
+      <div className="grid gap-3 rounded-xl border bg-card p-4 md:grid-cols-[minmax(0,1fr)_220px]">
+        <Input
+          value={query}
+          onChange={(event) => setQuery(event.target.value)}
+          placeholder="Deal, firma veya sorumlu ara..."
+        />
+        <select
+          value={visibility}
+          onChange={(event) => setVisibility(event.target.value as typeof visibility)}
+          className="flex h-9 w-full rounded-lg border border-input bg-background px-3 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
+        >
+          <option value="ALL">Tum kartlar</option>
+          <option value="OPEN">Acik asamalar</option>
+          <option value="CLOSED">Kapali asamalar</option>
+        </select>
+      </div>
+
       <div className="-mx-4 overflow-x-auto px-4 pb-4 md:-mx-6 md:px-6">
         <div className="flex min-w-max gap-4">
-          {optimisticBoard.stages.map((stage) => {
+          {visibleBoard.stages.map((stage) => {
             const stageTotal = stage.deals.reduce((sum, deal) => sum + deal.amount, 0)
-            const stageIndex = optimisticBoard.stages.findIndex((entry) => entry.id === stage.id)
-            const previousStage = optimisticBoard.stages[stageIndex - 1]
-            const nextStage = optimisticBoard.stages[stageIndex + 1]
+            const stageIndex = visibleBoard.stages.findIndex((entry) => entry.id === stage.id)
+            const previousStage = visibleBoard.stages[stageIndex - 1]
+            const nextStage = visibleBoard.stages[stageIndex + 1]
 
             return (
               <section
@@ -239,9 +286,12 @@ export function PipelineBoardClient({
                       aria-grabbed={dragId === deal.id}
                     >
                       <div className="flex items-start justify-between gap-2">
-                        <span className="text-sm font-medium leading-snug text-pretty">
+                        <Link
+                          href={`/anlasmalar/${deal.id}`}
+                          className="text-sm font-medium leading-snug text-pretty hover:underline"
+                        >
                           {deal.title}
-                        </span>
+                        </Link>
                         <GripVertical className="size-4 shrink-0 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100" />
                       </div>
 
