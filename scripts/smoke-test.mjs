@@ -36,6 +36,7 @@ async function waitForServer(timeoutMs = 30000) {
 
 async function runChecks() {
   const health = await request("/api/health");
+  const healthJson = JSON.parse(health.text);
   assert(
     health.response.status === 200 || health.response.status === 503,
     `/api/health beklenmeyen durum dondu: ${health.response.status}`,
@@ -45,6 +46,8 @@ async function runChecks() {
   assert(health.response.headers.get("x-robots-tag") === "noindex, nofollow", "/api/health robots basligi eksik");
   assert(health.text.includes("\"status\":"), "/api/health status alani eksik");
   assert(health.text.includes("\"checks\":"), "/api/health checks alani eksik");
+  assert(typeof healthJson.sessionSecretConfigured === "boolean", "/api/health session secret hazirlik alani eksik");
+  assert(typeof healthJson.appUrlConfigured === "boolean", "/api/health app url hazirlik alani eksik");
 
   const login = await request("/login");
   assert(login.response.status === 200, `/login beklenmeyen durum dondu: ${login.response.status}`);
@@ -61,6 +64,12 @@ async function main() {
   const server = spawn(`npm run start -- --port ${port}`, {
     stdio: "ignore",
     shell: true,
+    env: {
+      ...process.env,
+      NEXTAUTH_SECRET: process.env.NEXTAUTH_SECRET || "smoke-test-secret",
+      NEXTAUTH_URL: process.env.NEXTAUTH_URL || baseUrl,
+      APP_URL: process.env.APP_URL || baseUrl,
+    },
   });
 
   try {

@@ -12,6 +12,7 @@ This document reflects the post-refactor CRM codebase after the hardening pass f
 - soft-delete and data-access safety
 - accessibility without visual redesign
 - dead code and text consistency
+- production auth and export hardening
 
 ## Current Strengths
 
@@ -20,6 +21,7 @@ This document reflects the post-refactor CRM codebase after the hardening pass f
 - `npm run verify` is part of the working loop and is green after the refactor pass.
 - API routes now validate query input with Zod.
 - Environment access is centralized through `lib/env.ts`.
+- User-management responses are now intentionally narrowed before they leave auth-related server actions.
 
 ## Closed Findings
 
@@ -51,6 +53,30 @@ This document reflects the post-refactor CRM codebase after the hardening pass f
 - Detail query lookups for company, contact, and deal records now respect `archivedAt: null`.
 - Additional Prisma indexes were added for common archived/status/ownership filter combinations.
 
+### 6. Production auth now fails closed
+
+- `lib/env.ts` no longer ships a static fallback session secret.
+- Production runtime now refuses to boot without `NEXTAUTH_SECRET`, `AUTH_SECRET`, or `SESSION_SECRET`.
+- Development and test environments use a per-process runtime secret instead of a committed string literal.
+
+### 7. Password hashes are no longer exposed to client-facing auth flows
+
+- Prisma now omits `user.passwordHash` by default at the client layer.
+- The few server-only paths that must verify passwords explicitly opt back in.
+- User and role-management actions now return narrowed response payloads that exclude sensitive fields by type and by runtime shape.
+
+### 8. Login rate limiting and session policy are more consistent
+
+- Rate limiting is now enforced inside `Credentials.authorize`, which covers both the form action path and direct requests to the NextAuth credentials callback.
+- Login throttling now applies both per-IP and per-IP-plus-email keys.
+- Session `maxAge` and cookie lifetime now align with the intended 7-day policy.
+
+### 9. Export route permissions and CSV safety were hardened
+
+- `/api/export` now enforces entity-specific read permissions before returning data.
+- CSV export now neutralizes formula-style cell prefixes to reduce spreadsheet injection risk.
+- Export permission mapping and CSV escaping are covered by unit regression checks.
+
 ## Remaining Risks
 
 ### 1. Rate limiting is still process-local by design
@@ -58,18 +84,23 @@ This document reflects the post-refactor CRM codebase after the hardening pass f
 - `lib/security/rate-limit.ts` still uses in-memory storage.
 - This is now documented clearly, but a shared backend such as Redis or KV would still be needed for multi-instance enforcement.
 
-### 2. Some legacy/out-of-scope surfaces remain intentionally untouched
+### 2. Audit logs still miss request IP and User-Agent
+
+- `AuditLog` does not yet persist request IP or User-Agent for login/logout and privileged management events.
+- This lowers forensic value during account-abuse investigations and is still worth a schema-level follow-up.
+
+### 3. Password policy is still intentionally minimal
+
+- Validation still enforces baseline length, but does not yet require stronger complexity or entropy checks.
+- This is acceptable for the current MVP boundary, though a stronger policy would be safer for production roll-out.
+
+### 4. Some legacy/out-of-scope surfaces remain intentionally untouched
 
 - `app/(app)/teklifler/page.tsx` is still a scoped workspace rather than a fully generalized product area.
 - This is acceptable for the current MVP boundary, but it remains a deliberate product decision rather than a technical gap.
 
-### 3. A deeper dead-code sweep could still be done
-
-- The obvious unused shared action shim was removed.
-- A broader “unused export / stale file” cleanup could still be run as a separate, lower-risk maintenance pass.
-
 ## Recommended Next Steps
 
-1. Leave the current refactor state as the new baseline unless product scope changes.
-2. If production traffic or multi-instance deployment is a priority, replace the in-memory rate limiter with a shared store.
-3. If repo hygiene matters more than feature work next, run a dedicated dead-code and docs cleanup pass.
+1. If production traffic or multi-instance deployment is a priority, replace the in-memory rate limiter with a shared store.
+2. Add request IP and User-Agent capture to `AuditLog` for authentication and privileged actions.
+3. Tighten password policy only if product owners accept the UX trade-off for setup and password change flows.

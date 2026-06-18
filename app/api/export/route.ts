@@ -1,20 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getCurrentSession } from '@/lib/auth/session'
+import { requirePermission } from '@/lib/auth/rbac'
 import { db } from '@/lib/db/prisma'
+import { toCsv } from '@/lib/export/csv'
+import { getExportEntityPermissions } from '@/lib/export/permissions'
 import { toNumber } from '@/lib/format'
 import { exportRouteQuerySchema } from '@/lib/validation/api'
-
-function csvEscape(value: unknown) {
-  const text = String(value ?? '')
-  return `"${text.replaceAll('"', '""')}"`
-}
-
-function toCsv(headers: string[], rows: Array<Array<unknown>>) {
-  return [
-    headers.map(csvEscape).join(','),
-    ...rows.map((row) => row.map(csvEscape).join(',')),
-  ].join('\n')
-}
 
 export async function GET(request: NextRequest) {
   const session = await getCurrentSession()
@@ -32,6 +23,10 @@ export async function GET(request: NextRequest) {
   }
 
   const { entity } = parsedQuery.data
+
+  for (const permission of getExportEntityPermissions(entity)) {
+    await requirePermission(permission)
+  }
 
   if (entity === 'contacts') {
     const contacts = await db.contact.findMany({

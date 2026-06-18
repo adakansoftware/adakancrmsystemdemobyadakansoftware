@@ -52,6 +52,7 @@ When you are ready to connect Neon, the only required runtime step is setting:
 
 - `DATABASE_URL`
 - `DIRECT_URL`
+- `NEXTAUTH_SECRET`
 
 Then run:
 
@@ -60,3 +61,9 @@ npm run prisma:generate
 npm run prisma:validate
 npm run db:push
 ```
+
+## Production auth and rate-limit notes
+
+- Production boot is fail-closed for session secrets: `NEXTAUTH_SECRET` (or `AUTH_SECRET` / `SESSION_SECRET`) must be set or the app will not start.
+- Forwarded IP headers are only trusted when `TRUST_PROXY_HEADERS=true` or when the app runs on Vercel.
+- The built-in rate limiter is still process-local; multi-instance production needs a shared backend such as Redis or KV.

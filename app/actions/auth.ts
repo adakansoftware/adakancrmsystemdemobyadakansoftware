@@ -10,12 +10,17 @@ import { createAuditLog } from '@/lib/audit/log'
 import { ensureSystemRoles } from '@/lib/crm/bootstrap'
 import { getCurrentSession } from '@/lib/auth/session'
 import {
-  LOGIN_RATE_LIMIT_MAX_ATTEMPTS,
-  LOGIN_RATE_LIMIT_WINDOW_MS,
-} from '@/lib/auth/constants'
+  assertLoginRateLimit,
+  clearLoginRateLimit,
+} from '@/lib/auth/login-rate-limit'
 import { hashPassword, verifyPassword } from '@/lib/auth/password'
-import { checkRateLimit, clearRateLimit } from '@/lib/security/rate-limit'
 import { createValidatedAction } from '@/lib/actions/create-validated-action'
+import {
+  managedUserSelect,
+  roleAssignmentSelect,
+  toManagedRoleAssignmentSummary,
+  toManagedUserSummary,
+} from '@/lib/auth/user-safe-select'
 import {
   changePasswordSchema,
   createUserAccountSchema,
@@ -26,6 +31,7 @@ import {
   userRoleAssignmentSchema,
 } from '@/lib/validation/crm'
 import { getRoleSlugs, requireAuthenticatedUser, requirePermission } from '@/lib/auth/rbac'
+import { env } from '@/lib/env'
 
 function revalidateAuthPaths() {
   for (const path of ['/', '/ayarlar', '/admin']) {
@@ -33,29 +39,20 @@ function revalidateAuthPaths() {
   }
 }
 
-async function getLoginRateLimitKey(email: string) {
-  const headerStore = await headers()
-  const forwardedFor = headerStore.get('x-forwarded-for') ?? 'unknown'
-  const clientIp = forwardedFor.split(',')[0]?.trim() || 'unknown'
-  return `login:${clientIp}:${email.toLowerCase()}`
-}
-
 export const loginAction = createValidatedAction(loginSchema, async (input) => {
   await ensureSystemRoles()
-  const rateLimitKey = await getLoginRateLimitKey(input.email)
-  const rateLimit = checkRateLimit(
-    rateLimitKey,
-    LOGIN_RATE_LIMIT_MAX_ATTEMPTS,
-    LOGIN_RATE_LIMIT_WINDOW_MS,
+  const rateLimitContext = await assertLoginRateLimit(
+    input.email,
+    env.trustProxyHeaders,
+    await headers(),
   )
-
-  if (!rateLimit.allowed) {
-    throw new Error('Cok fazla giris denemesi yapildi. Lutfen daha sonra tekrar deneyin.')
-  }
 
   const user = await db.user.findUnique({
     where: {
       email: input.email.toLowerCase(),
+    },
+    omit: {
+      passwordHash: false,
     },
     include: {
       roles: {
@@ -74,7 +71,7 @@ export const loginAction = createValidatedAction(loginSchema, async (input) => {
     throw new Error('User account is not active')
   }
 
-  clearRateLimit(rateLimitKey)
+  clearLoginRateLimit(rateLimitContext.keys)
 
   return {
     userId: user.id,
@@ -209,13 +206,7 @@ export async function listUsersWithRoles() {
   await requirePermission('users:manage')
 
   return db.user.findMany({
-    include: {
-      roles: {
-        include: {
-          role: true,
-        },
-      },
-    },
+    select: managedUserSelect,
     orderBy: {
       createdAt: 'desc',
     },
@@ -273,10 +264,8 @@ export const changePasswordAction = createValidatedAction(
 
     const user = await db.user.findUniqueOrThrow({
       where: { id: session.userId },
-      select: {
-        id: true,
-        email: true,
-        passwordHash: true,
+      omit: {
+        passwordHash: false,
       },
     })
 
@@ -352,13 +341,7 @@ export const createUserAccountAction = createValidatedAction(
           },
         },
       },
-      include: {
-        roles: {
-          include: {
-            role: true,
-          },
-        },
-      },
+      select: managedUserSelect,
     })
 
     await createAuditLog({
@@ -370,7 +353,7 @@ export const createUserAccountAction = createValidatedAction(
     })
 
     revalidateAuthPaths()
-    return { id: user.id }
+    return toManagedUserSummary(user)
   },
 )
 
@@ -393,6 +376,7 @@ export const updateUserStatusAction = createValidatedAction(
       data: {
         status: input.status,
       },
+      select: managedUserSelect,
     })
 
     await createAuditLog({
@@ -404,7 +388,7 @@ export const updateUserStatusAction = createValidatedAction(
     })
 
     revalidateAuthPaths()
-    return { id: user.id }
+    return toManagedUserSummary(user)
   },
 )
 
@@ -422,10 +406,7 @@ export const assignRoleAction = createValidatedAction(
       },
       update: {},
       create: input,
-      include: {
-        user: true,
-        role: true,
-      },
+      select: roleAssignmentSelect,
     })
 
     await createAuditLog({
@@ -440,7 +421,7 @@ export const assignRoleAction = createValidatedAction(
       },
     })
 
-    return assignment
+    return toManagedRoleAssignmentSummary(assignment)
   },
 )
 
@@ -456,10 +437,7 @@ export const removeRoleAction = createValidatedAction(
           roleId: input.roleId,
         },
       },
-      include: {
-        user: true,
-        role: true,
-      },
+      select: roleAssignmentSelect,
     })
 
     await createAuditLog({
@@ -474,6 +452,6 @@ export const removeRoleAction = createValidatedAction(
       },
     })
 
-    return assignment
+    return toManagedRoleAssignmentSummary(assignment)
   },
 )

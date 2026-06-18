@@ -20,7 +20,7 @@ Adakan CRM, Next.js App Router uzerinde calisan, Prisma ve PostgreSQL ile gercek
 ```env
 DATABASE_URL=postgresql://...
 DIRECT_URL=postgresql://...
-SESSION_SECRET=uzun-guvenli-bir-deger
+NEXTAUTH_SECRET=uzun-guvenli-bir-deger
 APP_URL=http://localhost:3000
 ```
 
@@ -98,4 +98,5 @@ curl http://localhost:3000/api/health
 - Seed verisi Turkce CRM senaryolari ve pipeline asamalari ile gelir.
 - Ana uygulama sayfalari fake demo array'lerine bagli degildir.
 - `APP_URL`, smoke script ve health kontrolleri icin tanimli olmalidir.
+- Production ortaminda `NEXTAUTH_SECRET` zorunludur; tanimli degilse uygulama fail-closed sekilde acilmaz.
 - Uretim kontrolunde once `/api/health`, sonra `npm run verify` calistirilmasi tavsiye edilir.

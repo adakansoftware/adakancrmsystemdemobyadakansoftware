@@ -3,7 +3,11 @@ import Credentials from 'next-auth/providers/credentials'
 import { PrismaAdapter } from '@auth/prisma-adapter'
 import { z } from 'zod'
 import { createAuditLog } from '@/lib/audit/log'
-import { SESSION_COOKIE_NAME } from '@/lib/auth/constants'
+import { SESSION_COOKIE_NAME, SESSION_TTL_SECONDS } from '@/lib/auth/constants'
+import {
+  assertLoginRateLimit,
+  clearLoginRateLimit,
+} from '@/lib/auth/login-rate-limit'
 import { verifyPassword } from '@/lib/auth/password'
 import { db } from '@/lib/db/prisma'
 import { env } from '@/lib/env'
@@ -14,10 +18,11 @@ const credentialsSchema = z.object({
 })
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
-  adapter: PrismaAdapter(db),
+  adapter: PrismaAdapter(db as never),
   secret: env.sessionSecret,
   session: {
     strategy: 'jwt',
+    maxAge: SESSION_TTL_SECONDS,
   },
   cookies: {
     sessionToken: {
@@ -27,6 +32,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         sameSite: 'lax',
         path: '/',
         secure: env.isProduction,
+        maxAge: SESSION_TTL_SECONDS,
       },
     },
   },
@@ -42,9 +48,17 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           return null
         }
 
+        const rateLimitContext = await assertLoginRateLimit(
+          credentials.data.email,
+          env.trustProxyHeaders,
+        )
+
         const user = await db.user.findUnique({
           where: {
             email: credentials.data.email.toLowerCase(),
+          },
+          omit: {
+            passwordHash: false,
           },
           include: {
             roles: {
@@ -67,6 +81,8 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         if (!isValid || (user.status !== 'ACTIVE' && user.status !== 'INVITED')) {
           return null
         }
+
+        clearLoginRateLimit(rateLimitContext.keys)
 
         await db.user.update({
           where: { id: user.id },
