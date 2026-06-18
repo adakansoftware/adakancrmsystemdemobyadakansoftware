@@ -1,96 +1,75 @@
 # Codebase Audit Report
 
-Date: 2026-06-13
+Date: 2026-06-18
 
 ## Scope
 
-This audit reflects the current CRM MVP after Prisma-backed reads, server actions,
-auth, audit logging, and pipeline persistence were wired in. The review focuses on:
+This document reflects the post-refactor CRM codebase after the hardening pass focused on:
 
-- duplicated components and repeated interaction patterns
-- unnecessary state and weak UI state ownership
-- folder structure and separation of concerns
-- TypeScript typing quality
-- component reusability
-- accessibility and responsive behavior
-- dead code and placeholder surfaces
+- repeated interaction patterns and client state ownership
+- TypeScript centralization
+- validation and environment handling
+- soft-delete and data-access safety
+- accessibility without visual redesign
+- dead code and text consistency
 
 ## Current Strengths
 
-- Main CRM routes now read from Prisma instead of fake arrays.
-- Core create/update flows exist through server actions with validation and audit logging.
-- Route protection, seeded auth, and pipeline movement persistence are working.
-- `npm run verify` and smoke coverage are already part of the delivery workflow.
+- Main CRM pages, detail screens, and management dialogs now share common server-action UX primitives.
+- Route protection, audit logging, seed-based auth, and pipeline persistence remain intact.
+- `npm run verify` is part of the working loop and is green after the refactor pass.
+- API routes now validate query input with Zod.
+- Environment access is centralized through `lib/env.ts`.
 
-## Findings
+## Closed Findings
 
-### 1. Repeated interaction logic is still too copy-pasted
+### 1. Repeated interaction logic was centralized
 
-- Lead, deal, task, and settings screens each rebuild the same `Select` pattern.
-- Success/error toast handling and `router.refresh()` logic is repeated in multiple client components.
-- Per-row pending state is implemented separately in several list components with nearly identical code.
+- Shared `useServerActionToast` and `useOptimisticRowAction` hooks now handle success/error toasts, pending state, and refresh behavior.
+- Lead, deal, task, settings, company, contact, and detail update surfaces no longer duplicate the same inline async control flow.
+- Inline select usage remains visually unchanged while accessibility labels stay explicit.
 
-Impact:
-This increases the chance of inconsistent behavior, inconsistent accessibility labels,
-and regressions when one inline update flow is fixed but the others are not.
+### 2. Type centralization improved materially
 
-### 2. Some UI surfaces are still functionally thin
+- Shared query result types are now derived from server query functions in `lib/crm/queries.ts`.
+- Settings page props were moved into a dedicated CRM view-model module.
+- Client components no longer need as many repeated inline row and option type declarations.
 
-- `app/(app)/musteriler/page.tsx` and `app/(app)/firmalar/page.tsx` are real-data pages, but still read-only.
-- `app/(app)/ayarlar/settings-client.tsx` still contains placeholder-ish UX such as a passive action button.
-- `app/(app)/teklifler/page.tsx` remains intentionally out of scope and should stay clearly isolated from MVP expectations.
+### 3. Validation and env handling were standardized
 
-Impact:
-The app feels partially operational rather than fully productized in the places users
-expect to manage live CRM records.
+- API route query parsing is now validated in `lib/validation/api.ts`.
+- Environment variable access is centralized in `lib/env.ts`.
+- Shared action helpers now expose reusable validation error typing for client-side action wrappers.
 
-### 3. TypeScript view-models are not centralized enough
+### 4. Accessibility improved without UI redesign
 
-- Page query functions build rich row objects, but the corresponding client components define their own inline types.
-- Shared option types such as assignable users are repeated instead of coming from a common CRM view-model module.
-- Several action return types are still broader than needed for client consumers.
+- Pipeline board now supports keyboard stage movement.
+- Existing inline select controls consistently receive descriptive ARIA labels through shared call sites.
 
-Impact:
-Type drift can happen quietly when server query shapes evolve.
+### 5. Soft-delete safety improved
 
-### 4. Dead code still exists from the static demo phase
+- Detail query lookups for company, contact, and deal records now respect `archivedAt: null`.
+- Additional Prisma indexes were added for common archived/status/ownership filter combinations.
 
-- `lib/data.ts` is no longer needed by the main app route set.
-- The file still contains large fake arrays and corrupted strings, which now work against maintainability.
+## Remaining Risks
 
-Impact:
-It creates confusion about what is source-of-truth and makes the repo look less production-ready.
+### 1. Rate limiting is still process-local by design
 
-### 5. Accessibility and responsive polish still need hardening
+- `lib/security/rate-limit.ts` still uses in-memory storage.
+- This is now documented clearly, but a shared backend such as Redis or KV would still be needed for multi-instance enforcement.
 
-- Inline selects do not consistently expose descriptive labels from a shared abstraction.
-- The pipeline board supports pointer drag and drop, but not a keyboard alternative.
-- Dense table screens still rely on hidden columns without shared compact-row fallbacks.
+### 2. Some legacy/out-of-scope surfaces remain intentionally untouched
 
-Impact:
-The MVP is usable, but not yet consistently robust across assistive tech and narrow screens.
+- `app/(app)/teklifler/page.tsx` is still a scoped workspace rather than a fully generalized product area.
+- This is acceptable for the current MVP boundary, but it remains a deliberate product decision rather than a technical gap.
 
-### 6. Text normalization remains unfinished
+### 3. A deeper dead-code sweep could still be done
 
-- Some files still contain mojibake-style corrupted Turkish text.
-- This appears in labels, validation messages, and some supporting content.
+- The obvious unused shared action shim was removed.
+- A broader “unused export / stale file” cleanup could still be run as a separate, lower-risk maintenance pass.
 
-Impact:
-It damages perceived quality and can cause confusion in production UI.
+## Recommended Next Steps
 
-## Priority Order
-
-1. Remove dead demo data and centralize repeated CRM list interaction primitives.
-2. Strengthen shared typing for row models and option lists.
-3. Clean placeholder UX in settings and other half-wired screens.
-4. Normalize corrupted UI strings.
-5. Continue with company/contact update surfaces and notes/timeline presentation.
-
-## Execution Notes
-
-The next implementation pass should avoid redesign and focus on:
-
-1. extracting reusable inline select controls and shared CRM row types
-2. deleting unused static demo data
-3. tightening settings behavior and other low-confidence surfaces
-4. keeping verification green after every structural cleanup
+1. Leave the current refactor state as the new baseline unless product scope changes.
+2. If production traffic or multi-instance deployment is a priority, replace the in-memory rate limiter with a shared store.
+3. If repo hygiene matters more than feature work next, run a dedicated dead-code and docs cleanup pass.
