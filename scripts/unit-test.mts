@@ -15,9 +15,20 @@ import {
   toManagedUserSummary,
 } from "../lib/auth/user-safe-select.ts";
 import {
+  isStrongPassword,
+  passwordPolicyDescription,
+  strongPasswordSchema,
+} from "../lib/validation/password.ts";
+import {
   exportRouteQuerySchema,
   searchRouteQuerySchema,
 } from "../lib/validation/api.ts";
+const {
+  changePasswordSchema,
+  createUserAccountSchema,
+  loginSchema,
+  setupSchema,
+} = await import("../lib/validation/crm.ts");
 
 process.env.DATABASE_URL ??= "postgresql://unit-test";
 
@@ -244,6 +255,64 @@ function testSensitiveUserFieldsStayOutOfResponses() {
   );
 }
 
+function testPasswordPolicy() {
+  assert(isStrongPassword("Admin123") === true, "Guclu sifre yardimcisi karma sifreyi kabul etmeli");
+  assert(isStrongPassword("password") === false, "Guclu sifre yardimcisi zayif sifreyi reddetmeli");
+
+  const weakPassword = strongPasswordSchema().safeParse("password");
+  assert(weakPassword.success === false, "Strong password schema zayif sifreyi reddetmeli");
+  assert(
+    weakPassword.error.issues[0]?.message === passwordPolicyDescription,
+    "Strong password schema politika mesajini donmeli",
+  );
+
+  const setupResult = setupSchema.safeParse({
+    firstName: "Ada",
+    lastName: "Kan",
+    email: "ada@example.com",
+    password: "Password1",
+  });
+  assert(setupResult.success === true, "Setup schema guclu sifreyi kabul etmeli");
+
+  const weakSetupResult = setupSchema.safeParse({
+    firstName: "Ada",
+    lastName: "Kan",
+    email: "ada@example.com",
+    password: "password",
+  });
+  assert(weakSetupResult.success === false, "Setup schema zayif sifreyi reddetmeli");
+
+  const createUserResult = createUserAccountSchema.safeParse({
+    firstName: "Ada",
+    lastName: "Kan",
+    email: "ada@example.com",
+    password: "Admin123",
+    roleId: "role-1",
+    status: "INVITED",
+  });
+  assert(createUserResult.success === true, "Kullanici olusturma schema guclu sifreyi kabul etmeli");
+
+  const changePasswordResult = changePasswordSchema.safeParse({
+    currentPassword: "Current123",
+    nextPassword: "NextPass1",
+    confirmPassword: "NextPass1",
+  });
+  assert(changePasswordResult.success === true, "Sifre degistirme schema guclu yeni sifreyi kabul etmeli");
+
+  const weakChangePasswordResult = changePasswordSchema.safeParse({
+    currentPassword: "Current123",
+    nextPassword: "nextpass",
+    confirmPassword: "nextpass",
+  });
+  assert(weakChangePasswordResult.success === false, "Sifre degistirme schema zayif yeni sifreyi reddetmeli");
+
+  const loginResult = loginSchema.safeParse({
+    email: "ada@example.com",
+    password: "legacy123",
+  });
+  assert(loginResult.success === true, "Login schema eski mevcut sifreleri bloke etmemeli");
+}
+
 testHealthySummary();
 testWarnSummary();
 testErrorSummary();
@@ -255,4 +324,5 @@ testClientIpResolution();
 testCsvExportSafety();
 testExportPermissionMapping();
 testSensitiveUserFieldsStayOutOfResponses();
+testPasswordPolicy();
 console.log("Unit checks passed");

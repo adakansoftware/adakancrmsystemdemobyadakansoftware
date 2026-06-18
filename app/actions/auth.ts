@@ -3,16 +3,11 @@
 import { AuthError } from 'next-auth'
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
-import { headers } from 'next/headers'
 import { signIn, signOut } from '@/auth'
 import { db } from '@/lib/db/prisma'
 import { createAuditLog } from '@/lib/audit/log'
 import { ensureSystemRoles } from '@/lib/crm/bootstrap'
 import { getCurrentSession } from '@/lib/auth/session'
-import {
-  assertLoginRateLimit,
-  clearLoginRateLimit,
-} from '@/lib/auth/login-rate-limit'
 import { hashPassword, verifyPassword } from '@/lib/auth/password'
 import { createValidatedAction } from '@/lib/actions/create-validated-action'
 import {
@@ -31,7 +26,6 @@ import {
   userRoleAssignmentSchema,
 } from '@/lib/validation/crm'
 import { getRoleSlugs, requireAuthenticatedUser, requirePermission } from '@/lib/auth/rbac'
-import { env } from '@/lib/env'
 
 function revalidateAuthPaths() {
   for (const path of ['/', '/ayarlar', '/admin']) {
@@ -39,65 +33,21 @@ function revalidateAuthPaths() {
   }
 }
 
-export const loginAction = createValidatedAction(loginSchema, async (input) => {
-  await ensureSystemRoles()
-  const rateLimitContext = await assertLoginRateLimit(
-    input.email,
-    env.trustProxyHeaders,
-    await headers(),
-  )
-
-  const user = await db.user.findUnique({
-    where: {
-      email: input.email.toLowerCase(),
-    },
-    omit: {
-      passwordHash: false,
-    },
-    include: {
-      roles: {
-        include: {
-          role: true,
-        },
-      },
-    },
+export async function loginFormAction(formData: FormData) {
+  const parsedLogin = loginSchema.safeParse({
+    email: String(formData.get('email') ?? ''),
+    password: String(formData.get('password') ?? ''),
   })
 
-  if (!user || !(await verifyPassword(input.password, user.passwordHash))) {
-    throw new Error('Invalid credentials')
-  }
-
-  if (user.status !== 'ACTIVE' && user.status !== 'INVITED') {
-    throw new Error('User account is not active')
-  }
-
-  clearLoginRateLimit(rateLimitContext.keys)
-
-  return {
-    userId: user.id,
-  }
-})
-
-export async function loginFormAction(formData: FormData) {
-  let result: Awaited<ReturnType<typeof loginAction>>
-
-  try {
-    result = await loginAction({
-      email: String(formData.get('email') ?? ''),
-      password: String(formData.get('password') ?? ''),
-    })
-  } catch {
-    redirect('/login?error=invalid_credentials')
-  }
-
-  if (!result.success) {
+  if (!parsedLogin.success) {
     redirect('/login?error=invalid_credentials')
   }
 
   try {
+    await ensureSystemRoles()
     await signIn('credentials', {
-      email: String(formData.get('email') ?? ''),
-      password: String(formData.get('password') ?? ''),
+      email: parsedLogin.data.email,
+      password: parsedLogin.data.password,
       redirectTo: '/',
     })
   } catch (error) {

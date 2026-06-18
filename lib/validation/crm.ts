@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { PASSWORD_MAX_LENGTH, PASSWORD_MIN_LENGTH, strongPasswordSchema } from '@/lib/validation/password'
 
 const cuidOrUuid = z.string().min(1)
 const nullableId = cuidOrUuid.nullish()
@@ -86,7 +87,7 @@ export const userSchema = z.object({
 
 export const loginSchema = z.object({
   email: z.email(),
-  password: z.string().min(8).max(128),
+  password: z.string().min(PASSWORD_MIN_LENGTH).max(PASSWORD_MAX_LENGTH),
 })
 
 export const userRoleAssignmentSchema = z.object({
@@ -98,7 +99,7 @@ export const setupSchema = z.object({
   firstName: z.string().trim().min(1).max(100),
   lastName: z.string().trim().min(1).max(100),
   email: z.email(),
-  password: z.string().min(8).max(128),
+  password: strongPasswordSchema(),
 })
 
 export const updateProfileSchema = z.object({
@@ -109,9 +110,9 @@ export const updateProfileSchema = z.object({
 
 export const changePasswordSchema = z
   .object({
-    currentPassword: z.string().min(8).max(128),
-    nextPassword: z.string().min(8).max(128),
-    confirmPassword: z.string().min(8).max(128),
+    currentPassword: z.string().min(PASSWORD_MIN_LENGTH).max(PASSWORD_MAX_LENGTH),
+    nextPassword: strongPasswordSchema(),
+    confirmPassword: z.string().min(PASSWORD_MIN_LENGTH).max(PASSWORD_MAX_LENGTH),
   })
   .refine((value) => value.nextPassword === value.confirmPassword, {
     message: 'Passwords do not match',
@@ -122,7 +123,7 @@ export const createUserAccountSchema = z.object({
   firstName: z.string().trim().min(1).max(100),
   lastName: z.string().trim().min(1).max(100),
   email: z.email(),
-  password: z.string().min(8).max(128),
+  password: strongPasswordSchema(),
   roleId: cuidOrUuid,
   status: userStatusSchema.optional(),
 })

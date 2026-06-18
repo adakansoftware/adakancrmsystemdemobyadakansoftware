@@ -77,6 +77,12 @@ This document reflects the post-refactor CRM codebase after the hardening pass f
 - CSV export now neutralizes formula-style cell prefixes to reduce spreadsheet injection risk.
 - Export permission mapping and CSV escaping are covered by unit regression checks.
 
+### 10. Password policy and login flow were tightened
+
+- Setup, password change, and user creation now require passwords with uppercase, lowercase, and numeric characters.
+- Login validation still accepts existing legacy passwords so older accounts are not locked out unexpectedly.
+- `loginFormAction` no longer repeats the same credential lookup and bcrypt compare that already happen inside `Credentials.authorize`.
+
 ## Remaining Risks
 
 ### 1. Rate limiting is still process-local by design
@@ -89,12 +95,7 @@ This document reflects the post-refactor CRM codebase after the hardening pass f
 - `AuditLog` does not yet persist request IP or User-Agent for login/logout and privileged management events.
 - This lowers forensic value during account-abuse investigations and is still worth a schema-level follow-up.
 
-### 3. Password policy is still intentionally minimal
-
-- Validation still enforces baseline length, but does not yet require stronger complexity or entropy checks.
-- This is acceptable for the current MVP boundary, though a stronger policy would be safer for production roll-out.
-
-### 4. Some legacy/out-of-scope surfaces remain intentionally untouched
+### 3. Some legacy/out-of-scope surfaces remain intentionally untouched
 
 - `app/(app)/teklifler/page.tsx` is still a scoped workspace rather than a fully generalized product area.
 - This is acceptable for the current MVP boundary, but it remains a deliberate product decision rather than a technical gap.
@@ -103,4 +104,4 @@ This document reflects the post-refactor CRM codebase after the hardening pass f
 
 1. If production traffic or multi-instance deployment is a priority, replace the in-memory rate limiter with a shared store.
 2. Add request IP and User-Agent capture to `AuditLog` for authentication and privileged actions.
-3. Tighten password policy only if product owners accept the UX trade-off for setup and password change flows.
+3. Leave the new password policy and auth hardening as the baseline unless migration requirements for legacy users change.

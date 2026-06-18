@@ -43,6 +43,7 @@ import {
   userStatuses,
   type SettingsClientProps,
 } from '@/lib/crm/settings-view-models'
+import { passwordPolicyDescription, strongPasswordSchema } from '@/lib/validation/password'
 
 const profileFormSchema = z.object({
   firstName: z.string().trim().min(1, 'Ad zorunlu'),
@@ -53,7 +54,7 @@ const profileFormSchema = z.object({
 const passwordFormSchema = z
   .object({
     currentPassword: z.string().min(8, 'Mevcut sifre en az 8 karakter olmali'),
-    nextPassword: z.string().min(8, 'Yeni sifre en az 8 karakter olmali'),
+    nextPassword: strongPasswordSchema(passwordPolicyDescription),
     confirmPassword: z.string().min(8, 'Tekrar alanini doldurun'),
   })
   .refine((value) => value.nextPassword === value.confirmPassword, {
@@ -65,7 +66,7 @@ const createUserFormSchema = z.object({
   firstName: z.string().trim().min(1, 'Ad zorunlu'),
   lastName: z.string().trim().min(1, 'Soyad zorunlu'),
   email: z.email('Gecerli bir e-posta girin'),
-  password: z.string().min(8, 'Sifre en az 8 karakter olmali'),
+  password: strongPasswordSchema(passwordPolicyDescription),
   roleId: z.string().min(1, 'Rol secin'),
   status: z.enum(userStatuses),
 })
