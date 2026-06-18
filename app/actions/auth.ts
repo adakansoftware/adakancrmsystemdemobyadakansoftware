@@ -222,6 +222,8 @@ export async function listUsersWithRoles() {
   })
 }
 
+export type UsersWithRolesData = Awaited<ReturnType<typeof listUsersWithRoles>>
+
 export const updateProfileAction = createValidatedAction(
   updateProfileSchema,
   async (input) => {

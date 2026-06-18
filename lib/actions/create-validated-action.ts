@@ -1,8 +1,14 @@
 import { z } from 'zod'
 
-type ValidatedActionResult<TData> =
+export type ValidatedActionErrors = Partial<Record<string, string[]>>
+
+export type ValidatedActionResult<TData> =
   | { success: true; data: TData }
-  | { success: false; errors: Partial<Record<string, string[]>> }
+  | { success: false; errors: ValidatedActionErrors }
+
+export function getFirstValidationError(errors: ValidatedActionErrors) {
+  return Object.values(errors).flat().find((message) => typeof message === 'string')
+}
 
 export function createValidatedAction<TSchema extends z.ZodType, TResult>(
   schema: TSchema,

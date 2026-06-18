@@ -170,6 +170,22 @@ test.describe('CRM smoke flows', () => {
     await expect(page).toHaveURL(/\/anlasmalar\/.+/)
   })
 
+  test('moves a pipeline card with keyboard controls', async ({ page }) => {
+    await login(page)
+    await page.goto('/pipeline')
+
+    const firstStage = page.locator('section').first()
+    const secondStage = page.locator('section').nth(1)
+    const card = firstStage.locator('article').first()
+    await expect(card).toBeVisible()
+
+    const dealTitle = ((await card.getByRole('link').textContent()) ?? '').trim()
+    await card.focus()
+    await page.keyboard.press('ArrowRight')
+
+    await expect(secondStage.locator('article').filter({ hasText: dealTitle }).first()).toBeVisible()
+  })
+
   test('shows the quotes workspace with weighted pipeline summary', async ({ page }) => {
     await login(page)
     await page.goto('/teklifler')

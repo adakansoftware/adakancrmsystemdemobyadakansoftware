@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { useMemo, useOptimistic, useState, useTransition } from 'react'
+import { type KeyboardEvent, useMemo, useOptimistic, useState, useTransition } from 'react'
 import { Building2, Calendar, ChevronLeft, ChevronRight, GripVertical, Plus } from 'lucide-react'
 import { toast } from 'sonner'
 import { moveDealToStageAction } from '@/app/actions/crm'
@@ -60,6 +60,12 @@ function getStageMoveLabel(dealTitle: string, stageName: string | undefined, dir
   }
 
   return `${dealTitle} kaydini ${stageName} asamasina tasi`
+}
+
+function getKeyboardMoveNote(direction: 'next' | 'previous') {
+  return direction === 'previous'
+    ? 'Pipeline keyboard move backward'
+    : 'Pipeline keyboard move forward'
 }
 
 const priorityVariant: Record<string, 'secondary' | 'info' | 'warning'> = {
@@ -194,6 +200,23 @@ export function PipelineBoardClient({
     setOverStage(null)
   }
 
+  function handleDealCardKeyDown(
+    event: KeyboardEvent<HTMLElement>,
+    dealId: string,
+    previousStageId: string | undefined,
+    nextStageId: string | undefined,
+  ) {
+    if (event.key === 'ArrowLeft' && previousStageId) {
+      event.preventDefault()
+      moveDeal(dealId, previousStageId, getKeyboardMoveNote('previous'))
+    }
+
+    if ((event.key === 'ArrowRight' || event.key === 'Enter') && nextStageId) {
+      event.preventDefault()
+      moveDeal(dealId, nextStageId, getKeyboardMoveNote('next'))
+    }
+  }
+
   return (
     <div className="flex flex-col gap-4">
       <div className="grid gap-4 sm:grid-cols-3">
@@ -272,8 +295,12 @@ export function PipelineBoardClient({
                     <article
                       key={deal.id}
                       draggable={!isPending}
+                      tabIndex={0}
                       onDragStart={() => setDragId(deal.id)}
                       onDragEnd={() => setDragId(null)}
+                      onKeyDown={(event) =>
+                        handleDealCardKeyDown(event, deal.id, previousStage?.id, nextStage?.id)
+                      }
                       className={cn(
                         'group flex cursor-grab flex-col gap-2.5 rounded-lg border border-l-4 bg-card p-3 shadow-sm transition-all hover:shadow-md active:cursor-grabbing',
                         stage.isWon

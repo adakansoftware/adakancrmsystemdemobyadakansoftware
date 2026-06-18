@@ -6,23 +6,16 @@ import { createAuditLog } from '@/lib/audit/log'
 import { SESSION_COOKIE_NAME } from '@/lib/auth/constants'
 import { verifyPassword } from '@/lib/auth/password'
 import { db } from '@/lib/db/prisma'
+import { env } from '@/lib/env'
 
 const credentialsSchema = z.object({
   email: z.email(),
   password: z.string().min(8),
 })
 
-const authSecret =
-  process.env.NEXTAUTH_SECRET ??
-  process.env.AUTH_SECRET ??
-  process.env.SESSION_SECRET ??
-  (process.env.NODE_ENV === 'production'
-    ? undefined
-    : 'adikan-crm-dev-secret-change-in-production')
-
 export const { handlers, signIn, signOut, auth } = NextAuth({
   adapter: PrismaAdapter(db),
-  secret: authSecret,
+  secret: env.sessionSecret,
   session: {
     strategy: 'jwt',
   },
@@ -33,7 +26,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         httpOnly: true,
         sameSite: 'lax',
         path: '/',
-        secure: process.env.NODE_ENV === 'production',
+        secure: env.isProduction,
       },
     },
   },

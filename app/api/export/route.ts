@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getCurrentSession } from '@/lib/auth/session'
 import { db } from '@/lib/db/prisma'
 import { toNumber } from '@/lib/format'
+import { exportRouteQuerySchema } from '@/lib/validation/api'
 
 function csvEscape(value: unknown) {
   const text = String(value ?? '')
@@ -22,7 +23,15 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
-  const entity = request.nextUrl.searchParams.get('entity')
+  const parsedQuery = exportRouteQuerySchema.safeParse({
+    entity: request.nextUrl.searchParams.get('entity'),
+  })
+
+  if (!parsedQuery.success) {
+    return NextResponse.json({ error: 'Unsupported export entity' }, { status: 400 })
+  }
+
+  const { entity } = parsedQuery.data
 
   if (entity === 'contacts') {
     const contacts = await db.contact.findMany({

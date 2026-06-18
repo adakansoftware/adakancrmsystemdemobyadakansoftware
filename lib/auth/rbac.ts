@@ -136,3 +136,5 @@ export async function requireAuthenticatedUser() {
 
   return session
 }
+
+export type SessionUser = NonNullable<Awaited<ReturnType<typeof requireAuthenticatedUser>>['user']>

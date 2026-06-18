@@ -1,14 +1,13 @@
 'use client'
 
-import { useRouter } from 'next/navigation'
-import { useState, useTransition } from 'react'
-import { toast } from 'sonner'
 import { updateTaskAction } from '@/app/actions/crm'
 import { InlineSelectField } from '@/components/crm/inline-select-field'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
-import { taskStatuses, type TaskRow, type UserOption } from '@/lib/crm/view-models'
+import { useOptimisticRowAction } from '@/hooks/use-optimistic-row-action'
+import { type AssignableUsersData, type TasksPageData } from '@/lib/crm/queries'
+import { taskStatuses } from '@/lib/crm/view-models'
 import { formatDate } from '@/lib/format'
 import { priorityMeta, taskPriorityLabels, taskStatusLabels } from '@/lib/ui-meta'
 
@@ -16,45 +15,35 @@ export function TasksListClient({
   tasks,
   users,
 }: {
-  tasks: TaskRow[]
-  users: UserOption[]
+  tasks: TasksPageData
+  users: AssignableUsersData
 }) {
-  const router = useRouter()
-  const [isPending, startTransition] = useTransition()
-  const [pendingTaskId, setPendingTaskId] = useState<string | null>(null)
+  const { runRowAction, isRowPending } = useOptimisticRowAction<string>()
 
   function updateTask(
     taskId: string,
-    payload: { status?: TaskRow['status']; assigneeId?: string | null },
+    payload: { status?: TasksPageData[number]['status']; assigneeId?: string | null },
     successMessage: string,
   ) {
-    startTransition(async () => {
-      try {
-        setPendingTaskId(taskId)
-        const result = await updateTaskAction({
+    runRowAction(
+      taskId,
+      () =>
+        updateTaskAction({
           id: taskId,
           ...payload,
-        })
-
-        if (!result.success) {
-          throw new Error('Gorev guncellenemedi')
-        }
-
-        toast.success(successMessage)
-        router.refresh()
-      } catch (error) {
-        toast.error(error instanceof Error ? error.message : 'Gorev guncellemesi basarisiz')
-      } finally {
-        setPendingTaskId(null)
-      }
-    })
+        }),
+      {
+        successMessage,
+        errorMessage: 'Gorev guncellemesi basarisiz',
+      },
+    )
   }
 
   return (
     <Card>
       <CardContent className="flex flex-col p-0">
         {tasks.map((task, index) => {
-          const isRowPending = isPending && pendingTaskId === task.id
+          const rowPending = isRowPending(task.id)
 
           return (
             <div
@@ -78,7 +67,7 @@ export function TasksListClient({
                 onValueChange={(value) =>
                   updateTask(task.id, { status: value }, 'Gorev durumu guncellendi')
                 }
-                disabled={isRowPending}
+                disabled={rowPending}
                 className="w-40"
                 testId={`task-status-${task.id}`}
                 ariaLabel={`${task.title} durumunu degistir`}
@@ -102,7 +91,7 @@ export function TasksListClient({
                       'Gorev sorumlusu guncellendi',
                     )
                   }
-                  disabled={isRowPending}
+                  disabled={rowPending}
                   className="w-full"
                   testId={`task-owner-${task.id}`}
                   ariaLabel={`${task.title} sorumlusunu degistir`}

@@ -13,6 +13,10 @@ if (!global.__crmRateLimitStore__) {
   global.__crmRateLimitStore__ = rateLimitStore
 }
 
+// This in-memory limiter only protects a single Node.js instance.
+// In serverless or multi-instance deployments, use a shared store such as Redis,
+// Vercel KV, or another edge-compatible backend to enforce global limits.
+
 export function checkRateLimit(key: string, limit: number, windowMs: number) {
   const now = Date.now()
   const current = rateLimitStore.get(key)

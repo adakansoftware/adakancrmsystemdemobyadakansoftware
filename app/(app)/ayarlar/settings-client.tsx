@@ -1,8 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
-import { useState, useTransition } from 'react'
+import { useState } from 'react'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { ArrowDown, ArrowUp, Plus, Trash2 } from 'lucide-react'
 import { useForm } from 'react-hook-form'
@@ -38,64 +37,12 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-
-type SettingsClientProps = {
-  currentUser: {
-    id: string
-    name: string
-    email: string
-    roles: string[]
-  }
-  canManageUsers: boolean
-  users: Array<{
-    id: string
-    name: string
-    email: string
-    status: string
-    roleIds: string[]
-    roleSlugs: string[]
-  }>
-  roles: Array<{
-    id: string
-    slug: string
-    name: string
-  }>
-  overview: {
-    counts: {
-      companies: number
-      contacts: number
-      deals: number
-      tasks: number
-    }
-    pipelines: Array<{
-      id: string
-      name: string
-      key: string
-      description: string | null
-      isDefault: boolean
-      stages: Array<{
-        id: string
-        name: string
-        position: number
-        probability: number
-        isClosed: boolean
-        isWon: boolean
-      }>
-    }>
-    tags: Array<{
-      id: string
-      name: string
-      color: string
-      _count: {
-        companies: number
-        contacts: number
-        deals: number
-      }
-    }>
-  }
-}
-
-const userStatuses = ['ACTIVE', 'INVITED', 'SUSPENDED', 'ARCHIVED'] as const
+import { useOptimisticRowAction } from '@/hooks/use-optimistic-row-action'
+import { useServerActionToast } from '@/hooks/use-server-action-toast'
+import {
+  userStatuses,
+  type SettingsClientProps,
+} from '@/lib/crm/settings-view-models'
 
 const profileFormSchema = z.object({
   firstName: z.string().trim().min(1, 'Ad zorunlu'),
@@ -143,11 +90,10 @@ export function SettingsClient({
   roles,
   overview,
 }: SettingsClientProps) {
-  const router = useRouter()
-  const [isPending, startTransition] = useTransition()
-  const [pendingUserId, setPendingUserId] = useState<string | null>(null)
-  const [pendingPipelineId, setPendingPipelineId] = useState<string | null>(null)
-  const [pendingTagId, setPendingTagId] = useState<string | null>(null)
+  const { isPending, runServerAction } = useServerActionToast()
+  const userActions = useOptimisticRowAction<string>()
+  const pipelineActions = useOptimisticRowAction<string>()
+  const tagActions = useOptimisticRowAction<string>()
   const [createUserRoleId, setCreateUserRoleId] = useState(roles[0]?.id ?? '')
   const [createUserStatus, setCreateUserStatus] = useState<(typeof userStatuses)[number]>('INVITED')
   const [newStageNames, setNewStageNames] = useState<Record<string, string>>({})
@@ -212,29 +158,19 @@ export function SettingsClient({
     },
   })
 
-  function refreshWithSuccess(message: string) {
-    toast.success(message)
-    router.refresh()
-  }
-
   function updatePipelineName(pipelineId: string) {
-    startTransition(async () => {
-      try {
-        setPendingPipelineId(pipelineId)
-        const result = await updatePipelineAction({
+    pipelineActions.runRowAction(
+      pipelineId,
+      () =>
+        updatePipelineAction({
           id: pipelineId,
           name: pipelineNames[pipelineId],
-        })
-        if (!result.success) {
-          throw new Error('Pipeline guncellenemedi')
-        }
-        refreshWithSuccess('Pipeline adi guncellendi')
-      } catch (error) {
-        toast.error(error instanceof Error ? error.message : 'Pipeline guncellenemedi')
-      } finally {
-        setPendingPipelineId(null)
-      }
-    })
+        }),
+      {
+        successMessage: 'Pipeline adi guncellendi',
+        errorMessage: 'Pipeline guncellenemedi',
+      },
+    )
   }
 
   function updateStage(stageId: string) {
@@ -243,24 +179,19 @@ export function SettingsClient({
       return
     }
 
-    startTransition(async () => {
-      try {
-        setPendingPipelineId(stageId)
-        const result = await updateStageAction({
+    pipelineActions.runRowAction(
+      stageId,
+      () =>
+        updateStageAction({
           id: stageId,
           name: edit.name,
           probability: Number(edit.probability),
-        })
-        if (!result.success) {
-          throw new Error('Stage guncellenemedi')
-        }
-        refreshWithSuccess('Stage guncellendi')
-      } catch (error) {
-        toast.error(error instanceof Error ? error.message : 'Stage guncellenemedi')
-      } finally {
-        setPendingPipelineId(null)
-      }
-    })
+        }),
+      {
+        successMessage: 'Stage guncellendi',
+        errorMessage: 'Stage guncellenemedi',
+      },
+    )
   }
 
   function moveStage(pipelineId: string, stageId: string, direction: 'up' | 'down') {
@@ -279,9 +210,9 @@ export function SettingsClient({
       return
     }
 
-    startTransition(async () => {
-      try {
-        setPendingPipelineId(pipelineId)
+    pipelineActions.runRowAction(
+      pipelineId,
+      async () => {
         const tempPosition = 999
         const tempResult = await updateStageAction({ id: currentStage.id, position: tempPosition })
         if (!tempResult.success) throw new Error('Stage sirasi gecici olarak guncellenemedi')
@@ -295,13 +226,13 @@ export function SettingsClient({
           position: targetStage.position,
         })
         if (!currentResult.success) throw new Error('Stage sirasi guncellenemedi')
-        refreshWithSuccess('Stage sirasi guncellendi')
-      } catch (error) {
-        toast.error(error instanceof Error ? error.message : 'Stage sirasi guncellenemedi')
-      } finally {
-        setPendingPipelineId(null)
-      }
-    })
+        return currentResult
+      },
+      {
+        successMessage: 'Stage sirasi guncellendi',
+        errorMessage: 'Stage sirasi guncellenemedi',
+      },
+    )
   }
 
   function createStage(pipelineId: string) {
@@ -313,10 +244,10 @@ export function SettingsClient({
       return
     }
 
-    startTransition(async () => {
-      try {
-        setPendingPipelineId(pipelineId)
-        const result = await createStageAction({
+    pipelineActions.runRowAction(
+      pipelineId,
+      () =>
+        createStageAction({
           pipelineId,
           name: stageName,
           key: `${pipeline.key}-${stageName.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`,
@@ -324,18 +255,15 @@ export function SettingsClient({
           probability: 0,
           isClosed: false,
           isWon: false,
-        })
-        if (!result.success) {
-          throw new Error('Yeni stage olusturulamadi')
-        }
-        setNewStageNames((current) => ({ ...current, [pipelineId]: '' }))
-        refreshWithSuccess('Yeni stage olusturuldu')
-      } catch (error) {
-        toast.error(error instanceof Error ? error.message : 'Stage olusturulamadi')
-      } finally {
-        setPendingPipelineId(null)
-      }
-    })
+        }),
+      {
+        successMessage: 'Yeni stage olusturuldu',
+        errorMessage: 'Stage olusturulamadi',
+        onSuccess: () => {
+          setNewStageNames((current) => ({ ...current, [pipelineId]: '' }))
+        },
+      },
+    )
   }
 
   function updateUserRole(userId: string, nextSlug: string) {
@@ -346,9 +274,9 @@ export function SettingsClient({
       return
     }
 
-    startTransition(async () => {
-      try {
-        setPendingUserId(userId)
+    userActions.runRowAction(
+      userId,
+      async () => {
         for (const roleId of user.roleIds) {
           const removeResult = await removeRoleAction({ userId, roleId })
           if (!removeResult.success) {
@@ -360,105 +288,76 @@ export function SettingsClient({
         if (!assignResult.success) {
           throw new Error('Yeni rol atanamadi')
         }
-
-        refreshWithSuccess('Kullanici rolu guncellendi')
-      } catch (error) {
-        toast.error(error instanceof Error ? error.message : 'Rol guncellemesi basarisiz oldu')
-      } finally {
-        setPendingUserId(null)
-      }
-    })
+        return assignResult
+      },
+      {
+        successMessage: 'Kullanici rolu guncellendi',
+        errorMessage: 'Rol guncellemesi basarisiz oldu',
+      },
+    )
   }
 
   function updateUserStatus(userId: string, status: (typeof userStatuses)[number]) {
-    startTransition(async () => {
-      try {
-        setPendingUserId(userId)
-        const result = await updateUserStatusAction({ userId, status })
-        if (!result.success) {
-          throw new Error('Kullanici durumu dogrulanamadi')
-        }
-        refreshWithSuccess('Kullanici durumu guncellendi')
-      } catch (error) {
-        toast.error(error instanceof Error ? error.message : 'Durum guncellemesi basarisiz oldu')
-      } finally {
-        setPendingUserId(null)
-      }
+    userActions.runRowAction(userId, () => updateUserStatusAction({ userId, status }), {
+      successMessage: 'Kullanici durumu guncellendi',
+      errorMessage: 'Durum guncellemesi basarisiz oldu',
     })
   }
 
   const handleProfileSubmit = profileForm.handleSubmit((values) => {
-    startTransition(async () => {
-      try {
-        const result = await updateProfileAction(values)
-        if (!result.success) {
-          throw new Error('Profil bilgileri dogrulanamadi')
-        }
-        refreshWithSuccess('Profil bilgileri guncellendi')
-      } catch (error) {
-        toast.error(error instanceof Error ? error.message : 'Profil guncellenemedi')
-      }
+    runServerAction(() => updateProfileAction(values), {
+      successMessage: 'Profil bilgileri guncellendi',
+      errorMessage: 'Profil guncellenemedi',
     })
   })
 
   const handlePasswordSubmit = passwordForm.handleSubmit((values) => {
-    startTransition(async () => {
-      try {
-        const result = await changePasswordAction(values)
-        if (!result.success) {
-          throw new Error('Sifre alanlari dogrulanamadi')
-        }
+    runServerAction(() => changePasswordAction(values), {
+      successMessage: 'Sifre basariyla degistirildi',
+      errorMessage: 'Sifre degistirilemedi',
+      onSuccess: () => {
         passwordForm.reset()
-        refreshWithSuccess('Sifre basariyla degistirildi')
-      } catch (error) {
-        toast.error(error instanceof Error ? error.message : 'Sifre degistirilemedi')
-      }
+      },
     })
   })
 
   const handleCreateUser = createUserForm.handleSubmit((values) => {
-    startTransition(async () => {
-      try {
-        const result = await createUserAccountAction({
+    runServerAction(
+      () =>
+        createUserAccountAction({
           ...values,
           roleId: createUserRoleId,
           status: createUserStatus,
-        })
-        if (!result.success) {
-          throw new Error('Yeni kullanici bilgileri dogrulanamadi')
-        }
-        createUserForm.reset({
-          firstName: '',
-          lastName: '',
-          email: '',
-          password: '',
-          roleId: roles[0]?.id ?? '',
-          status: 'INVITED',
-        })
-        setCreateUserRoleId(roles[0]?.id ?? '')
-        setCreateUserStatus('INVITED')
-        refreshWithSuccess('Yeni kullanici olusturuldu')
-      } catch (error) {
-        toast.error(error instanceof Error ? error.message : 'Kullanici olusturulamadi')
-      }
-    })
+        }),
+      {
+        successMessage: 'Yeni kullanici olusturuldu',
+        errorMessage: 'Kullanici olusturulamadi',
+        onSuccess: () => {
+          createUserForm.reset({
+            firstName: '',
+            lastName: '',
+            email: '',
+            password: '',
+            roleId: roles[0]?.id ?? '',
+            status: 'INVITED',
+          })
+          setCreateUserRoleId(roles[0]?.id ?? '')
+          setCreateUserStatus('INVITED')
+        },
+      },
+    )
   })
 
   const handleCreateTag = createTagForm.handleSubmit((values) => {
-    startTransition(async () => {
-      try {
-        const result = await createTagAction(values)
-        if (!result.success) {
-          throw new Error('Etiket olusturulamadi')
-        }
+    runServerAction(() => createTagAction(values), {
+      successMessage: 'Etiket olusturuldu',
+      errorMessage: 'Etiket olusturulamadi',
+      onSuccess: () => {
         createTagForm.reset({
           name: '',
           color: '#6366f1',
         })
-        refreshWithSuccess('Etiket olusturuldu')
-      } catch (error) {
-        toast.error(error instanceof Error ? error.message : 'Etiket olusturulamadi')
-      }
+      },
     })
   })
 
@@ -474,39 +373,24 @@ export function SettingsClient({
       return
     }
 
-    startTransition(async () => {
-      try {
-        setPendingTagId(tagId)
-        const result = await updateTagAction({
+    tagActions.runRowAction(
+      tagId,
+      () =>
+        updateTagAction({
           id: tagId,
           ...parsed.data,
-        })
-        if (!result.success) {
-          throw new Error('Etiket guncellenemedi')
-        }
-        refreshWithSuccess('Etiket guncellendi')
-      } catch (error) {
-        toast.error(error instanceof Error ? error.message : 'Etiket guncellenemedi')
-      } finally {
-        setPendingTagId(null)
-      }
-    })
+        }),
+      {
+        successMessage: 'Etiket guncellendi',
+        errorMessage: 'Etiket guncellenemedi',
+      },
+    )
   }
 
   function removeTag(tagId: string) {
-    startTransition(async () => {
-      try {
-        setPendingTagId(tagId)
-        const result = await deleteTagAction({ id: tagId })
-        if (!result.success) {
-          throw new Error('Etiket silinemedi')
-        }
-        refreshWithSuccess('Etiket silindi')
-      } catch (error) {
-        toast.error(error instanceof Error ? error.message : 'Etiket silinemedi')
-      } finally {
-        setPendingTagId(null)
-      }
+    tagActions.runRowAction(tagId, () => deleteTagAction({ id: tagId }), {
+      successMessage: 'Etiket silindi',
+      errorMessage: 'Etiket silinemedi',
     })
   }
 
@@ -611,7 +495,7 @@ export function SettingsClient({
                 </TableHeader>
                 <TableBody>
                   {users.map((user) => {
-                    const isRowPending = isPending && pendingUserId === user.id
+                    const rowPending = userActions.isRowPending(user.id)
 
                     return (
                       <TableRow key={user.id}>
@@ -627,7 +511,7 @@ export function SettingsClient({
                             onValueChange={(value) =>
                               updateUserStatus(user.id, value as (typeof userStatuses)[number])
                             }
-                            disabled={isRowPending}
+                            disabled={rowPending}
                             ariaLabel={`${user.name} durumunu degistir`}
                             options={userStatuses.map((status) => ({
                               value: status,
@@ -639,7 +523,7 @@ export function SettingsClient({
                           <InlineSelectField
                             value={user.roleSlugs[0] ?? roles[0]?.slug ?? ''}
                             onValueChange={(value) => updateUserRole(user.id, value)}
-                            disabled={isRowPending}
+                            disabled={rowPending}
                             ariaLabel={`${user.name} rolunu degistir`}
                             options={roles.map((role) => ({
                               value: role.slug,
@@ -648,8 +532,8 @@ export function SettingsClient({
                           />
                         </TableCell>
                         <TableCell className="text-right">
-                          <Badge variant={isRowPending ? 'warning' : 'secondary'}>
-                            {isRowPending ? 'Isleniyor' : 'Guncel'}
+                          <Badge variant={rowPending ? 'warning' : 'secondary'}>
+                            {rowPending ? 'Isleniyor' : 'Guncel'}
                           </Badge>
                         </TableCell>
                       </TableRow>
@@ -774,7 +658,7 @@ export function SettingsClient({
                   />
                   <Button
                     onClick={() => updatePipelineName(pipeline.id)}
-                    disabled={isPending && pendingPipelineId === pipeline.id}
+                    disabled={pipelineActions.isRowPending(pipeline.id)}
                   >
                     Pipeline Adini Kaydet
                   </Button>
@@ -907,13 +791,13 @@ export function SettingsClient({
                       <Badge variant="outline">
                         {tag._count.companies + tag._count.contacts + tag._count.deals} bag
                       </Badge>
-                      <Button onClick={() => saveTag(tag.id)} disabled={isPending && pendingTagId === tag.id}>
+                      <Button onClick={() => saveTag(tag.id)} disabled={tagActions.isRowPending(tag.id)}>
                         Kaydet
                       </Button>
                       <Button
                         variant="outline"
                         onClick={() => removeTag(tag.id)}
-                        disabled={isPending && pendingTagId === tag.id}
+                        disabled={tagActions.isRowPending(tag.id)}
                       >
                         <Trash2 />
                       </Button>

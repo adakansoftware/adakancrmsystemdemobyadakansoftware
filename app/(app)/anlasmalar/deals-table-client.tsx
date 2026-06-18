@@ -1,9 +1,6 @@
 'use client'
 
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
-import { useState, useTransition } from 'react'
-import { toast } from 'sonner'
 import { moveDealToStageAction, updateDealAction } from '@/app/actions/crm'
 import { InlineSelectField } from '@/components/crm/inline-select-field'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
@@ -15,7 +12,9 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import { dealStatuses, type DealRow, type UserOption } from '@/lib/crm/view-models'
+import { useOptimisticRowAction } from '@/hooks/use-optimistic-row-action'
+import { type AssignableUsersData, type DealsPageData } from '@/lib/crm/queries'
+import { dealStatuses } from '@/lib/crm/view-models'
 import { formatCurrency, formatDate } from '@/lib/format'
 import { dealStatusLabels } from '@/lib/ui-meta'
 
@@ -23,100 +22,64 @@ export function DealsTableClient({
   deals,
   users,
 }: {
-  deals: DealRow[]
-  users: UserOption[]
+  deals: DealsPageData
+  users: AssignableUsersData
 }) {
-  const router = useRouter()
-  const [isPending, startTransition] = useTransition()
-  const [pendingDealId, setPendingDealId] = useState<string | null>(null)
-
-  function refreshWithSuccess(message: string) {
-    toast.success(message)
-    router.refresh()
-  }
+  const { runRowAction, isRowPending } = useOptimisticRowAction<string>()
 
   function updateDealOwner(dealId: string, ownerId: string | null) {
-    startTransition(async () => {
-      try {
-        setPendingDealId(dealId)
-        const result = await updateDealAction({ id: dealId, ownerId })
-
-        if (!result.success) {
-          throw new Error('Anlasma sorumlusu guncellenemedi')
-        }
-
-        refreshWithSuccess('Anlasma sorumlusu guncellendi')
-      } catch (error) {
-        toast.error(error instanceof Error ? error.message : 'Anlasma guncellemesi basarisiz')
-      } finally {
-        setPendingDealId(null)
-      }
+    runRowAction(dealId, () => updateDealAction({ id: dealId, ownerId }), {
+      successMessage: 'Anlasma sorumlusu guncellendi',
+      errorMessage: 'Anlasma guncellemesi basarisiz',
     })
   }
 
-  function updateDealStage(deal: DealRow, stageId: string) {
-    startTransition(async () => {
-      try {
-        setPendingDealId(deal.id)
-        const result = await moveDealToStageAction({
+  function updateDealStage(deal: DealsPageData[number], stageId: string) {
+    runRowAction(
+      deal.id,
+      () =>
+        moveDealToStageAction({
           dealId: deal.id,
           toPipelineId: deal.pipelineId,
           toStageId: stageId,
-        })
-
-        if (!result.success) {
-          throw new Error('Anlasma asamasi guncellenemedi')
-        }
-
-        refreshWithSuccess('Anlasma asamasi guncellendi')
-      } catch (error) {
-        toast.error(error instanceof Error ? error.message : 'Asama degisikligi basarisiz')
-      } finally {
-        setPendingDealId(null)
-      }
-    })
+        }),
+      {
+        successMessage: 'Anlasma asamasi guncellendi',
+        errorMessage: 'Asama degisikligi basarisiz',
+      },
+    )
   }
 
-  function updateDealStatus(deal: DealRow, status: DealRow['status']) {
-    startTransition(async () => {
-      try {
-        setPendingDealId(deal.id)
-
+  function updateDealStatus(deal: DealsPageData[number], status: DealsPageData[number]['status']) {
+    runRowAction(
+      deal.id,
+      async () => {
         if (status === 'ABANDONED') {
-          const result = await updateDealAction({ id: deal.id, status })
-          if (!result.success) {
-            throw new Error('Anlasma durumu guncellenemedi')
-          }
-        } else {
-          const targetStage =
-            status === 'OPEN'
-              ? deal.availableStages.find((stage) => !stage.isClosed)
-              : deal.availableStages.find((stage) =>
-                  status === 'WON' ? stage.isClosed && stage.isWon : stage.isClosed && !stage.isWon,
-                )
-
-          if (!targetStage) {
-            throw new Error('Bu durum icin uygun stage bulunamadi')
-          }
-
-          const result = await moveDealToStageAction({
-            dealId: deal.id,
-            toPipelineId: deal.pipelineId,
-            toStageId: targetStage.id,
-          })
-
-          if (!result.success) {
-            throw new Error('Anlasma durumu guncellenemedi')
-          }
+          return updateDealAction({ id: deal.id, status })
         }
 
-        refreshWithSuccess('Anlasma durumu guncellendi')
-      } catch (error) {
-        toast.error(error instanceof Error ? error.message : 'Durum degisikligi basarisiz')
-      } finally {
-        setPendingDealId(null)
-      }
-    })
+        const targetStage =
+          status === 'OPEN'
+            ? deal.availableStages.find((stage) => !stage.isClosed)
+            : deal.availableStages.find((stage) =>
+                status === 'WON' ? stage.isClosed && stage.isWon : stage.isClosed && !stage.isWon,
+              )
+
+        if (!targetStage) {
+          throw new Error('Bu durum icin uygun stage bulunamadi')
+        }
+
+        return moveDealToStageAction({
+          dealId: deal.id,
+          toPipelineId: deal.pipelineId,
+          toStageId: targetStage.id,
+        })
+      },
+      {
+        successMessage: 'Anlasma durumu guncellendi',
+        errorMessage: 'Durum degisikligi basarisiz',
+      },
+    )
   }
 
   return (
@@ -135,7 +98,7 @@ export function DealsTableClient({
       </TableHeader>
       <TableBody>
         {deals.map((deal) => {
-          const isRowPending = isPending && pendingDealId === deal.id
+          const rowPending = isRowPending(deal.id)
 
           return (
             <TableRow key={deal.id} data-testid={`deal-row-${deal.id}`}>
@@ -157,7 +120,7 @@ export function DealsTableClient({
                 <InlineSelectField
                   value={deal.status}
                   onValueChange={(value) => updateDealStatus(deal, value)}
-                  disabled={isRowPending}
+                  disabled={rowPending}
                   testId={`deal-status-${deal.id}`}
                   ariaLabel={`${deal.title} durumunu degistir`}
                   options={dealStatuses.map((status) => ({
@@ -170,7 +133,7 @@ export function DealsTableClient({
                 <InlineSelectField
                   value={deal.stageId}
                   onValueChange={(value) => updateDealStage(deal, value)}
-                  disabled={isRowPending}
+                  disabled={rowPending}
                   testId={`deal-stage-${deal.id}`}
                   ariaLabel={`${deal.title} asamasini degistir`}
                   options={deal.availableStages.map((stage) => ({
@@ -195,7 +158,7 @@ export function DealsTableClient({
                     onValueChange={(value) =>
                       updateDealOwner(deal.id, value === 'unassigned' ? null : value)
                     }
-                    disabled={isRowPending}
+                    disabled={rowPending}
                     className="w-full"
                     testId={`deal-owner-${deal.id}`}
                     ariaLabel={`${deal.title} sorumlusunu degistir`}

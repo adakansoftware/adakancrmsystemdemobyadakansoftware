@@ -4,6 +4,7 @@ import { Analytics } from '@vercel/analytics/next'
 import { ThemeProvider } from '@/components/theme-provider'
 import { Toaster } from '@/components/ui/sonner'
 import { TooltipProvider } from '@/components/ui/tooltip'
+import { env } from '@/lib/env'
 import './globals.css'
 
 const geistSans = Geist({ variable: '--font-geist-sans', subsets: ['latin'] })
@@ -13,9 +14,9 @@ const geistMono = Geist_Mono({
 })
 
 export const metadata: Metadata = {
-  title: 'Adakan CRM - Müşteri İlişkileri Yönetimi',
+  title: 'Adakan CRM - Musteri Iliskileri Yonetimi',
   description:
-    'Küçük işletmeler için modern, sade ve güçlü CRM. Lead takibi, satış hattı ve görev yönetimi tek panelde.',
+    'Kucuk isletmeler icin modern, sade ve guclu CRM. Lead takibi, satis hatti ve gorev yonetimi tek panelde.',
   generator: 'Codex',
 }
 
@@ -40,7 +41,7 @@ export default function RootLayout({
           <TooltipProvider delay={200}>{children}</TooltipProvider>
           <Toaster />
         </ThemeProvider>
-        {process.env.NODE_ENV === 'production' && <Analytics />}
+        {env.isProduction && <Analytics />}
       </body>
     </html>
   )

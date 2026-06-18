@@ -5,6 +5,11 @@ import { PageHeader } from '@/components/shared/page-header'
 import { getRoleSlugs, requireAuthenticatedUser } from '@/lib/auth/rbac'
 import { SYSTEM_ROLE_DEFINITIONS } from '@/lib/auth/constants'
 import { getSettingsOverviewData } from '@/lib/crm/queries'
+import {
+  toSettingsCurrentUser,
+  toSettingsRoleOptions,
+  toSettingsUserRows,
+} from '@/lib/crm/settings-view-models'
 import { db } from '@/lib/db/prisma'
 
 export default async function SettingsPage() {
@@ -37,26 +42,10 @@ export default async function SettingsPage() {
         description="Profil, guvenlik ve kullanici yonetimi ayarlari"
       />
       <SettingsClient
-        currentUser={{
-          id: session.user.id,
-          name: `${session.user.firstName} ${session.user.lastName}`,
-          email: session.user.email,
-          roles: roleSlugs,
-        }}
+        currentUser={toSettingsCurrentUser(session.user, roleSlugs)}
         canManageUsers={canManageUsers}
-        users={users.map((user) => ({
-          id: user.id,
-          name: `${user.firstName} ${user.lastName}`,
-          email: user.email,
-          status: user.status,
-          roleIds: user.roles.map((entry) => entry.roleId),
-          roleSlugs: user.roles.map((entry) => entry.role.slug),
-        }))}
-        roles={roles.map((role) => ({
-          id: role.id,
-          slug: role.slug,
-          name: role.name,
-        }))}
+        users={toSettingsUserRows(users)}
+        roles={toSettingsRoleOptions(roles)}
         overview={settingsOverview}
       />
     </div>

@@ -1,8 +1,5 @@
 'use client'
 
-import { useRouter } from 'next/navigation'
-import { useState, useTransition } from 'react'
-import { toast } from 'sonner'
 import { updateLeadAction } from '@/app/actions/crm'
 import { InlineSelectField } from '@/components/crm/inline-select-field'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
@@ -15,7 +12,9 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import { leadStatuses, type LeadRow, type UserOption } from '@/lib/crm/view-models'
+import { useOptimisticRowAction } from '@/hooks/use-optimistic-row-action'
+import { type AssignableUsersData, type LeadsPageData } from '@/lib/crm/queries'
+import { leadStatuses } from '@/lib/crm/view-models'
 import { formatCurrency } from '@/lib/format'
 import { getInitials } from '@/lib/helpers'
 import {
@@ -28,38 +27,28 @@ export function LeadsTableClient({
   leads,
   users,
 }: {
-  leads: LeadRow[]
-  users: UserOption[]
+  leads: LeadsPageData
+  users: AssignableUsersData
 }) {
-  const router = useRouter()
-  const [isPending, startTransition] = useTransition()
-  const [pendingLeadId, setPendingLeadId] = useState<string | null>(null)
+  const { runRowAction, isRowPending } = useOptimisticRowAction<string>()
 
   function updateLead(
     leadId: string,
-    payload: { status?: LeadRow['status']; ownerId?: string | null },
+    payload: { status?: LeadsPageData[number]['status']; ownerId?: string | null },
     successMessage: string,
   ) {
-    startTransition(async () => {
-      try {
-        setPendingLeadId(leadId)
-        const result = await updateLeadAction({
+    runRowAction(
+      leadId,
+      () =>
+        updateLeadAction({
           id: leadId,
           ...payload,
-        })
-
-        if (!result.success) {
-          throw new Error('Lead guncellenemedi')
-        }
-
-        toast.success(successMessage)
-        router.refresh()
-      } catch (error) {
-        toast.error(error instanceof Error ? error.message : 'Lead guncellemesi basarisiz')
-      } finally {
-        setPendingLeadId(null)
-      }
-    })
+        }),
+      {
+        successMessage,
+        errorMessage: 'Lead guncellemesi basarisiz',
+      },
+    )
   }
 
   return (
@@ -78,7 +67,7 @@ export function LeadsTableClient({
       </TableHeader>
       <TableBody>
         {leads.map((lead) => {
-          const isRowPending = isPending && pendingLeadId === lead.id
+          const rowPending = isRowPending(lead.id)
 
           return (
             <TableRow key={lead.id} data-testid={`lead-row-${lead.id}`}>
@@ -111,7 +100,7 @@ export function LeadsTableClient({
                   onValueChange={(value) =>
                     updateLead(lead.id, { status: value }, 'Lead durumu guncellendi')
                   }
-                  disabled={isRowPending}
+                  disabled={rowPending}
                   testId={`lead-status-${lead.id}`}
                   ariaLabel={`${lead.title} durumunu degistir`}
                   options={leadStatuses.map((status) => ({
@@ -133,7 +122,7 @@ export function LeadsTableClient({
                       'Lead sorumlusu guncellendi',
                     )
                   }
-                  disabled={isRowPending}
+                  disabled={rowPending}
                   testId={`lead-owner-${lead.id}`}
                   ariaLabel={`${lead.title} sorumlusunu degistir`}
                   options={[

@@ -1446,3 +1446,9 @@ export async function getSettingsOverviewData() {
     tags,
   }
 }
+
+export type AssignableUsersData = Awaited<ReturnType<typeof getAssignableUsers>>
+export type LeadsPageData = Awaited<ReturnType<typeof getLeadsPageData>>
+export type DealsPageData = Awaited<ReturnType<typeof getDealsPageData>>
+export type TasksPageData = Awaited<ReturnType<typeof getTasksPageData>>
+export type SettingsOverviewData = Awaited<ReturnType<typeof getSettingsOverviewData>>
