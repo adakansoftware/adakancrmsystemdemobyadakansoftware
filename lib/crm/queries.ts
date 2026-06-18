@@ -640,8 +640,8 @@ export async function getCompaniesManagementPageData() {
 export async function getContactDetailPageData(contactId: string) {
   await requirePermission('contacts:read')
 
-  const contact = await db.contact.findUnique({
-    where: { id: contactId },
+  const contact = await db.contact.findFirst({
+    where: { id: contactId, archivedAt: null },
     select: {
       id: true,
       companyId: true,
@@ -772,8 +772,8 @@ export async function getContactDetailPageData(contactId: string) {
 export async function getCompanyDetailPageData(companyId: string) {
   await requirePermission('companies:read')
 
-  const company = await db.company.findUnique({
-    where: { id: companyId },
+  const company = await db.company.findFirst({
+    where: { id: companyId, archivedAt: null },
     select: {
       id: true,
       name: true,
@@ -916,8 +916,8 @@ export async function getCompanyDetailPageData(companyId: string) {
 export async function getDealDetailPageData(dealId: string) {
   await requirePermission('deals:read')
 
-  const deal = await db.deal.findUnique({
-    where: { id: dealId },
+  const deal = await db.deal.findFirst({
+    where: { id: dealId, archivedAt: null },
     select: {
       id: true,
       title: true,

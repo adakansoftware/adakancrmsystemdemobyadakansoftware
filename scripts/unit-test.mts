@@ -1,4 +1,8 @@
 import { buildHealthSummary } from "../lib/health.ts";
+import {
+  exportRouteQuerySchema,
+  searchRouteQuerySchema,
+} from "../lib/validation/api.ts";
 
 function assert(condition: unknown, message: string) {
   if (!condition) {
@@ -52,7 +56,22 @@ function testErrorSummary() {
   assert(summary.envReady === false, "Error summary envReady false olmali");
 }
 
+function testSearchRouteSchema() {
+  const summary = searchRouteQuerySchema.parse({});
+  assert(summary.q === "", "Search schema bos q degeri uretmeli");
+}
+
+function testExportRouteSchema() {
+  const summary = exportRouteQuerySchema.safeParse({ entity: "dashboard" });
+  assert(summary.success === true, "Export schema dashboard entity kabul etmeli");
+
+  const invalid = exportRouteQuerySchema.safeParse({ entity: "users" });
+  assert(invalid.success === false, "Export schema bilinmeyen entity reddetmeli");
+}
+
 testHealthySummary();
 testWarnSummary();
 testErrorSummary();
+testSearchRouteSchema();
+testExportRouteSchema();
 console.log("Unit checks passed");

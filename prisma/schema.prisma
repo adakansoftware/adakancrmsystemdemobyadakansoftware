@@ -132,6 +132,7 @@ model User {
 
   @@index([status])
   @@index([lastLoginAt])
+  @@index([archivedAt, status])
 }
 
 model Role {
@@ -192,6 +193,7 @@ model Company {
   @@index([ownerId])
   @@index([status])
   @@index([city])
+  @@index([archivedAt, status])
 }
 
 model Contact {
@@ -222,6 +224,7 @@ model Contact {
   @@index([ownerId])
   @@index([email])
   @@index([lastName, firstName])
+  @@index([archivedAt, ownerId])
 }
 
 model Pipeline {
@@ -244,6 +247,7 @@ model Pipeline {
 
   @@index([entityType])
   @@index([isDefault])
+  @@index([archivedAt, entityType, isDefault])
 }
 
 model Stage {
@@ -311,6 +315,8 @@ model Lead {
   @@index([pipelineId, stageId])
   @@index([status, source])
   @@index([expectedCloseAt])
+  @@index([archivedAt, status])
+  @@index([archivedAt, ownerId])
 }
 
 model Deal {
@@ -352,6 +358,9 @@ model Deal {
   @@index([pipelineId, stageId])
   @@index([status])
   @@index([expectedCloseAt])
+  @@index([archivedAt, status])
+  @@index([archivedAt, pipelineId, stageId])
+  @@index([archivedAt, ownerId])
 }
 
 model DealStageHistory {
@@ -425,6 +434,9 @@ model Task {
   @@index([leadId])
   @@index([dealId])
   @@index([dueAt])
+  @@index([archivedAt, status])
+  @@index([archivedAt, assigneeId])
+  @@index([archivedAt, dueAt])
 }
 
 model Activity {
