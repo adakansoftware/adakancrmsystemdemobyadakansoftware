@@ -1,9 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { useState, useTransition } from 'react'
-import { useRouter } from 'next/navigation'
-import { toast } from 'sonner'
+import { useState } from 'react'
 import {
   deleteContactAction,
   updateContactAction,
@@ -36,6 +34,7 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { useServerActionToast } from '@/hooks/use-server-action-toast'
 import type { ContactRow, UserOption } from '@/lib/crm/view-models'
 import { formatCurrency, formatDate } from '@/lib/format'
 import { getInitials } from '@/lib/helpers'
@@ -56,8 +55,7 @@ function ContactManagementDialog({
   users,
   companies,
 }: ContactManagementDialogProps) {
-  const router = useRouter()
-  const [isPending, startTransition] = useTransition()
+  const { isPending, runServerAction } = useServerActionToast()
   const [form, setForm] = useState({
     firstName: contact.firstName,
     lastName: contact.lastName,
@@ -69,15 +67,10 @@ function ContactManagementDialog({
     ownerId: contact.ownerId ?? 'unassigned',
   })
 
-  function refresh(message: string) {
-    toast.success(message)
-    router.refresh()
-  }
-
   function saveContact() {
-    startTransition(async () => {
-      try {
-        const result = await updateContactAction({
+    runServerAction(
+      () =>
+        updateContactAction({
           id: contact.id,
           firstName: form.firstName,
           lastName: form.lastName,
@@ -87,31 +80,18 @@ function ContactManagementDialog({
           mobilePhone: form.mobilePhone.trim() || null,
           companyId: form.companyId === 'none' ? null : form.companyId,
           ownerId: form.ownerId === 'unassigned' ? null : form.ownerId,
-        })
-
-        if (!result.success) {
-          throw new Error('Musteri guncellenemedi')
-        }
-
-        refresh('Musteri guncellendi')
-      } catch (error) {
-        toast.error(error instanceof Error ? error.message : 'Musteri guncellenemedi')
-      }
-    })
+        }),
+      {
+        successMessage: 'Musteri guncellendi',
+        errorMessage: 'Musteri guncellenemedi',
+      },
+    )
   }
 
   function archiveContact() {
-    startTransition(async () => {
-      try {
-        const result = await deleteContactAction({ id: contact.id })
-        if (!result.success) {
-          throw new Error('Musteri arsivlenemedi')
-        }
-
-        refresh('Musteri arsive tasindi')
-      } catch (error) {
-        toast.error(error instanceof Error ? error.message : 'Musteri arsivlenemedi')
-      }
+    runServerAction(() => deleteContactAction({ id: contact.id }), {
+      successMessage: 'Musteri arsive tasindi',
+      errorMessage: 'Musteri arsivlenemedi',
     })
   }
 

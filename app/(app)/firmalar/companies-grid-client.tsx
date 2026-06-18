@@ -1,14 +1,9 @@
 'use client'
 
 import Link from 'next/link'
-import { useState, useTransition } from 'react'
-import { useRouter } from 'next/navigation'
+import { useState } from 'react'
 import { Building2, Handshake, MapPin, SearchX, Users } from 'lucide-react'
-import { toast } from 'sonner'
-import {
-  deleteCompanyAction,
-  updateCompanyAction,
-} from '@/app/actions/crm'
+import { deleteCompanyAction, updateCompanyAction } from '@/app/actions/crm'
 import { EntityActivityComposer } from '@/components/crm/entity-activity-composer'
 import { EntityActivityFeed } from '@/components/crm/entity-activity-feed'
 import { EntityNotesPanel } from '@/components/crm/entity-notes-panel'
@@ -16,13 +11,7 @@ import { InlineSelectField } from '@/components/crm/inline-select-field'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import {
-  Card,
-  CardContent,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card'
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 import {
   Dialog,
   DialogContent,
@@ -41,6 +30,7 @@ import {
 import { Input } from '@/components/ui/input'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Textarea } from '@/components/ui/textarea'
+import { useServerActionToast } from '@/hooks/use-server-action-toast'
 import type { CompanyRow, UserOption } from '@/lib/crm/view-models'
 import { formatCurrency } from '@/lib/format'
 import { getInitials } from '@/lib/helpers'
@@ -66,8 +56,7 @@ function CompanyManagementDialog({
   company: CompanyRow
   users: UserOption[]
 }) {
-  const router = useRouter()
-  const [isPending, startTransition] = useTransition()
+  const { isPending, runServerAction } = useServerActionToast()
   const [form, setForm] = useState({
     name: company.name,
     legalName: company.legalName,
@@ -83,15 +72,10 @@ function CompanyManagementDialog({
     status: company.status,
   })
 
-  function refresh(message: string) {
-    toast.success(message)
-    router.refresh()
-  }
-
   function saveCompany() {
-    startTransition(async () => {
-      try {
-        const result = await updateCompanyAction({
+    runServerAction(
+      () =>
+        updateCompanyAction({
           id: company.id,
           name: form.name,
           legalName: form.legalName.trim() || null,
@@ -105,31 +89,18 @@ function CompanyManagementDialog({
           employeeCount: form.employeeCount.trim() ? Number(form.employeeCount) : null,
           ownerId: form.ownerId === 'unassigned' ? null : form.ownerId,
           status: form.status,
-        })
-
-        if (!result.success) {
-          throw new Error('Firma guncellenemedi')
-        }
-
-        refresh('Firma guncellendi')
-      } catch (error) {
-        toast.error(error instanceof Error ? error.message : 'Firma guncellenemedi')
-      }
-    })
+        }),
+      {
+        successMessage: 'Firma guncellendi',
+        errorMessage: 'Firma guncellenemedi',
+      },
+    )
   }
 
   function archiveCompany() {
-    startTransition(async () => {
-      try {
-        const result = await deleteCompanyAction({ id: company.id })
-        if (!result.success) {
-          throw new Error('Firma arsivlenemedi')
-        }
-
-        refresh('Firma arsive tasindi')
-      } catch (error) {
-        toast.error(error instanceof Error ? error.message : 'Firma arsivlenemedi')
-      }
+    runServerAction(() => deleteCompanyAction({ id: company.id }), {
+      successMessage: 'Firma arsive tasindi',
+      errorMessage: 'Firma arsivlenemedi',
     })
   }
 
@@ -155,54 +126,110 @@ function CompanyManagementDialog({
             <div className="grid gap-4 md:grid-cols-2">
               <label className="space-y-2 text-sm">
                 <span>Firma Adi</span>
-                <Input value={form.name} onChange={(event) => setForm((current) => ({ ...current, name: event.target.value }))} />
+                <Input
+                  value={form.name}
+                  onChange={(event) =>
+                    setForm((current) => ({ ...current, name: event.target.value }))
+                  }
+                />
               </label>
               <label className="space-y-2 text-sm">
                 <span>Yasal Unvan</span>
-                <Input value={form.legalName} onChange={(event) => setForm((current) => ({ ...current, legalName: event.target.value }))} />
+                <Input
+                  value={form.legalName}
+                  onChange={(event) =>
+                    setForm((current) => ({ ...current, legalName: event.target.value }))
+                  }
+                />
               </label>
               <label className="space-y-2 text-sm">
                 <span>E-posta</span>
-                <Input type="email" value={form.email} onChange={(event) => setForm((current) => ({ ...current, email: event.target.value }))} />
+                <Input
+                  type="email"
+                  value={form.email}
+                  onChange={(event) =>
+                    setForm((current) => ({ ...current, email: event.target.value }))
+                  }
+                />
               </label>
               <label className="space-y-2 text-sm">
                 <span>Telefon</span>
-                <Input value={form.phone} onChange={(event) => setForm((current) => ({ ...current, phone: event.target.value }))} />
+                <Input
+                  value={form.phone}
+                  onChange={(event) =>
+                    setForm((current) => ({ ...current, phone: event.target.value }))
+                  }
+                />
               </label>
               <label className="space-y-2 text-sm">
                 <span>Web Sitesi</span>
-                <Input value={form.website} onChange={(event) => setForm((current) => ({ ...current, website: event.target.value }))} />
+                <Input
+                  value={form.website}
+                  onChange={(event) =>
+                    setForm((current) => ({ ...current, website: event.target.value }))
+                  }
+                />
               </label>
               <label className="space-y-2 text-sm">
                 <span>Sektor</span>
-                <Input value={form.industry} onChange={(event) => setForm((current) => ({ ...current, industry: event.target.value }))} />
+                <Input
+                  value={form.industry}
+                  onChange={(event) =>
+                    setForm((current) => ({ ...current, industry: event.target.value }))
+                  }
+                />
               </label>
               <label className="space-y-2 text-sm">
                 <span>Sehir</span>
-                <Input value={form.city} onChange={(event) => setForm((current) => ({ ...current, city: event.target.value }))} />
+                <Input
+                  value={form.city}
+                  onChange={(event) =>
+                    setForm((current) => ({ ...current, city: event.target.value }))
+                  }
+                />
               </label>
               <label className="space-y-2 text-sm">
                 <span>Ulke</span>
-                <Input value={form.country} onChange={(event) => setForm((current) => ({ ...current, country: event.target.value }))} />
+                <Input
+                  value={form.country}
+                  onChange={(event) =>
+                    setForm((current) => ({ ...current, country: event.target.value }))
+                  }
+                />
               </label>
               <label className="space-y-2 text-sm">
                 <span>Calisan Sayisi</span>
-                <Input value={form.employeeCount} onChange={(event) => setForm((current) => ({ ...current, employeeCount: event.target.value }))} />
+                <Input
+                  value={form.employeeCount}
+                  onChange={(event) =>
+                    setForm((current) => ({ ...current, employeeCount: event.target.value }))
+                  }
+                />
               </label>
               <div className="space-y-2 text-sm">
                 <span>Durum</span>
                 <InlineSelectField
                   value={form.status}
-                  onValueChange={(value) => setForm((current) => ({ ...current, status: value as CompanyRow['status'] }))}
+                  onValueChange={(value) =>
+                    setForm((current) => ({
+                      ...current,
+                      status: value as CompanyRow['status'],
+                    }))
+                  }
                   ariaLabel="Firma durumu"
-                  options={companyStatusOptions.map((option) => ({ value: option.value, label: option.label }))}
+                  options={companyStatusOptions.map((option) => ({
+                    value: option.value,
+                    label: option.label,
+                  }))}
                 />
               </div>
               <div className="space-y-2 text-sm md:col-span-2">
                 <span>Sorumlu</span>
                 <InlineSelectField
                   value={form.ownerId}
-                  onValueChange={(value) => setForm((current) => ({ ...current, ownerId: value }))}
+                  onValueChange={(value) =>
+                    setForm((current) => ({ ...current, ownerId: value }))
+                  }
                   ariaLabel="Firma sorumlusu"
                   options={[
                     { value: 'unassigned', label: 'Atanmamis' },
@@ -212,7 +239,15 @@ function CompanyManagementDialog({
               </div>
               <label className="space-y-2 text-sm md:col-span-2">
                 <span>Adres</span>
-                <Textarea value={form.addressLine1} onChange={(event) => setForm((current) => ({ ...current, addressLine1: event.target.value }))} />
+                <Textarea
+                  value={form.addressLine1}
+                  onChange={(event) =>
+                    setForm((current) => ({
+                      ...current,
+                      addressLine1: event.target.value,
+                    }))
+                  }
+                />
               </label>
             </div>
 
@@ -220,7 +255,7 @@ function CompanyManagementDialog({
               <div className="space-y-1">
                 <p className="text-sm font-medium">Hizli ozet</p>
                 <p className="text-xs text-muted-foreground">
-                  {company.relatedCustomers} kisi · {company.activeDeals} aktif deal
+                  {company.relatedCustomers} kisi | {company.activeDeals} aktif deal
                 </p>
                 <p className="text-xs text-muted-foreground">
                   Toplam deal degeri: {formatCurrency(company.totalValue)}

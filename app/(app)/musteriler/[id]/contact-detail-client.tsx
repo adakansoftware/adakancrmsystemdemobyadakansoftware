@@ -1,13 +1,12 @@
 'use client'
 
-import { useState, useTransition } from 'react'
-import { useRouter } from 'next/navigation'
-import { toast } from 'sonner'
+import { useState } from 'react'
 import { updateContactAction } from '@/app/actions/crm'
 import { InlineSelectField } from '@/components/crm/inline-select-field'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
+import { useServerActionToast } from '@/hooks/use-server-action-toast'
 import type { UserOption } from '@/lib/crm/view-models'
 
 type CompanyOption = {
@@ -35,8 +34,7 @@ export function ContactDetailClient({
   users: UserOption[]
   companies: CompanyOption[]
 }) {
-  const router = useRouter()
-  const [isPending, startTransition] = useTransition()
+  const { isPending, runServerAction } = useServerActionToast()
   const [form, setForm] = useState({
     firstName: contact.firstName,
     lastName: contact.lastName,
@@ -50,9 +48,9 @@ export function ContactDetailClient({
   })
 
   function save() {
-    startTransition(async () => {
-      try {
-        const result = await updateContactAction({
+    runServerAction(
+      () =>
+        updateContactAction({
           id: contact.id,
           firstName: form.firstName,
           lastName: form.lastName,
@@ -63,18 +61,12 @@ export function ContactDetailClient({
           companyId: form.companyId === 'none' ? null : form.companyId,
           ownerId: form.ownerId === 'unassigned' ? null : form.ownerId,
           linkedinUrl: form.linkedinUrl.trim() || null,
-        })
-
-        if (!result.success) {
-          throw new Error('Kisi bilgileri guncellenemedi')
-        }
-
-        toast.success('Kisi bilgileri guncellendi')
-        router.refresh()
-      } catch (error) {
-        toast.error(error instanceof Error ? error.message : 'Kisi guncellenemedi')
-      }
-    })
+        }),
+      {
+        successMessage: 'Kisi bilgileri guncellendi',
+        errorMessage: 'Kisi guncellenemedi',
+      },
+    )
   }
 
   return (

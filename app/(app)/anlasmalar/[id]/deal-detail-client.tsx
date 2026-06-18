@@ -1,13 +1,12 @@
 'use client'
 
-import { useState, useTransition } from 'react'
-import { useRouter } from 'next/navigation'
-import { toast } from 'sonner'
+import { useState } from 'react'
 import { moveDealToStageAction, updateDealAction } from '@/app/actions/crm'
 import { InlineSelectField } from '@/components/crm/inline-select-field'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
+import { useServerActionToast } from '@/hooks/use-server-action-toast'
 import { formatCurrency } from '@/lib/format'
 import { dealStatusLabels } from '@/lib/ui-meta'
 import { dealStatuses, type UserOption } from '@/lib/crm/view-models'
@@ -38,8 +37,7 @@ export function DealDetailClient({
   }
   users: UserOption[]
 }) {
-  const router = useRouter()
-  const [isPending, startTransition] = useTransition()
+  const { isPending, runServerAction } = useServerActionToast()
   const [title, setTitle] = useState(deal.title)
   const [amount, setAmount] = useState(String(deal.amount))
   const [ownerId, setOwnerId] = useState(deal.ownerId ?? 'unassigned')
@@ -47,49 +45,37 @@ export function DealDetailClient({
   const [stageId, setStageId] = useState(deal.stageId)
 
   function persistCoreFields() {
-    startTransition(async () => {
-      try {
-        const result = await updateDealAction({
+    runServerAction(
+      () =>
+        updateDealAction({
           id: deal.id,
           title,
           amount: Number(amount),
           ownerId: ownerId === 'unassigned' ? null : ownerId,
           status,
-        })
-
-        if (!result.success) {
-          throw new Error('Deal bilgileri kaydedilemedi')
-        }
-
-        toast.success('Deal bilgileri guncellendi')
-        router.refresh()
-      } catch (error) {
-        toast.error(error instanceof Error ? error.message : 'Deal guncellenemedi')
-      }
-    })
+        }),
+      {
+        successMessage: 'Deal bilgileri guncellendi',
+        errorMessage: 'Deal guncellenemedi',
+      },
+    )
   }
 
   function moveStage(nextStageId: string) {
     setStageId(nextStageId)
 
-    startTransition(async () => {
-      try {
-        const result = await moveDealToStageAction({
+    runServerAction(
+      () =>
+        moveDealToStageAction({
           dealId: deal.id,
           toPipelineId: deal.pipelineId,
           toStageId: nextStageId,
-        })
-
-        if (!result.success) {
-          throw new Error('Asama guncellenemedi')
-        }
-
-        toast.success('Deal asamasi guncellendi')
-        router.refresh()
-      } catch (error) {
-        toast.error(error instanceof Error ? error.message : 'Asama guncellenemedi')
-      }
-    })
+        }),
+      {
+        successMessage: 'Deal asamasi guncellendi',
+        errorMessage: 'Asama guncellenemedi',
+      },
+    )
   }
 
   return (
