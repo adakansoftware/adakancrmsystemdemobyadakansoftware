@@ -14,6 +14,7 @@ const envSchema = z.object({
   TRUST_PROXY_HEADERS: z
     .enum(['true', 'false'])
     .optional(),
+  RATE_LIMIT_STORE: z.enum(['memory', 'database']).optional(),
 })
 
 const devSessionSecret = crypto.randomBytes(32).toString('hex')
@@ -30,6 +31,7 @@ export function createEnv(source: NodeJS.ProcessEnv) {
     AUTH_URL: source.AUTH_URL,
     APP_URL: source.APP_URL,
     TRUST_PROXY_HEADERS: source.TRUST_PROXY_HEADERS,
+    RATE_LIMIT_STORE: source.RATE_LIMIT_STORE,
   })
 
   if (!parsedEnv.success) {
@@ -70,6 +72,9 @@ export function createEnv(source: NodeJS.ProcessEnv) {
     trustProxyHeaders:
       rawEnv.TRUST_PROXY_HEADERS === 'true' ||
       (rawEnv.TRUST_PROXY_HEADERS == null && source.VERCEL === '1'),
+    rateLimitStore:
+      rawEnv.RATE_LIMIT_STORE ??
+      (rawEnv.DATABASE_URL.length > 0 ? 'database' : 'memory'),
   }
 }
 

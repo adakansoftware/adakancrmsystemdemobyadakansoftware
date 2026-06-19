@@ -3,6 +3,7 @@ import {
   LOGIN_RATE_LIMIT_MAX_ATTEMPTS,
   LOGIN_RATE_LIMIT_WINDOW_MS,
 } from '@/lib/auth/constants'
+import { resolveClientIpFromHeaders } from '@/lib/request/request-metadata'
 import { checkRateLimit, clearRateLimit } from '@/lib/security/rate-limit'
 
 export const LOGIN_RATE_LIMIT_ERROR_MESSAGE =
@@ -12,30 +13,7 @@ type HeaderStoreLike = {
   get(name: string): string | null
 }
 
-type ClientIpOptions = {
-  forwardedFor?: string | null
-  realIp?: string | null
-  trustProxyHeaders: boolean
-}
-
-export function resolveClientIp({
-  forwardedFor,
-  realIp,
-  trustProxyHeaders,
-}: ClientIpOptions) {
-  if (trustProxyHeaders) {
-    const forwardedIp = forwardedFor?.split(',')[0]?.trim()
-    if (forwardedIp) {
-      return forwardedIp
-    }
-
-    if (realIp?.trim()) {
-      return realIp.trim()
-    }
-  }
-
-  return 'unknown'
-}
+export { resolveClientIpFromHeaders as resolveClientIp }
 
 export function getLoginRateLimitKeys(email: string, clientIp: string) {
   const normalizedEmail = email.trim().toLowerCase()
@@ -48,11 +26,8 @@ export async function getRequestLoginRateLimitContext(
   headerStore?: HeaderStoreLike,
 ) {
   const resolvedHeaders = headerStore ?? (await headers())
-  const clientIp = resolveClientIp({
-    forwardedFor: resolvedHeaders.get('x-forwarded-for'),
-    realIp: resolvedHeaders.get('x-real-ip'),
-    trustProxyHeaders,
-  })
+  const clientIp =
+    resolveClientIpFromHeaders(resolvedHeaders, trustProxyHeaders) ?? 'unknown'
 
   return {
     clientIp,
@@ -72,7 +47,7 @@ export async function assertLoginRateLimit(
   )
 
   for (const key of context.keys) {
-    const result = checkRateLimit(
+    const result = await checkRateLimit(
       key,
       LOGIN_RATE_LIMIT_MAX_ATTEMPTS,
       LOGIN_RATE_LIMIT_WINDOW_MS,
@@ -86,8 +61,8 @@ export async function assertLoginRateLimit(
   return context
 }
 
-export function clearLoginRateLimit(keys: string[]) {
+export async function clearLoginRateLimit(keys: string[]) {
   for (const key of keys) {
-    clearRateLimit(key)
+    await clearRateLimit(key)
   }
 }

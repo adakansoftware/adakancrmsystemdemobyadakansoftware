@@ -83,25 +83,21 @@ This document reflects the post-refactor CRM codebase after the hardening pass f
 - Login validation still accepts existing legacy passwords so older accounts are not locked out unexpectedly.
 - `loginFormAction` no longer repeats the same credential lookup and bcrypt compare that already happen inside `Credentials.authorize`.
 
+### 11. Rate limiter and audit forensics were finished
+
+- Login throttling now defaults to a shared PostgreSQL-backed store, so limits remain effective across multiple app instances that share the same database.
+- `RATE_LIMIT_STORE=memory` is still available as an explicit local-development fallback instead of being the implicit production behavior.
+- `AuditLog` now persists request IP and User-Agent metadata, and the admin screen surfaces those details in recent audit entries.
+
 ## Remaining Risks
 
-### 1. Rate limiting is still process-local by design
-
-- `lib/security/rate-limit.ts` still uses in-memory storage.
-- This is now documented clearly, but a shared backend such as Redis or KV would still be needed for multi-instance enforcement.
-
-### 2. Audit logs still miss request IP and User-Agent
-
-- `AuditLog` does not yet persist request IP or User-Agent for login/logout and privileged management events.
-- This lowers forensic value during account-abuse investigations and is still worth a schema-level follow-up.
-
-### 3. Some legacy/out-of-scope surfaces remain intentionally untouched
+### 1. Some legacy/out-of-scope surfaces remain intentionally untouched
 
 - `app/(app)/teklifler/page.tsx` is still a scoped workspace rather than a fully generalized product area.
 - This is acceptable for the current MVP boundary, but it remains a deliberate product decision rather than a technical gap.
 
 ## Recommended Next Steps
 
-1. If production traffic or multi-instance deployment is a priority, replace the in-memory rate limiter with a shared store.
-2. Add request IP and User-Agent capture to `AuditLog` for authentication and privileged actions.
+1. Leave the PostgreSQL-backed limiter and audit metadata capture as the new operational baseline.
+2. If traffic patterns outgrow database-backed throttling, move the limiter to Redis or KV without changing the auth call sites.
 3. Leave the new password policy and auth hardening as the baseline unless migration requirements for legacy users change.

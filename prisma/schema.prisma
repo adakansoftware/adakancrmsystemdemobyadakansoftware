@@ -554,6 +554,16 @@ model VerificationToken {
   @@unique([identifier, token])
 }
 
+model RateLimitBucket {
+  key       String   @id
+  count     Int
+  resetAt   DateTime
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([resetAt])
+}
+
 model AuditLog {
   id         String      @id @default(uuid()) @db.Uuid
   actorId    String?     @db.Uuid
@@ -562,10 +572,13 @@ model AuditLog {
   entityId   String?
   summary    String
   metadata   Json?
+  ipAddress  String?
+  userAgent  String?
   createdAt  DateTime    @default(now())
   actor      User?       @relation("AuditActor", fields: [actorId], references: [id], onDelete: SetNull)
 
   @@index([actorId, createdAt])
   @@index([entityType, entityId, createdAt])
   @@index([action, createdAt])
+  @@index([ipAddress, createdAt])
 }

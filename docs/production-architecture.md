@@ -66,4 +66,5 @@ npm run db:push
 
 - Production boot is fail-closed for session secrets: `NEXTAUTH_SECRET` (or `AUTH_SECRET` / `SESSION_SECRET`) must be set or the app will not start.
 - Forwarded IP headers are only trusted when `TRUST_PROXY_HEADERS=true` or when the app runs on Vercel.
-- The built-in rate limiter is still process-local; multi-instance production needs a shared backend such as Redis or KV.
+- The built-in rate limiter now defaults to a shared PostgreSQL-backed store via Prisma, which is safe for multi-instance deployments that share the same database.
+- `RATE_LIMIT_STORE=memory` remains available for local-only development, but it should not be used for horizontally scaled production traffic.

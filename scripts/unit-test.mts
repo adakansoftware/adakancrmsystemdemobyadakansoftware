@@ -5,6 +5,7 @@ import {
   LOGIN_RATE_LIMIT_ERROR_MESSAGE,
   resolveClientIp,
 } from "../lib/auth/login-rate-limit.ts";
+import { resolveClientIpFromHeaders } from "../lib/request/request-metadata.ts";
 import {
   csvEscape,
   toCsv,
@@ -140,6 +141,15 @@ function testCreateEnvFailsClosedInProduction() {
   });
   assert(productionEnv.sessionSecretConfigured === true, "Production secret konfigurasyonu algilanmali");
   assert(productionEnv.appUrlConfigured === true, "Production app URL konfigurasyonu algilanmali");
+  assert(productionEnv.rateLimitStore === "database", "Database varken varsayilan rate limit store database olmali");
+
+  const memoryEnv = createEnv({
+    NODE_ENV: "production",
+    DATABASE_URL: "postgresql://db",
+    NEXTAUTH_SECRET: "production-secret",
+    RATE_LIMIT_STORE: "memory",
+  });
+  assert(memoryEnv.rateLimitStore === "memory", "Rate limit store env ile override edilebilmeli");
 }
 
 function testSessionTtlIsConsistent() {
@@ -150,19 +160,39 @@ function testSessionTtlIsConsistent() {
 }
 
 function testClientIpResolution() {
-  const trustedIp = resolveClientIp({
-    forwardedFor: "198.51.100.10, 10.0.0.1",
-    realIp: null,
-    trustProxyHeaders: true,
-  });
+  const trustedIp = resolveClientIp(
+    {
+      get(name: string) {
+        if (name === "x-forwarded-for") return "198.51.100.10, 10.0.0.1";
+        return null;
+      },
+    },
+    true,
+  );
   assert(trustedIp === "198.51.100.10", "Trusted proxy ilk forwarded IP'yi kullanmali");
 
-  const untrustedIp = resolveClientIp({
-    forwardedFor: "198.51.100.10",
-    realIp: "203.0.113.8",
-    trustProxyHeaders: false,
-  });
-  assert(untrustedIp === "unknown", "Untrusted proxy header'lari kullanilmamali");
+  const untrustedIp = resolveClientIp(
+    {
+      get(name: string) {
+        if (name === "x-forwarded-for") return "198.51.100.10";
+        if (name === "x-real-ip") return "203.0.113.8";
+        return null;
+      },
+    },
+    false,
+  );
+  assert(untrustedIp === null, "Untrusted proxy header'lari kullanilmamali");
+
+  const fallbackIp = resolveClientIpFromHeaders(
+    {
+      get(name: string) {
+        if (name === "x-client-ip") return "203.0.113.15";
+        return null;
+      },
+    },
+    false,
+  );
+  assert(fallbackIp === "203.0.113.15", "Fallback client IP header'i okunabilmeli");
 
   const keys = getLoginRateLimitKeys("User@Example.com", "203.0.113.5");
   assert(keys[0] === "login:203.0.113.5", "IP bazli login key uretilmeli");

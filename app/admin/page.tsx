@@ -135,6 +135,12 @@ export default async function AdminPage() {
                   {log.entityType}
                   {log.entityId ? ` / ${log.entityId}` : ''}
                 </p>
+                {(log.ipAddress || log.userAgent) ? (
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    {log.ipAddress ?? 'IP bilinmiyor'}
+                    {log.userAgent ? ` / ${log.userAgent}` : ''}
+                  </p>
+                ) : null}
                 <p className="mt-1 text-xs text-muted-foreground">{formatDateTime(log.createdAt)}</p>
               </div>
             ))}

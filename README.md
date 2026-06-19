@@ -22,6 +22,8 @@ DATABASE_URL=postgresql://...
 DIRECT_URL=postgresql://...
 NEXTAUTH_SECRET=uzun-guvenli-bir-deger
 APP_URL=http://localhost:3000
+TRUST_PROXY_HEADERS=false
+RATE_LIMIT_STORE=database
 ```
 
 ## Kurulum
@@ -99,4 +101,6 @@ curl http://localhost:3000/api/health
 - Ana uygulama sayfalari fake demo array'lerine bagli degildir.
 - `APP_URL`, smoke script ve health kontrolleri icin tanimli olmalidir.
 - Production ortaminda `NEXTAUTH_SECRET` zorunludur; tanimli degilse uygulama fail-closed sekilde acilmaz.
+- Varsayilan rate limiter paylasimli PostgreSQL store kullanir; `RATE_LIMIT_STORE=memory` sadece tek-instance yerel gelistirme icin dusunulmelidir.
+- `TRUST_PROXY_HEADERS=true` yalnizca Vercel veya guvendiginiz reverse proxy arkasinda kullanilmalidir.
 - Uretim kontrolunde once `/api/health`, sonra `npm run verify` calistirilmasi tavsiye edilir.

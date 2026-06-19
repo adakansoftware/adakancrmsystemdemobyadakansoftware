@@ -82,7 +82,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           return null
         }
 
-        clearLoginRateLimit(rateLimitContext.keys)
+        await clearLoginRateLimit(rateLimitContext.keys)
 
         await db.user.update({
           where: { id: user.id },
