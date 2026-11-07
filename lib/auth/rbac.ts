@@ -19,7 +19,12 @@ export type Permission =
   | 'deals:create'
   | 'deals:update'
   | 'deals:delete'
+  | 'tasks:read'
+  | 'tasks:create'
+  | 'tasks:update'
   | 'activities:read'
+  | 'activities:create'
+  | 'tags:manage'
   | 'notes:read'
   | 'notes:create'
   | 'notes:update'
@@ -44,7 +49,12 @@ const ALL_PERMISSIONS: Permission[] = [
   'deals:create',
   'deals:update',
   'deals:delete',
+  'tasks:read',
+  'tasks:create',
+  'tasks:update',
   'activities:read',
+  'activities:create',
+  'tags:manage',
   'notes:read',
   'notes:create',
   'notes:update',
@@ -68,7 +78,12 @@ const ROLE_PERMISSIONS: Record<SystemRoleSlug, Permission[]> = {
     'deals:read',
     'deals:create',
     'deals:update',
+    'tasks:read',
+    'tasks:create',
+    'tasks:update',
     'activities:read',
+    'activities:create',
+    'tags:manage',
     'notes:read',
     'notes:create',
     'notes:update',
@@ -84,7 +99,11 @@ const ROLE_PERMISSIONS: Record<SystemRoleSlug, Permission[]> = {
     'deals:read',
     'deals:create',
     'deals:update',
+    'tasks:read',
+    'tasks:create',
+    'tasks:update',
     'activities:read',
+    'activities:create',
     'notes:read',
     'notes:create',
     'notes:update',
@@ -94,6 +113,7 @@ const ROLE_PERMISSIONS: Record<SystemRoleSlug, Permission[]> = {
     'contacts:read',
     'leads:read',
     'deals:read',
+    'tasks:read',
     'activities:read',
     'notes:read',
   ],

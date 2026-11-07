@@ -138,7 +138,7 @@ test.describe('CRM smoke flows', () => {
     await firstCustomerLink.click()
 
     await expect(page).toHaveURL(/\/musteriler\/.+/)
-    await expect(page.getByText('Kisi Bilgileri')).toBeVisible()
+    await expect(page.getByText('Kisi Bilgileri', { exact: true })).toBeVisible()
     await expect(page.getByText('Aktivite Akisi')).toBeVisible()
   })
 

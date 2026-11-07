@@ -15,8 +15,27 @@ type RunServerActionOptions<TResult> = {
   onSuccess?: (data: TResult) => void
 }
 
+// Internal errors (Prisma query internals, framework digests, raw permission
+// details) must never surface to the client. Only deliberately user-facing
+// messages thrown by server actions are shown.
+const INTERNAL_ERROR_PATTERNS: RegExp[] = [
+  /^Invalid `/,
+  /PrismaClient\w*Error/,
+  /^Forbidden:/,
+  /NEXT_REDIRECT/i,
+  /^Error: Minified React error/i,
+]
+
 function getErrorMessage(error: unknown, fallbackMessage: string) {
-  return error instanceof Error ? error.message : fallbackMessage
+  if (error instanceof Error) {
+    const message = error.message
+
+    if (message && !INTERNAL_ERROR_PATTERNS.some((pattern) => pattern.test(message))) {
+      return message
+    }
+  }
+
+  return fallbackMessage
 }
 
 export function useServerActionToast() {

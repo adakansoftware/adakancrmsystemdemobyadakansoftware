@@ -108,6 +108,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           firstName: user.firstName,
           lastName: user.lastName,
           roleSlugs: user.roles.map((entry) => entry.role.slug),
+          sessionVersion: user.sessionVersion,
         }
       },
     }),
@@ -119,6 +120,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         firstName?: string
         lastName?: string
         roleSlugs?: string[]
+        sessionVersion?: number
       }
 
       if (user) {
@@ -126,6 +128,8 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         mutableToken.firstName = (user as { firstName?: string }).firstName
         mutableToken.lastName = (user as { lastName?: string }).lastName
         mutableToken.roleSlugs = (user as { roleSlugs?: string[] }).roleSlugs ?? []
+        mutableToken.sessionVersion =
+          (user as { sessionVersion?: number }).sessionVersion ?? 0
       }
 
       return mutableToken
@@ -138,6 +142,8 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         session.user.roleSlugs = Array.isArray(token.roleSlugs)
           ? token.roleSlugs.map(String)
           : []
+        session.user.sessionVersion =
+          typeof token.sessionVersion === 'number' ? token.sessionVersion : 0
       }
 
       return session
@@ -157,6 +163,7 @@ declare module 'next-auth' {
       firstName: string
       lastName: string
       roleSlugs: string[]
+      sessionVersion: number
     }
   }
 
@@ -164,5 +171,6 @@ declare module 'next-auth' {
     firstName?: string
     lastName?: string
     roleSlugs?: string[]
+    sessionVersion?: number
   }
 }

@@ -8,13 +8,16 @@ import { getRuntimeHealthSummary } from '@/lib/health-runtime'
 import { formatDateTime } from '@/lib/format'
 
 export default async function AdminPage() {
-  const [users, health, activeSessions, todayAuditCount, recentAuditLogs, auditActionCounts] = await Promise.all([
+  const lastDayCutoff = new Date()
+  lastDayCutoff.setDate(lastDayCutoff.getDate() - 1)
+
+  const [users, health, usersLoggedInLastDay, todayAuditCount, recentAuditLogs, auditActionCounts] = await Promise.all([
     listUsersWithRoles(),
     getRuntimeHealthSummary(),
-    db.session.count({
+    db.user.count({
       where: {
-        expires: {
-          gt: new Date(),
+        lastLoginAt: {
+          gte: lastDayCutoff,
         },
       },
     }),
@@ -71,7 +74,7 @@ export default async function AdminPage() {
         <SummaryCard label="Toplam Kullanici" value={users.length} />
         <SummaryCard label="Aktif Kullanici" value={activeUsers} />
         <SummaryCard label="Bekleyen Davet" value={invitedUsers} />
-        <SummaryCard label="Aktif Oturum" value={activeSessions} />
+        <SummaryCard label="Son 24s Giris Yapan" value={usersLoggedInLastDay} />
         <SummaryCard label="Bugunku Audit" value={todayAuditCount} />
       </div>
 

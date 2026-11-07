@@ -1,5 +1,6 @@
 import { cache } from 'react'
 import { auth } from '@/auth'
+import { db } from '@/lib/db/prisma'
 
 type LegacySessionShape = {
   id: string
@@ -22,6 +23,25 @@ export const getCurrentSession = cache(async (): Promise<LegacySessionShape | nu
   const session = await auth()
 
   if (!session?.user?.id || !session.user.email) {
+    return null
+  }
+
+  // Reject tokens issued before a password change, role change, or status
+  // change. JWT sessions otherwise stay valid until cookie expiry.
+  const storedUser = await db.user.findUnique({
+    where: { id: session.user.id },
+    select: {
+      sessionVersion: true,
+      status: true,
+    },
+  })
+
+  if (
+    !storedUser ||
+    storedUser.status === 'SUSPENDED' ||
+    storedUser.status === 'ARCHIVED' ||
+    storedUser.sessionVersion !== session.user.sessionVersion
+  ) {
     return null
   }
 

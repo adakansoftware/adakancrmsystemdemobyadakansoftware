@@ -241,6 +241,10 @@ export const changePasswordAction = createValidatedAction(
       where: { id: user.id },
       data: {
         passwordHash: await hashPassword(input.nextPassword),
+        // Invalidate existing JWT sessions; the user must sign in again.
+        sessionVersion: {
+          increment: 1,
+        },
       },
     })
 
@@ -325,6 +329,13 @@ export const updateUserStatusAction = createValidatedAction(
       where: { id: input.userId },
       data: {
         status: input.status,
+        // Disabling a user must revoke existing JWT sessions immediately.
+        sessionVersion:
+          input.status === 'ACTIVE'
+            ? undefined
+            : {
+                increment: 1,
+              },
       },
       select: managedUserSelect,
     })
@@ -359,6 +370,16 @@ export const assignRoleAction = createValidatedAction(
       select: roleAssignmentSelect,
     })
 
+    // Role slugs are embedded in the JWT; force re-auth so they refresh.
+    await db.user.update({
+      where: { id: input.userId },
+      data: {
+        sessionVersion: {
+          increment: 1,
+        },
+      },
+    })
+
     await createAuditLog({
       actorId: session.userId,
       action: 'ASSIGN_ROLE',
@@ -388,6 +409,16 @@ export const removeRoleAction = createValidatedAction(
         },
       },
       select: roleAssignmentSelect,
+    })
+
+    // Role slugs are embedded in the JWT; force re-auth so they refresh.
+    await db.user.update({
+      where: { id: input.userId },
+      data: {
+        sessionVersion: {
+          increment: 1,
+        },
+      },
     })
 
     await createAuditLog({

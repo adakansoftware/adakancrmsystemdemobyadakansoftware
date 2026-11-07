@@ -170,7 +170,11 @@ function getActiveRateLimitStore() {
 export async function checkRateLimit(key: string, limit: number, windowMs: number) {
   try {
     return await getActiveRateLimitStore().check(key, limit, windowMs)
-  } catch {
+  } catch (error) {
+    // Fail-open on store failure so a database outage does not lock out every
+    // request, but surface the failure. Note: counters split across stores
+    // mid-window, so the effective limit can temporarily be up to 2x.
+    console.error('[rate-limit] primary store check failed, falling back to memory', error)
     return memoryRateLimitStore.check(key, limit, windowMs)
   }
 }
@@ -178,7 +182,8 @@ export async function checkRateLimit(key: string, limit: number, windowMs: numbe
 export async function clearRateLimit(key: string) {
   try {
     await getActiveRateLimitStore().clear(key)
-  } catch {
+  } catch (error) {
+    console.error('[rate-limit] primary store clear failed, falling back to memory', error)
     await memoryRateLimitStore.clear(key)
   }
 }

@@ -1,6 +1,6 @@
 # Codebase Audit Report
 
-Date: 2026-06-18
+Date: 2026-06-18 (initial hardening pass), 2026-11-07 (second hardening pass, see "Second Hardening Pass" at the end)
 
 ## Scope
 
@@ -101,3 +101,45 @@ This document reflects the post-refactor CRM codebase after the hardening pass f
 1. Leave the PostgreSQL-backed limiter and audit metadata capture as the new operational baseline.
 2. If traffic patterns outgrow database-backed throttling, move the limiter to Redis or KV without changing the auth call sites.
 3. Leave the new password policy and auth hardening as the baseline unless migration requirements for legacy users change.
+
+## Second Hardening Pass
+
+Date: 2026-11-07
+
+### Closed findings
+
+#### 1. RBAC permission gaps for tasks, activities, and tags
+
+- Added dedicated `tasks:read`, `tasks:create`, `tasks:update`, `activities:create`, and `tags:manage` permissions to the role matrix.
+- `createTaskAction`, `updateTaskAction`, and `listTasks` now require task permissions instead of reusing `activities:read`; a readonly user can no longer create or mutate tasks.
+- `createActivityAction` now requires `activities:create` instead of read access.
+- Tag CRUD now requires `tags:manage` (owner and manager) instead of the unrelated `companies:update`.
+- Role matrix: owner keeps all permissions; manager and staff gain task CRUD, activity creation, and (manager only) tag management; readonly gains `tasks:read` only.
+
+#### 2. JWT sessions are now invalidated by server-side state changes
+
+- `User.sessionVersion` was added to the Prisma schema (default 0) and is embedded in the JWT at sign-in.
+- `getCurrentSession` verifies the token's version against the database on every request (React-cached per request) and rejects the session on mismatch, on `SUSPENDED`, or on `ARCHIVED` status. This check deliberately lives outside the middleware/jwt callback so the edge middleware stays database-free.
+- `sessionVersion` is incremented on password change, user suspension/archival, and role assignment/removal, so password changes and role changes now revoke outstanding tokens instead of staying valid until cookie expiry.
+
+#### 3. Global search respects entity permissions
+
+- `/api/search` now computes the caller's entity read permissions and passes an entity filter into `searchCrmRecords`, consistent with the per-entity checks already enforced by `/api/export`.
+
+#### 4. Client error surface no longer leaks internal errors
+
+- `useServerActionToast` now suppresses technical error messages (Prisma query internals, `Forbidden:` details, framework digests) and falls back to the caller-provided error message. Deliberately user-facing messages thrown by server actions are still shown.
+
+#### 5. Rate limiter fallback failures are no longer silent
+
+- `checkRateLimit`/`clearRateLimit` log primary-store failures before falling back to the in-memory store. Documented limitation: counters can split across stores mid-window, so the effective limit can temporarily reach up to 2x during a database outage.
+
+#### 6. Admin session metric now reflects reality
+
+- The `Session` table is not populated by JWT-strategy logins, so the previous "Aktif Oturum" card counted adapter rows that never matched runtime sessions. It now reports users that signed in during the last 24 hours (`lastLoginAt`-based).
+
+### Verification
+
+- `npm run verify` (prisma validate, lint, build, unit checks, smoke checks) passes.
+- Full Playwright browser suite passes (a pre-existing strict-mode selector collision in the customer detail test was fixed with `{ exact: true }`).
+- Schema change pushed with `prisma db push`; the `sessionVersion` column is additive and defaults to 0.

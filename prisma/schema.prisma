@@ -109,6 +109,7 @@ model User {
   timezone           String             @default("Europe/Istanbul")
   locale             String             @default("tr-TR")
   status             UserStatus         @default(ACTIVE)
+  sessionVersion     Int                @default(0)
   lastLoginAt        DateTime?
   createdAt          DateTime           @default(now())
   updatedAt          DateTime           @updatedAt

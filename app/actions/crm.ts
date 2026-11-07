@@ -551,7 +551,7 @@ export const deleteDealAction = createValidatedAction(
 )
 
 export async function listTasks() {
-  await requirePermission('activities:read')
+  await requirePermission('tasks:read')
   return db.task.findMany({
     where: { archivedAt: null },
     include: {
@@ -566,7 +566,7 @@ export async function listTasks() {
 }
 
 export const createTaskAction = createValidatedAction(taskSchema, async (input) => {
-  const session = await requirePermission('activities:read')
+  const session = await requirePermission('tasks:create')
   const task = await db.task.create({
     data: {
       ...input,
@@ -601,7 +601,7 @@ export const createTaskAction = createValidatedAction(taskSchema, async (input) 
 export const updateTaskAction = createValidatedAction(
   updateTaskSchema,
   async ({ id, ...input }) => {
-    const session = await requirePermission('activities:read')
+    const session = await requirePermission('tasks:update')
     const task = await db.task.update({
       where: { id },
       data: {
@@ -643,7 +643,7 @@ export const updateTaskAction = createValidatedAction(
 export const createActivityAction = createValidatedAction(
   activitySchema,
   async (input) => {
-    const session = await requirePermission('activities:read')
+    const session = await requirePermission('activities:create')
     const activity = await db.activity.create({
       data: {
         actorId: input.actorId ?? session.userId,
@@ -775,7 +775,7 @@ export const deleteNoteAction = createValidatedAction(
 )
 
 export const createTagAction = createValidatedAction(tagSchema, async (input) => {
-  const session = await requirePermission('companies:update')
+  const session = await requirePermission('tags:manage')
   const tag = await db.tag.create({
     data: input,
   })
@@ -796,7 +796,7 @@ export const createTagAction = createValidatedAction(tagSchema, async (input) =>
 export const updateTagAction = createValidatedAction(
   updateTagSchema,
   async ({ id, ...input }) => {
-    const session = await requirePermission('companies:update')
+    const session = await requirePermission('tags:manage')
     const tag = await db.tag.update({
       where: { id },
       data: input,
@@ -819,7 +819,7 @@ export const updateTagAction = createValidatedAction(
 export const deleteTagAction = createValidatedAction(
   deleteEntitySchema,
   async ({ id }) => {
-    const session = await requirePermission('companies:update')
+    const session = await requirePermission('tags:manage')
     const tag = await db.tag.delete({
       where: { id },
     })
