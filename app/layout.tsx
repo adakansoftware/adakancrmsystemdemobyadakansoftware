@@ -17,7 +17,6 @@ export const metadata: Metadata = {
   title: 'Adakan CRM - Musteri Iliskileri Yonetimi',
   description:
     'Kucuk isletmeler icin modern, sade ve guclu CRM. Lead takibi, satis hatti ve gorev yonetimi tek panelde.',
-  generator: 'Codex',
 }
 
 export default function RootLayout({

@@ -1,21 +1,8 @@
 import { NextResponse } from 'next/server'
 import { auth } from '@/auth'
+import { APP_PROTECTED_PREFIXES } from '@/lib/app-routes'
 
-const APP_PROTECTED_PREFIXES = [
-  '/',
-  '/musteriler',
-  '/firmalar',
-  '/leads',
-  '/anlasmalar',
-  '/pipeline',
-  '/gorevler',
-  '/takvim',
-  '/teklifler',
-  '/ayarlar',
-  '/raporlar',
-]
-
-function matchesPrefix(pathname: string, prefixes: string[]) {
+function matchesPrefix(pathname: string, prefixes: readonly string[]) {
   return prefixes.some((prefix) =>
     prefix === '/' ? pathname === '/' : pathname.startsWith(prefix),
   )

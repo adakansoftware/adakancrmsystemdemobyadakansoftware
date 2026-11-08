@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getCurrentSession } from '@/lib/auth/session'
 import { requirePermission } from '@/lib/auth/rbac'
+import { getOpenCrmMetrics } from '@/lib/crm/queries'
 import { db } from '@/lib/db/prisma'
 import { toCsv } from '@/lib/export/csv'
 import { getExportEntityPermissions } from '@/lib/export/permissions'
-import { toNumber } from '@/lib/format'
 import { exportRouteQuerySchema } from '@/lib/validation/api'
 
 export async function GET(request: NextRequest) {
@@ -101,9 +101,9 @@ export async function GET(request: NextRequest) {
     })
 
     const safeLeads = leads.map((lead) => ({
-  ...lead,
-  estimatedValue: lead.estimatedValue?.toString() ?? "",
-}))
+      ...lead,
+      estimatedValue: lead.estimatedValue?.toString() ?? '',
+    }))
 
     const csv = toCsv(
       ['ID', 'Baslik', 'Firma', 'Kaynak', 'Durum', 'Tahmini Deger', 'Sorumlu', 'Asama'],
@@ -128,28 +128,17 @@ export async function GET(request: NextRequest) {
   }
 
   if (entity === 'dashboard') {
-    const [contacts, companies, openDeals, openLeads, tasks] = await Promise.all([
-      db.contact.count({ where: { archivedAt: null } }),
-      db.company.count({ where: { archivedAt: null } }),
-      db.deal.findMany({
-        where: { archivedAt: null, status: 'OPEN' },
-        select: { amount: true },
-      }),
-      db.lead.count({ where: { archivedAt: null, status: 'OPEN' } }),
-      db.task.count({
-        where: { archivedAt: null, status: { in: ['TODO', 'IN_PROGRESS', 'BLOCKED'] } },
-      }),
-    ])
+    const metrics = await getOpenCrmMetrics()
 
     const csv = toCsv(
       ['Metrik', 'Deger'],
       [
-        ['Toplam Kisi', contacts],
-        ['Toplam Firma', companies],
-        ['Acik Lead', openLeads],
-        ['Acik Deal', openDeals.length],
-        ['Acik Deal Tutari', openDeals.reduce((sum, deal) => sum + toNumber(deal.amount), 0)],
-        ['Bekleyen Gorev', tasks],
+        ['Toplam Kisi', metrics.totalContacts],
+        ['Toplam Firma', metrics.totalCompanies],
+        ['Acik Lead', metrics.openLeads],
+        ['Acik Deal', metrics.openDealCount],
+        ['Acik Deal Tutari', metrics.openDealValue],
+        ['Bekleyen Gorev', metrics.pendingTasks],
       ],
     )
 

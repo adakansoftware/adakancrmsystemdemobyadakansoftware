@@ -53,24 +53,10 @@ function mapEntityActivities(
   }))
 }
 
-export async function getDashboardData() {
-  await requirePermission('deals:read')
-
-  const now = new Date()
-  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1)
-
-  const [
-    totalContacts,
-    totalCompanies,
-    openLeads,
-    openDeals,
-    pendingTasks,
-    recentActivities,
-    stageRows,
-    staffRows,
-    upcomingTasks,
-    recentDeals,
-  ] = await Promise.all([
+// Shared open-state metrics used by both the dashboard page and the
+// dashboard CSV export. No permission check: callers enforce their own.
+export async function getOpenCrmMetrics() {
+  const [totalContacts, totalCompanies, openLeads, openDeals, pendingTasks] = await Promise.all([
     db.contact.count({ where: { archivedAt: null } }),
     db.company.count({ where: { archivedAt: null } }),
     db.lead.count({ where: { archivedAt: null, status: 'OPEN' } }),
@@ -81,6 +67,33 @@ export async function getDashboardData() {
     db.task.count({
       where: { archivedAt: null, status: { in: ['TODO', 'IN_PROGRESS', 'BLOCKED'] } },
     }),
+  ])
+
+  return {
+    totalContacts,
+    totalCompanies,
+    openLeads,
+    openDealCount: openDeals.length,
+    openDealValue: openDeals.reduce((sum, deal) => sum + toNumber(deal.amount), 0),
+    pendingTasks,
+  }
+}
+
+export async function getDashboardData() {
+  await requirePermission('deals:read')
+
+  const now = new Date()
+  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1)
+
+  const [
+    openMetrics,
+    recentActivities,
+    stageRows,
+    staffRows,
+    upcomingTasks,
+    recentDeals,
+  ] = await Promise.all([
+    getOpenCrmMetrics(),
     db.activity.findMany({
       take: 6,
       orderBy: { occurredAt: 'desc' },
@@ -142,7 +155,14 @@ export async function getDashboardData() {
     }),
   ])
 
-  const totalOpenDealValue = openDeals.reduce((sum, deal) => sum + toNumber(deal.amount), 0)
+  const {
+    totalContacts,
+    totalCompanies,
+    openLeads,
+    pendingTasks,
+    openDealCount,
+    openDealValue: totalOpenDealValue,
+  } = openMetrics
   const dealRevenueByMonth = new Map<string, number>()
   const wonDeals = recentDeals.filter((deal) => deal.status === 'WON')
   const wonThisMonthDeals = wonDeals.filter(
@@ -189,7 +209,7 @@ export async function getDashboardData() {
     totalContacts,
     totalCompanies,
     openLeads,
-    openDeals: openDeals.length,
+    openDeals: openDealCount,
     totalOpenDealValue,
     wonThisMonthCount: wonThisMonthDeals.length,
     wonThisMonthValue: wonThisMonthDeals.reduce((sum, deal) => sum + toNumber(deal.amount), 0),
