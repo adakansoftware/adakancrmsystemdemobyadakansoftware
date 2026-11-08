@@ -174,16 +174,35 @@ test.describe('CRM smoke flows', () => {
     await login(page)
     await page.goto('/pipeline')
 
-    const firstStage = page.locator('section').first()
-    const secondStage = page.locator('section').nth(1)
-    const card = firstStage.locator('article').first()
+    const stages = page.locator('section')
+    const stageCount = await stages.count()
+
+    let sourceIndex = -1
+    for (let index = 0; index < stageCount; index += 1) {
+      if ((await stages.nth(index).locator('article').count()) > 0) {
+        sourceIndex = index
+        break
+      }
+    }
+    expect(sourceIndex).toBeGreaterThanOrEqual(0)
+
+    const moveRight = sourceIndex < stageCount - 1
+    const sourceStage = stages.nth(sourceIndex)
+    const targetStage = stages.nth(moveRight ? sourceIndex + 1 : sourceIndex - 1)
+    const card = sourceStage.locator('article').first()
     await expect(card).toBeVisible()
 
     const dealTitle = ((await card.getByRole('link').textContent()) ?? '').trim()
     await card.focus()
-    await page.keyboard.press('ArrowRight')
+    await page.keyboard.press(moveRight ? 'ArrowRight' : 'ArrowLeft')
 
-    await expect(secondStage.locator('article').filter({ hasText: dealTitle }).first()).toBeVisible()
+    const movedCard = targetStage.locator('article').filter({ hasText: dealTitle }).first()
+    await expect(movedCard).toBeVisible()
+
+    // Move the card back so repeat runs do not drain the source column.
+    await movedCard.focus()
+    await page.keyboard.press(moveRight ? 'ArrowLeft' : 'ArrowRight')
+    await expect(sourceStage.locator('article').filter({ hasText: dealTitle }).first()).toBeVisible()
   })
 
   test('shows the quotes workspace with weighted pipeline summary', async ({ page }) => {
