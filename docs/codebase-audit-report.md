@@ -143,3 +143,27 @@ Date: 2026-11-07
 - `npm run verify` (prisma validate, lint, build, unit checks, smoke checks) passes.
 - Full Playwright browser suite passes (a pre-existing strict-mode selector collision in the customer detail test was fixed with `{ exact: true }`).
 - Schema change pushed with `prisma db push`; the `sessionVersion` column is additive and defaults to 0.
+
+## Third Pass — Structure and Dependency Cleanup (2026-11-08)
+
+### File structure
+
+- `lib/crm/queries.ts` (1474 lines) split into `lib/crm/queries/` per-entity modules with an `index.ts` barrel; the `@/lib/crm/queries` import path is unchanged for all consumers.
+- `app/actions/crm.ts` (1114 lines) split into `app/actions/crm/` domain modules (each carrying `'use server'`), with `app/actions/crm.ts` kept as a plain re-export barrel. Turbopack rejects re-export statements inside a `'use server'` file, so the directive lives only in the action modules.
+- `app/(app)/ayarlar/settings-client.tsx` (838 lines) reduced to a thin Tabs wrapper over five tab components: `profile-tab`, `security-tab`, `users-tab`, `pipeline-tab`, `tags-tab`, plus a shared `settings-shared.tsx` (`ErrorText`).
+
+### Dependencies
+
+- `next` 16.2.6 → 16.4.5: closes the high-severity `sharp` advisory set (libvips CVE-2026-33327/33328/35590/35591, libheif, librsvg) and the nested postcss findings. `sharp` is not used at runtime (`images.unoptimized`) but ships with next.
+- `next-auth` 5.0.0-beta.31 → 5.0.0-beta.32: clears the critical `@auth/core` advisories (homoglyph email normalization bypass, malformed Bearer header crash in `getToken()`, OAuth state/nonce/PKCE cookie provider binding).
+- Remaining audit findings (deepmerge via shadcn, deepmerge-ts via prisma 6, minimatch via eslint-config-next) require breaking upgrades (shadcn 1.0, prisma 7, eslint-config-next downgrade) and are deferred deliberately.
+- `zod` bumped past GHSA-mrhx-c7xc-m3w5; unused `cmdk` dependency removed; `pnpm-lock.yaml` deleted so npm stays the only package manager.
+
+### Test hardening
+
+- The pipeline keyboard-move smoke test no longer assumes the first column holds a card: it picks the first column that actually contains one, falls back to moving left from the last column, and moves the card back afterwards so repeat runs stop draining the source column.
+- `tsconfig.tsbuildinfo` added to `.gitignore`.
+
+### Verification
+
+- `npx tsc --noEmit`, `npm run verify` (prisma validate, lint, build, unit, smoke), and the full Playwright browser suite (16/16) pass on the final state.
