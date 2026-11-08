@@ -45,7 +45,7 @@ export type LeadOption = {
 export type PipelineOption = {
   id: string
   name: string
-  stages: Array<{ id: string; name: string }>
+  stages: Array<{ id: string; key: string; name: string }>
 }
 
 export type QuickCreateKind = 'company' | 'contact' | 'lead' | 'deal' | 'task'
@@ -96,12 +96,14 @@ export type LeadRow = {
   ownerId?: string | null
   owner: string
   stage: string
+  stageKey: string
   email: string
   phone: string
 }
 
 export type DealStageOption = {
   id: string
+  key: string
   name: string
   isClosed: boolean
   isWon: boolean
@@ -121,6 +123,7 @@ export type DealRow = {
   owner: string
   ownerInitials: string
   stage: string
+  stageKey: string
   stageId: string
   pipelineId: string
   availableStages: DealStageOption[]

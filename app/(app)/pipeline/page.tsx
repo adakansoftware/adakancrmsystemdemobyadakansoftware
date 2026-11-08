@@ -5,12 +5,14 @@ import { PipelineBoardClient } from '@/app/(app)/pipeline/pipeline-board-client'
 import { PipelineSwitcher } from '@/app/(app)/pipeline/pipeline-switcher'
 import { PageHeader } from '@/components/shared/page-header'
 import { Button } from '@/components/ui/button'
+import { getI18n } from '@/lib/i18n/server'
 
 export default async function PipelinePage({
   searchParams,
 }: {
   searchParams: Promise<{ pipelineId?: string }>
 }) {
+  const { t } = await getI18n()
   const { pipelineId } = await searchParams
   const pipelines = await listDealPipelines()
   const boardResult = await getDealPipelineBoardAction({
@@ -18,14 +20,14 @@ export default async function PipelinePage({
   })
 
   if (!boardResult.success || !boardResult.data) {
-    return <PageHeader title="Pipeline" description="Pipeline verisi bulunamadi." />
+    return <PageHeader title={t('pipeline.title')} description={t('pipeline.notFound')} />
   }
 
   return (
     <>
       <PageHeader
-        title="Pipeline"
-        description="Coklu pipeline, ozel stage ve kalici anlasma hareketleri"
+        title={t('pipeline.title')}
+        description={t('pipeline.description')}
         actions={
           <>
             <PipelineSwitcher
@@ -40,7 +42,7 @@ export default async function PipelinePage({
               render={
                 <Link href="/pipeline?quickCreate=deal">
                   <Plus data-icon="inline-start" />
-                  Yeni Anlasma
+                  {t('pipeline.newDeal')}
                 </Link>
               }
             />

@@ -68,7 +68,7 @@ export async function getCompaniesManagementPageData() {
     addressLine1: company.addressLine1 ?? '',
     employeeCount: company.employeeCount,
     ownerId: company.ownerId,
-    owner: company.owner ? `${company.owner.firstName} ${company.owner.lastName}` : 'Atanmamis',
+    owner: company.owner ? `${company.owner.firstName} ${company.owner.lastName}` : 'common.unassigned',
     relatedCustomers: company._count.contacts,
     activeDeals: company.deals.filter((deal) => deal.status === 'OPEN').length,
     totalValue: company.deals.reduce((sum, deal) => sum + toNumber(deal.amount), 0),
@@ -135,7 +135,7 @@ export async function getCompanyDetailPageData(companyId: string) {
               lastName: true,
             },
           },
-          stage: { select: { name: true } },
+          stage: { select: { key: true, name: true } },
         },
       },
       tasks: {
@@ -195,7 +195,7 @@ export async function getCompanyDetailPageData(companyId: string) {
     ...company,
     ownerName: company.owner
       ? `${company.owner.firstName} ${company.owner.lastName}`
-      : 'Atanmamis',
+      : 'common.unassigned',
     contacts: company.contacts.map((contact) => ({
       id: contact.id,
       name: `${contact.firstName} ${contact.lastName}`,
@@ -210,6 +210,7 @@ export async function getCompanyDetailPageData(companyId: string) {
       currency: deal.currency,
       status: deal.status,
       stage: deal.stage.name,
+      stageKey: deal.stage.key,
       contact: deal.contact
         ? `${deal.contact.firstName} ${deal.contact.lastName}`
         : '-',

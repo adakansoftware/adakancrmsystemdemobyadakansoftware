@@ -16,18 +16,23 @@ import {
 import { getDealsPageData } from '@/lib/crm/queries'
 import { createEnumLabels } from '@/lib/i18n/enums'
 import { getI18n } from '@/lib/i18n/server'
+import { displayStageName } from '@/lib/i18n/stages'
 import { dealStatusMeta } from '@/lib/ui-meta'
 import { formatCurrency, formatDate } from '@/lib/format'
 
 export default async function QuotesPage() {
-  const { t } = await getI18n()
+  const { t, locale } = await getI18n()
   const labels = createEnumLabels(t)
   const deals = await getDealsPageData()
   const currentTime = new Date()
-  const quoteDeals = deals.filter((deal) =>
-    ['Teklif', 'Pazarlik', 'Gorusme', 'Proposal', 'Negotiation'].some((label) =>
-      deal.stage.toLocaleLowerCase('tr-TR').includes(label.toLocaleLowerCase('tr-TR')),
-    ),
+  const quoteDeals = deals.filter(
+    (deal) =>
+      deal.stageKey === 'proposal' ||
+      deal.stageKey === 'negotiation' ||
+      // Name fallback for custom pipelines without stage keys.
+      ['Teklif', 'Pazarlik', 'Gorusme', 'Proposal', 'Negotiation'].some((label) =>
+        deal.stage.toLocaleLowerCase('tr-TR').includes(label.toLocaleLowerCase('tr-TR')),
+      ),
   )
   const totalValue = quoteDeals.reduce((sum, deal) => sum + deal.amount, 0)
   const weightedValue = quoteDeals.reduce(
@@ -47,8 +52,8 @@ export default async function QuotesPage() {
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
-        title="Teklifler"
-        description="Teklif ve pazarlik asamasindaki anlasmalari yakin takip icin ayrilmis gorunum."
+        title={t('quotes.title')}
+        description={t('quotes.description')}
       >
         <Button
           variant="outline"
@@ -56,7 +61,7 @@ export default async function QuotesPage() {
           render={
             <Link href="/anlasmalar">
               <Handshake data-icon="inline-start" />
-              Tum Anlasmalar
+              {t('quotes.allDeals')}
             </Link>
           }
         />
@@ -65,19 +70,19 @@ export default async function QuotesPage() {
           render={
             <Link href="/anlasmalar?quickCreate=deal">
               <FileText data-icon="inline-start" />
-              Yeni Teklif
+              {t('quotes.newQuote')}
             </Link>
           }
         />
       </PageHeader>
 
       <div className="grid gap-4 md:grid-cols-3">
-        <SummaryCard label="Aktif Teklif" value={quoteDeals.length} />
-        <SummaryCard label="Toplam Teklif Degeri" value={formatCurrency(totalValue)} />
+        <SummaryCard label={t('quotes.activeCount')} value={quoteDeals.length} />
+        <SummaryCard label={t('quotes.totalValue')} value={formatCurrency(totalValue, 'TRY', locale)} />
         <SummaryCard
-          label="Weighted Pipeline"
-          value={formatCurrency(weightedValue)}
-          badge={`${dueSoon} yaklasan kapanis`}
+          label={t('quotes.weightedPipeline')}
+          value={formatCurrency(weightedValue, 'TRY', locale)}
+          badge={t('quotes.dueSoonCloses', { count: dueSoon })}
         />
       </div>
 
@@ -85,26 +90,26 @@ export default async function QuotesPage() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <TrendingUp className="size-5" />
-            Teklif Oncelik Listesi
+            {t('quotes.priorityList')}
           </CardTitle>
         </CardHeader>
         <CardContent className="overflow-x-auto">
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Baslik</TableHead>
-                <TableHead>Firma / Kisi</TableHead>
-                <TableHead>Asama</TableHead>
-                <TableHead className="text-right">Tutar</TableHead>
-                <TableHead className="text-right">Olasilik</TableHead>
-                <TableHead className="text-right">Tahmini Kapanis</TableHead>
+                <TableHead>{t('common.colTitle')}</TableHead>
+                <TableHead>{t('common.colCompanyContact')}</TableHead>
+                <TableHead>{t('common.colStage')}</TableHead>
+                <TableHead className="text-right">{t('common.colAmount')}</TableHead>
+                <TableHead className="text-right">{t('common.colProbability')}</TableHead>
+                <TableHead className="text-right">{t('common.expectedClose')}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {quoteDeals.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={6} className="py-12 text-center text-sm text-muted-foreground">
-                    Teklif veya pazarlik asamasinda kayit yok.
+                    {t('quotes.empty')}
                   </TableCell>
                 </TableRow>
               ) : (
@@ -129,15 +134,17 @@ export default async function QuotesPage() {
                           <Badge variant={dealStatusMeta[deal.status].variant}>
                             {labels.dealStatus[deal.status]}
                           </Badge>
-                          <span className="text-xs text-muted-foreground">{deal.stage}</span>
+                          <span className="text-xs text-muted-foreground">
+                            {displayStageName({ name: deal.stage, key: deal.stageKey }, t)}
+                          </span>
                         </div>
                       </TableCell>
                       <TableCell className="text-right font-medium">
-                        {formatCurrency(deal.amount, deal.currency)}
+                        {formatCurrency(deal.amount, deal.currency, locale)}
                       </TableCell>
                       <TableCell className="text-right">%{deal.probability}</TableCell>
                       <TableCell className="text-right text-muted-foreground">
-                        {formatDate(deal.expectedCloseAt)}
+                        {formatDate(deal.expectedCloseAt, locale)}
                       </TableCell>
                     </TableRow>
                   ))

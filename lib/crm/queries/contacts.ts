@@ -69,7 +69,7 @@ export async function getContactsManagementPageData() {
     email: contact.email ?? '-',
     phone: contact.mobilePhone ?? contact.phone ?? '-',
     mobilePhone: contact.mobilePhone ?? '',
-    owner: contact.owner ? `${contact.owner.firstName} ${contact.owner.lastName}` : 'Atanmamis',
+    owner: contact.owner ? `${contact.owner.firstName} ${contact.owner.lastName}` : 'common.unassigned',
     lastActivityAt: contact.activities[0]?.occurredAt ?? null,
     lastActivitySubject: contact.activities[0]?.subject ?? 'Henuz aktivite yok',
     relatedDealValue: contact.deals
@@ -122,7 +122,7 @@ export async function getContactDetailPageData(contactId: string) {
           amount: true,
           currency: true,
           status: true,
-          stage: { select: { name: true } },
+          stage: { select: { key: true, name: true } },
           expectedCloseAt: true,
         },
       },
@@ -196,7 +196,7 @@ export async function getContactDetailPageData(contactId: string) {
     company: contact.company,
     owner: contact.owner
       ? `${contact.owner.firstName} ${contact.owner.lastName}`
-      : 'Atanmamis',
+      : 'common.unassigned',
     deals: contact.deals.map((deal) => ({
       id: deal.id,
       title: deal.title,
@@ -204,6 +204,7 @@ export async function getContactDetailPageData(contactId: string) {
       currency: deal.currency,
       status: deal.status,
       stage: deal.stage.name,
+      stageKey: deal.stage.key,
       expectedCloseAt: deal.expectedCloseAt,
     })),
     tasks: contact.tasks,

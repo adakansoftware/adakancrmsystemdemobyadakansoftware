@@ -4,12 +4,14 @@ import { TasksListClient } from '@/app/(app)/gorevler/tasks-list-client'
 import { PageHeader } from '@/components/shared/page-header'
 import { Button } from '@/components/ui/button'
 import { getAssignableUsers, getTasksPageData } from '@/lib/crm/queries'
+import { getI18n } from '@/lib/i18n/server'
 
 export default async function TasksPage({
   searchParams,
 }: {
   searchParams: Promise<{ q?: string }>
 }) {
+  const { t } = await getI18n()
   const { q } = await searchParams
   const normalizedQuery = q?.trim().toLowerCase() ?? ''
   const [tasks, users] = await Promise.all([getTasksPageData(), getAssignableUsers()])
@@ -26,11 +28,11 @@ export default async function TasksPage({
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
-        title="Gorevler"
+        title={t('tasks.title')}
         description={
           normalizedQuery
-            ? `"${q}" icin gorev sonuclari`
-            : `${openCount} acik gorev - ekibinizin yapilacak listesi`
+            ? t('tasks.searchResults', { query: q ?? '' })
+            : t('tasks.description', { count: openCount })
         }
         actions={
           <Button
@@ -38,7 +40,7 @@ export default async function TasksPage({
             render={
               <Link href="/gorevler?quickCreate=task">
                 <PlusIcon data-icon="inline-start" />
-                Yeni Gorev
+                {t('tasks.newTask')}
               </Link>
             }
           />

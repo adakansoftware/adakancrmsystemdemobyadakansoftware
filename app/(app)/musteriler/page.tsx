@@ -8,6 +8,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { listCompanies } from '@/app/actions/crm'
 import { getAssignableUsers, getContactsManagementPageData } from '@/lib/crm/queries'
+import { getI18n } from '@/lib/i18n/server'
 
 const PAGE_SIZE = 25
 
@@ -36,6 +37,7 @@ export default async function CustomersPage({
 }: {
   searchParams: Promise<CustomersPageSearchParams>
 }) {
+  const { t } = await getI18n()
   const params = await searchParams
   const query = params.q?.trim() ?? ''
   const companyFilter = params.company?.trim() ?? ''
@@ -86,8 +88,8 @@ export default async function CustomersPage({
   return (
     <>
       <PageHeader
-        title="Musteriler"
-        description="Kisi kayitlarini arayin, filtreleyin ve satis baglantilariyla birlikte yonetin."
+        title={t('contacts.title')}
+        description={t('contacts.description')}
       >
         <Button
           variant="outline"
@@ -95,7 +97,7 @@ export default async function CustomersPage({
           render={
             <Link href="/api/export?entity=contacts">
               <Download data-icon="inline-start" />
-              Disa Aktar
+              {t('contacts.export')}
             </Link>
           }
         />
@@ -104,7 +106,7 @@ export default async function CustomersPage({
           render={
             <Link href="/musteriler?quickCreate=contact">
               <Plus data-icon="inline-start" />
-              Yeni Musteri
+              {t('contacts.newContact')}
             </Link>
           }
         />
@@ -116,22 +118,22 @@ export default async function CustomersPage({
             <label className="space-y-2 text-sm">
               <span className="flex items-center gap-2 font-medium">
                 <Search className="size-4" />
-                Arama
+                {t('common.search')}
               </span>
-              <Input name="q" defaultValue={query} placeholder="Isim, e-posta, telefon veya firma" />
+              <Input name="q" defaultValue={query} placeholder={t('contacts.searchPlaceholder')} />
             </label>
 
             <label className="space-y-2 text-sm">
               <span className="flex items-center gap-2 font-medium">
                 <SlidersHorizontal className="size-4" />
-                Sirket
+                {t('contacts.company')}
               </span>
               <select
                 name="company"
                 defaultValue={companyFilter}
                 className="flex h-9 w-full rounded-lg border border-input bg-background px-3 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
               >
-                <option value="">Tum sirketler</option>
+                <option value="">{t('contacts.allCompanies')}</option>
                 {companies.map((company) => (
                   <option key={company.id} value={company.id}>
                     {company.name}
@@ -141,32 +143,32 @@ export default async function CustomersPage({
             </label>
 
             <label className="space-y-2 text-sm">
-              <span className="font-medium">Siralama</span>
+              <span className="font-medium">{t('contacts.sort')}</span>
               <select
                 name="sort"
                 defaultValue={sort}
                 className="flex h-9 w-full rounded-lg border border-input bg-background px-3 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
               >
-                <option value="name-asc">Isme gore (A-Z)</option>
-                <option value="created-desc">Eklenme tarihine gore (yeni)</option>
+                <option value="name-asc">{t('contacts.sortNameAsc')}</option>
+                <option value="created-desc">{t('contacts.sortCreatedDesc')}</option>
               </select>
             </label>
 
             <div className="flex items-end gap-2">
-              <Button type="submit">Uygula</Button>
+              <Button type="submit">{t('common.apply')}</Button>
               <Button
                 variant="ghost"
                 nativeButton={false}
-                render={<Link href="/musteriler">Temizle</Link>}
+                render={<Link href="/musteriler">{t('common.clear')}</Link>}
               />
             </div>
           </form>
 
           <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
-            <span>{filteredContacts.length} kayit bulundu</span>
-            <Badge variant="secondary">Sayfa {page} / {totalPages}</Badge>
+            <span>{t('common.recordsFound', { count: filteredContacts.length })}</span>
+            <Badge variant="secondary">{t('common.pageRange', { page, total: totalPages })}</Badge>
             {selectedCompany ? <Badge variant="outline">{selectedCompany.name}</Badge> : null}
-            {query ? <Badge variant="outline">Arama: {query}</Badge> : null}
+            {query ? <Badge variant="outline">{t('common.searchBadge', { query })}</Badge> : null}
           </div>
         </CardContent>
       </Card>
@@ -180,8 +182,11 @@ export default async function CustomersPage({
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <p className="text-sm text-muted-foreground">
           {filteredContacts.length === 0
-            ? 'Gosterilecek musteri yok.'
-            : `${pageStart + 1}-${Math.min(pageStart + PAGE_SIZE, filteredContacts.length)} arasi kayitlar gosteriliyor.`}
+            ? t('contacts.empty')
+            : t('common.showingRange', {
+                start: pageStart + 1,
+                end: Math.min(pageStart + PAGE_SIZE, filteredContacts.length),
+              })}
         </p>
         <div className="flex items-center gap-2">
           <Button
@@ -198,7 +203,7 @@ export default async function CustomersPage({
                 aria-disabled={page <= 1}
                 className={page <= 1 ? 'pointer-events-none opacity-50' : undefined}
               >
-                Onceki
+                {t('common.prev')}
               </Link>
             }
           />
@@ -216,7 +221,7 @@ export default async function CustomersPage({
                 aria-disabled={page >= totalPages}
                 className={page >= totalPages ? 'pointer-events-none opacity-50' : undefined}
               >
-                Sonraki
+                {t('common.next')}
               </Link>
             }
           />

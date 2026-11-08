@@ -5,10 +5,12 @@ import { type KeyboardEvent, useMemo, useOptimistic, useState, useTransition } f
 import { Building2, Calendar, ChevronLeft, ChevronRight, GripVertical, Plus } from 'lucide-react'
 import { toast } from 'sonner'
 import { moveDealToStageAction } from '@/app/actions/crm'
+import { useI18n } from '@/components/i18n/locale-provider'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { localeToIntl, type Locale } from '@/lib/i18n/config'
 import { cn } from '@/lib/utils'
 
 type PipelineBoardData = {
@@ -45,21 +47,11 @@ type PipelineBoardData = {
   }
 }
 
-function formatCompactCurrency(amount: number, currency: string) {
-  return `${new Intl.NumberFormat('tr-TR', {
+function formatCompactCurrency(amount: number, currency: string, locale: Locale) {
+  return `${new Intl.NumberFormat(localeToIntl(locale), {
     notation: 'compact',
     maximumFractionDigits: 1,
   }).format(amount)} ${currency}`
-}
-
-function getStageMoveLabel(dealTitle: string, stageName: string | undefined, direction: 'next' | 'previous') {
-  if (!stageName) {
-    return direction === 'previous'
-      ? `${dealTitle} kaydi icin onceki asama yok`
-      : `${dealTitle} kaydi icin sonraki asama yok`
-  }
-
-  return `${dealTitle} kaydini ${stageName} asamasina tasi`
 }
 
 function getKeyboardMoveNote(direction: 'next' | 'previous') {
@@ -84,6 +76,21 @@ export function PipelineBoardClient({
   const [isPending, startTransition] = useTransition()
   const [query, setQuery] = useState('')
   const [visibility, setVisibility] = useState<'ALL' | 'OPEN' | 'CLOSED'>('ALL')
+  const { t, locale } = useI18n()
+
+  function getStageMoveLabel(
+    dealTitle: string,
+    stageName: string | undefined,
+    direction: 'next' | 'previous',
+  ) {
+    if (!stageName) {
+      return direction === 'previous'
+        ? t('pipeline.stageMovePreviousNone', { title: dealTitle })
+        : t('pipeline.stageMoveNextNone', { title: dealTitle })
+    }
+
+    return t('pipeline.stageMoveTo', { title: dealTitle, stage: stageName })
+  }
 
   const [optimisticBoard, moveOptimisticDeal] = useOptimistic(
     initialBoard,
@@ -184,7 +191,7 @@ export function PipelineBoardClient({
         })
 
         if (!result.success) {
-          toast.error('Pipeline hareketi kaydedilemedi')
+          toast.error(t('pipeline.moveFailed'))
         }
       })
     }
@@ -221,21 +228,21 @@ export function PipelineBoardClient({
     <div className="flex flex-col gap-4">
       <div className="grid gap-4 sm:grid-cols-3">
         <div className="rounded-xl border bg-card p-4">
-          <p className="text-sm text-muted-foreground">Toplam deger</p>
+          <p className="text-sm text-muted-foreground">{t('pipeline.totalValue')}</p>
           <p className="mt-1 text-2xl font-semibold">
-            {formatCompactCurrency(metrics.totalValue, 'TRY')}
+            {formatCompactCurrency(metrics.totalValue, 'TRY', locale)}
           </p>
         </div>
         <div className="rounded-xl border bg-card p-4">
-          <p className="text-sm text-muted-foreground">Kazanilan deger</p>
+          <p className="text-sm text-muted-foreground">{t('pipeline.wonValue')}</p>
           <p className="mt-1 text-2xl font-semibold text-success">
-            {formatCompactCurrency(metrics.wonValue, 'TRY')}
+            {formatCompactCurrency(metrics.wonValue, 'TRY', locale)}
           </p>
         </div>
         <div className="rounded-xl border bg-card p-4">
-          <p className="text-sm text-muted-foreground">Kaybedilen deger</p>
+          <p className="text-sm text-muted-foreground">{t('pipeline.lostValue')}</p>
           <p className="mt-1 text-2xl font-semibold text-destructive">
-            {formatCompactCurrency(metrics.lostValue, 'TRY')}
+            {formatCompactCurrency(metrics.lostValue, 'TRY', locale)}
           </p>
         </div>
       </div>
@@ -244,16 +251,16 @@ export function PipelineBoardClient({
         <Input
           value={query}
           onChange={(event) => setQuery(event.target.value)}
-          placeholder="Deal, firma veya sorumlu ara..."
+          placeholder={t('pipeline.searchPlaceholder')}
         />
         <select
           value={visibility}
           onChange={(event) => setVisibility(event.target.value as typeof visibility)}
           className="flex h-9 w-full rounded-lg border border-input bg-background px-3 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
         >
-          <option value="ALL">Tum kartlar</option>
-          <option value="OPEN">Acik asamalar</option>
-          <option value="CLOSED">Kapali asamalar</option>
+          <option value="ALL">{t('pipeline.filterAll')}</option>
+          <option value="OPEN">{t('pipeline.filterOpen')}</option>
+          <option value="CLOSED">{t('pipeline.filterClosed')}</option>
         </select>
       </div>
 
@@ -278,7 +285,7 @@ export function PipelineBoardClient({
                   'flex w-[290px] shrink-0 flex-col rounded-xl border bg-muted/40 transition-colors',
                   overStage === stage.id && 'border-primary bg-primary/5',
                 )}
-                aria-label={`${stage.name} sutunu`}
+                aria-label={t('pipeline.stageColumnAria', { name: stage.name })}
               >
                 <div className="flex items-center justify-between gap-2 border-b px-3 py-3">
                   <div className="flex items-center gap-2">
@@ -286,7 +293,7 @@ export function PipelineBoardClient({
                     <Badge variant="secondary">{stage.deals.length}</Badge>
                   </div>
                   <span className="text-xs font-medium text-muted-foreground">
-                    {formatCompactCurrency(stageTotal, 'TRY')}
+                    {formatCompactCurrency(stageTotal, 'TRY', locale)}
                   </span>
                 </div>
 
@@ -329,7 +336,7 @@ export function PipelineBoardClient({
 
                       <div className="flex items-center justify-between">
                         <span className="text-sm font-semibold">
-                          {formatCompactCurrency(deal.amount, deal.currency)}
+                          {formatCompactCurrency(deal.amount, deal.currency, locale)}
                         </span>
                         <Badge variant={priorityVariant[deal.priority] ?? 'secondary'}>
                           {deal.priority}
@@ -355,7 +362,7 @@ export function PipelineBoardClient({
 
                       <div className="flex items-center justify-between gap-2 border-t pt-2">
                         <span className="text-[11px] text-muted-foreground">
-                          Klavye veya dokunmatik icin asama degistirme
+                          {t('pipeline.keyboardHint')}
                         </span>
                         <div className="flex items-center gap-1">
                           <Button
@@ -401,7 +408,7 @@ export function PipelineBoardClient({
                     render={
                       <Link href="/pipeline?quickCreate=deal">
                         <Plus data-icon="inline-start" />
-                        Anlasma ekle
+                        {t('pipeline.addDeal')}
                       </Link>
                     }
                   />

@@ -17,13 +17,23 @@ import {
 } from '@/components/ui/table'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { getDashboardData, getReportsPageData } from '@/lib/crm/queries'
+import { createEnumLabels } from '@/lib/i18n/enums'
+import { displayStageName } from '@/lib/i18n/stages'
+import { getI18n } from '@/lib/i18n/server'
 import { formatCurrency } from '@/lib/format'
 
 export default async function ReportsPage() {
+  const { t, locale } = await getI18n()
+  const labels = createEnumLabels(t)
   const [dashboard, reports] = await Promise.all([
-    getDashboardData(),
-    getReportsPageData(),
+    getDashboardData(locale),
+    getReportsPageData(locale),
   ])
+
+  const stageLabel = (entry: { stageKey: string | null; stage: string }) =>
+    entry.stage === 'reports.unknownStage'
+      ? t('reports.unknownStage')
+      : displayStageName({ key: entry.stageKey, name: entry.stage }, t)
 
   const totalWon = reports.salesPerformance.reduce((sum, person) => sum + person.revenue, 0)
   const avgWinRate =
@@ -38,32 +48,35 @@ export default async function ReportsPage() {
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
-        title="Raporlar"
-        description="Satis performansi, pipeline hizi ve aktivite kalitesi tek gorunumde."
+        title={t('reports.title')}
+        description={t('reports.description')}
       />
 
       <div className="grid gap-4 md:grid-cols-4">
-        <SummaryCard label="Acik Deal" value={dashboard.openDeals} />
-        <SummaryCard label="Kazanilan Tutar" value={formatCurrency(totalWon)} />
-        <SummaryCard label="Ortalama Win Rate" value={`%${avgWinRate}`} />
+        <SummaryCard label={t('dashboard.activeDeals')} value={dashboard.openDeals} />
         <SummaryCard
-          label="30 Gun Forecast Coverage"
+          label={t('dashboard.colWonAmount')}
+          value={formatCurrency(totalWon, 'TRY', locale)}
+        />
+        <SummaryCard label={t('reports.avgWinRate')} value={`%${avgWinRate}`} />
+        <SummaryCard
+          label={t('reports.forecastCoverage')}
           value={`%${reports.forecastCoverage}`}
-          badge={slowestStage ? `En yavas: ${slowestStage.stage}` : undefined}
+          badge={slowestStage ? t('reports.slowestBadge', { stage: stageLabel(slowestStage) }) : undefined}
         />
       </div>
 
       <Tabs defaultValue="sales" className="space-y-4">
         <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="sales">Satis Performansi</TabsTrigger>
-          <TabsTrigger value="pipeline">Pipeline Analizi</TabsTrigger>
-          <TabsTrigger value="activity">Aktivite Ozeti</TabsTrigger>
+          <TabsTrigger value="sales">{t('reports.tabSales')}</TabsTrigger>
+          <TabsTrigger value="pipeline">{t('reports.tabPipeline')}</TabsTrigger>
+          <TabsTrigger value="activity">{t('reports.tabActivity')}</TabsTrigger>
         </TabsList>
 
         <TabsContent value="sales" className="space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle>Kullanici Bazli Kapanan Deal Grafiği</CardTitle>
+              <CardTitle>{t('reports.closedByUserChart')}</CardTitle>
             </CardHeader>
             <CardContent>
               <SalesPerformanceChart
@@ -77,17 +90,17 @@ export default async function ReportsPage() {
 
           <Card>
             <CardHeader>
-              <CardTitle>Kazanma Orani Tablosu</CardTitle>
+              <CardTitle>{t('reports.winRateTable')}</CardTitle>
             </CardHeader>
             <CardContent className="overflow-x-auto">
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Kullanici</TableHead>
-                    <TableHead className="text-right">Toplam Deal</TableHead>
-                    <TableHead className="text-right">Kazanilan</TableHead>
+                    <TableHead>{t('reports.colUser')}</TableHead>
+                    <TableHead className="text-right">{t('reports.colTotalDeals')}</TableHead>
+                    <TableHead className="text-right">{t('reports.colWon')}</TableHead>
                     <TableHead className="text-right">Win Rate</TableHead>
-                    <TableHead className="text-right">Gelir</TableHead>
+                    <TableHead className="text-right">{t('reports.colRevenue')}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -97,7 +110,9 @@ export default async function ReportsPage() {
                       <TableCell className="text-right">{person.totalDeals}</TableCell>
                       <TableCell className="text-right">{person.wonDeals}</TableCell>
                       <TableCell className="text-right">%{person.winRate}</TableCell>
-                      <TableCell className="text-right">{formatCurrency(person.revenue)}</TableCell>
+                      <TableCell className="text-right">
+                        {formatCurrency(person.revenue, 'TRY', locale)}
+                      </TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
@@ -109,42 +124,46 @@ export default async function ReportsPage() {
         <TabsContent value="pipeline" className="space-y-4">
           <div className="grid gap-4 lg:grid-cols-3">
             <SummaryCard
-              label="Weighted Pipeline"
-              value={formatCurrency(reports.weightedPipelineValue)}
+              label={t('quotes.weightedPipeline')}
+              value={formatCurrency(reports.weightedPipelineValue, 'TRY', locale)}
             />
             <SummaryCard
-              label="Stalled Deal"
+              label={t('reports.stalledDeals')}
               value={reports.stalledDeals.length}
-              badge="21+ gun"
+              badge={t('reports.stalledBadge')}
             />
             <SummaryCard
-              label="Etiketli Segment"
+              label={t('reports.taggedSegments')}
               value={reports.tagPerformance.length}
-              badge="aktif etiket"
+              badge={t('reports.activeTagsBadge')}
             />
           </div>
 
           <Card>
             <CardHeader>
-              <CardTitle>Stage Bekleme Sureleri</CardTitle>
+              <CardTitle>{t('reports.stageDurations')}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
               {reports.pipelineAnalysis.length === 0 ? (
-                <p className="text-sm text-muted-foreground">Henuz stage hareket verisi yok.</p>
+                <p className="text-sm text-muted-foreground">{t('reports.noStageHistory')}</p>
               ) : (
                 reports.pipelineAnalysis.map((stage) => (
                   <div key={stage.stage} className="rounded-lg border p-3">
                     <div className="flex items-center justify-between gap-3">
                       <div>
-                        <p className="font-medium">{stage.stage}</p>
+                        <p className="font-medium">{stageLabel(stage)}</p>
                         <p className="text-xs text-muted-foreground">
-                          {stage.transitions} gecis kaydi
+                          {t('reports.transitionCount', { count: stage.transitions })}
                         </p>
                       </div>
                       <div className="flex items-center gap-2">
-                        <Badge variant="outline">{stage.avgDays} gun</Badge>
+                        <Badge variant="outline">{t('dashboard.avgDays', { count: stage.avgDays })}</Badge>
                         <Badge variant="secondary">
-                          {stage.avgDays <= 7 ? 'Hizli' : stage.avgDays <= 21 ? 'Normal' : 'Yavas'}
+                          {stage.avgDays <= 7
+                            ? t('reports.paceFast')
+                            : stage.avgDays <= 21
+                              ? t('reports.paceNormal')
+                              : t('reports.paceSlow')}
                         </Badge>
                       </div>
                     </div>
@@ -156,11 +175,11 @@ export default async function ReportsPage() {
 
           <Card>
             <CardHeader>
-              <CardTitle>Riskli ve Yavaslayan Deal&apos;lar</CardTitle>
+              <CardTitle>{t('reports.riskyDeals')}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
               {reports.stalledDeals.length === 0 ? (
-                <p className="text-sm text-muted-foreground">Kritik bekleyen deal gorunmuyor.</p>
+                <p className="text-sm text-muted-foreground">{t('reports.noStalledDeals')}</p>
               ) : (
                 reports.stalledDeals.map((deal) => (
                   <div key={deal.id} className="rounded-lg border p-3">
@@ -168,7 +187,10 @@ export default async function ReportsPage() {
                       <div>
                         <p className="font-medium">{deal.title}</p>
                         <p className="text-xs text-muted-foreground">
-                          {deal.stage} asamasinda {deal.ageDays} gundur bekliyor
+                          {t('reports.stalledFor', {
+                            stage: stageLabel(deal),
+                            count: deal.ageDays,
+                          })}
                         </p>
                         <div className="mt-2 flex flex-wrap gap-2">
                           {deal.tags.map((tag) => (
@@ -178,7 +200,9 @@ export default async function ReportsPage() {
                           ))}
                         </div>
                       </div>
-                      <Badge variant="warning">{formatCurrency(deal.amount)}</Badge>
+                      <Badge variant="warning">
+                        {formatCurrency(deal.amount, 'TRY', locale)}
+                      </Badge>
                     </div>
                   </div>
                 ))
@@ -191,7 +215,7 @@ export default async function ReportsPage() {
           <div className="grid gap-4 xl:grid-cols-[1.1fr_0.9fr]">
             <Card>
               <CardHeader>
-                <CardTitle>Bu Hafta vs Gecen Hafta</CardTitle>
+                <CardTitle>{t('reports.thisWeekVsLast')}</CardTitle>
               </CardHeader>
               <CardContent>
                 <ActivityComparisonChart
@@ -205,28 +229,33 @@ export default async function ReportsPage() {
             </Card>
             <Card>
               <CardHeader>
-                <CardTitle>Aktivite Karmasi</CardTitle>
+                <CardTitle>{t('reports.activityMix')}</CardTitle>
               </CardHeader>
               <CardContent>
-                <ActivityMixChart data={reports.activityMix} />
+                <ActivityMixChart
+                  data={reports.activityMix.map((item) => ({
+                    name: labels.activityType[item.type],
+                    value: item.value,
+                  }))}
+                />
               </CardContent>
             </Card>
           </div>
 
           <Card>
             <CardHeader>
-              <CardTitle>Kullanici Bazli Aktivite Dagilimi</CardTitle>
+              <CardTitle>{t('reports.activityByUser')}</CardTitle>
             </CardHeader>
             <CardContent className="overflow-x-auto">
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Kullanici</TableHead>
-                    <TableHead className="text-right">Arama</TableHead>
-                    <TableHead className="text-right">E-posta</TableHead>
-                    <TableHead className="text-right">Toplanti</TableHead>
-                    <TableHead className="text-right">Bu Hafta</TableHead>
-                    <TableHead className="text-right">Gecen Hafta</TableHead>
+                    <TableHead>{t('reports.colUser')}</TableHead>
+                    <TableHead className="text-right">{t('reports.colCalls')}</TableHead>
+                    <TableHead className="text-right">{t('reports.colEmails')}</TableHead>
+                    <TableHead className="text-right">{t('reports.colMeetings')}</TableHead>
+                    <TableHead className="text-right">{t('reports.colThisWeek')}</TableHead>
+                    <TableHead className="text-right">{t('reports.colLastWeek')}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -247,16 +276,16 @@ export default async function ReportsPage() {
 
           <Card>
             <CardHeader>
-              <CardTitle>Etiket Performansi</CardTitle>
+              <CardTitle>{t('reports.tagPerformance')}</CardTitle>
             </CardHeader>
             <CardContent className="overflow-x-auto">
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Etiket</TableHead>
-                    <TableHead className="text-right">Firma</TableHead>
-                    <TableHead className="text-right">Kisi</TableHead>
-                    <TableHead className="text-right">Deal</TableHead>
+                    <TableHead>{t('reports.colTag')}</TableHead>
+                    <TableHead className="text-right">{t('reports.colTagCompanies')}</TableHead>
+                    <TableHead className="text-right">{t('reports.colTagContacts')}</TableHead>
+                    <TableHead className="text-right">{t('reports.colTagDeals')}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>

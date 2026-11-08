@@ -123,21 +123,21 @@ export async function searchCrmRecords(
     ...companies.map((company) => ({
       id: company.id,
       title: company.name,
-      subtitle: [company.industry, company.city].filter(Boolean).join(' / ') || 'Firma kaydi',
+      subtitle: [company.industry, company.city].filter(Boolean).join(' / ') || 'search.companyRecord',
       href: '/firmalar',
       kind: 'company' as const,
     })),
     ...contacts.map((contact) => ({
       id: contact.id,
-      title: fullName(contact.firstName, contact.lastName) || 'Isimsiz kisi',
-      subtitle: contact.company?.name || contact.email || 'Musteri kaydi',
+      title: fullName(contact.firstName, contact.lastName) || 'search.unnamedContact',
+      subtitle: contact.company?.name || contact.email || 'search.contactRecord',
       href: '/musteriler',
       kind: 'contact' as const,
     })),
     ...leads.map((lead) => ({
       id: lead.id,
       title: lead.title,
-      subtitle: [lead.company?.name, lead.status].filter(Boolean).join(' / ') || 'Lead kaydi',
+      subtitle: [lead.company?.name, lead.status].filter(Boolean).join(' / ') || 'search.leadRecord',
       href: '/leads',
       kind: 'lead' as const,
     })),
@@ -156,7 +156,7 @@ export async function searchCrmRecords(
       subtitle:
         [fullName(task.assignee?.firstName, task.assignee?.lastName), task.status]
           .filter(Boolean)
-          .join(' / ') || 'Gorev kaydi',
+          .join(' / ') || 'search.taskRecord',
       href: '/gorevler',
       kind: 'task' as const,
     })),

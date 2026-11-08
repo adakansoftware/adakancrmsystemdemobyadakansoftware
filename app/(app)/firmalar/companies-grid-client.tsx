@@ -8,6 +8,7 @@ import { EntityActivityComposer } from '@/components/crm/entity-activity-compose
 import { EntityActivityFeed } from '@/components/crm/entity-activity-feed'
 import { EntityNotesPanel } from '@/components/crm/entity-notes-panel'
 import { InlineSelectField } from '@/components/crm/inline-select-field'
+import { useI18n, useEnumLabels } from '@/components/i18n/locale-provider'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -35,18 +36,11 @@ import type { CompanyRow, UserOption } from '@/lib/crm/view-models'
 import { formatCurrency } from '@/lib/format'
 import { getInitials } from '@/lib/helpers'
 
-const companyStatusOptions = [
-  { value: 'ACTIVE', label: 'Aktif' },
-  { value: 'INACTIVE', label: 'Pasif' },
-  { value: 'PROSPECT', label: 'Aday' },
-  { value: 'ARCHIVED', label: 'Arsiv' },
-] as const
-
-const companyStatusMeta = {
-  ACTIVE: { label: 'Aktif', variant: 'success' as const },
-  INACTIVE: { label: 'Pasif', variant: 'secondary' as const },
-  PROSPECT: { label: 'Aday', variant: 'warning' as const },
-  ARCHIVED: { label: 'Arsiv', variant: 'outline' as const },
+const companyStatusVariants = {
+  ACTIVE: 'success' as const,
+  INACTIVE: 'secondary' as const,
+  PROSPECT: 'warning' as const,
+  ARCHIVED: 'outline' as const,
 }
 
 function CompanyManagementDialog({
@@ -57,6 +51,14 @@ function CompanyManagementDialog({
   users: UserOption[]
 }) {
   const { isPending, runServerAction } = useServerActionToast()
+  const { t, locale } = useI18n()
+  const labels = useEnumLabels()
+  const companyStatusOptions = [
+    { value: 'ACTIVE', label: labels.companyStatus.ACTIVE },
+    { value: 'INACTIVE', label: labels.companyStatus.INACTIVE },
+    { value: 'PROSPECT', label: labels.companyStatus.PROSPECT },
+    { value: 'ARCHIVED', label: labels.companyStatus.ARCHIVED },
+  ]
   const [form, setForm] = useState({
     name: company.name,
     legalName: company.legalName,
@@ -91,41 +93,39 @@ function CompanyManagementDialog({
           status: form.status,
         }),
       {
-        successMessage: 'Firma guncellendi',
-        errorMessage: 'Firma guncellenemedi',
+        successMessage: t('companies.updated'),
+        errorMessage: t('companies.updateFailed'),
       },
     )
   }
 
   function archiveCompany() {
     runServerAction(() => deleteCompanyAction({ id: company.id }), {
-      successMessage: 'Firma arsive tasindi',
-      errorMessage: 'Firma arsivlenemedi',
+      successMessage: t('companies.archived'),
+      errorMessage: t('companies.archiveFailed'),
     })
   }
 
   return (
     <Dialog>
-      <DialogTrigger render={<Button variant="outline" size="sm" />}>Detay</DialogTrigger>
+      <DialogTrigger render={<Button variant="outline" size="sm" />}>{t('companies.detail')}</DialogTrigger>
       <DialogContent className="max-h-[90vh] max-w-4xl overflow-y-auto">
         <DialogHeader>
           <DialogTitle>{company.name}</DialogTitle>
-          <DialogDescription>
-            Kurumsal hesap bilgilerini, notlarini ve aktivite akisini yonet.
-          </DialogDescription>
+          <DialogDescription>{t('companies.dialogDescription')}</DialogDescription>
         </DialogHeader>
 
         <Tabs defaultValue="general">
           <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="general">Genel</TabsTrigger>
-            <TabsTrigger value="notes">Notlar</TabsTrigger>
-            <TabsTrigger value="activity">Aktivite</TabsTrigger>
+            <TabsTrigger value="general">{t('contacts.tabGeneral')}</TabsTrigger>
+            <TabsTrigger value="notes">{t('contacts.tabNotes')}</TabsTrigger>
+            <TabsTrigger value="activity">{t('contacts.tabActivity')}</TabsTrigger>
           </TabsList>
 
           <TabsContent value="general" className="space-y-4">
             <div className="grid gap-4 md:grid-cols-2">
               <label className="space-y-2 text-sm">
-                <span>Firma Adi</span>
+                <span>{t('companies.nameLabel')}</span>
                 <Input
                   value={form.name}
                   onChange={(event) =>
@@ -134,7 +134,7 @@ function CompanyManagementDialog({
                 />
               </label>
               <label className="space-y-2 text-sm">
-                <span>Yasal Unvan</span>
+                <span>{t('companies.legalNameLabel')}</span>
                 <Input
                   value={form.legalName}
                   onChange={(event) =>
@@ -143,7 +143,7 @@ function CompanyManagementDialog({
                 />
               </label>
               <label className="space-y-2 text-sm">
-                <span>E-posta</span>
+                <span>{t('contacts.email')}</span>
                 <Input
                   type="email"
                   value={form.email}
@@ -153,7 +153,7 @@ function CompanyManagementDialog({
                 />
               </label>
               <label className="space-y-2 text-sm">
-                <span>Telefon</span>
+                <span>{t('contacts.phone')}</span>
                 <Input
                   value={form.phone}
                   onChange={(event) =>
@@ -162,7 +162,7 @@ function CompanyManagementDialog({
                 />
               </label>
               <label className="space-y-2 text-sm">
-                <span>Web Sitesi</span>
+                <span>{t('companies.website')}</span>
                 <Input
                   value={form.website}
                   onChange={(event) =>
@@ -171,7 +171,7 @@ function CompanyManagementDialog({
                 />
               </label>
               <label className="space-y-2 text-sm">
-                <span>Sektor</span>
+                <span>{t('companies.industry')}</span>
                 <Input
                   value={form.industry}
                   onChange={(event) =>
@@ -180,7 +180,7 @@ function CompanyManagementDialog({
                 />
               </label>
               <label className="space-y-2 text-sm">
-                <span>Sehir</span>
+                <span>{t('companies.city')}</span>
                 <Input
                   value={form.city}
                   onChange={(event) =>
@@ -189,7 +189,7 @@ function CompanyManagementDialog({
                 />
               </label>
               <label className="space-y-2 text-sm">
-                <span>Ulke</span>
+                <span>{t('companies.country')}</span>
                 <Input
                   value={form.country}
                   onChange={(event) =>
@@ -198,7 +198,7 @@ function CompanyManagementDialog({
                 />
               </label>
               <label className="space-y-2 text-sm">
-                <span>Calisan Sayisi</span>
+                <span>{t('companies.employeeCount')}</span>
                 <Input
                   value={form.employeeCount}
                   onChange={(event) =>
@@ -207,7 +207,7 @@ function CompanyManagementDialog({
                 />
               </label>
               <div className="space-y-2 text-sm">
-                <span>Durum</span>
+                <span>{t('common.colStatus')}</span>
                 <InlineSelectField
                   value={form.status}
                   onValueChange={(value) =>
@@ -216,7 +216,7 @@ function CompanyManagementDialog({
                       status: value as CompanyRow['status'],
                     }))
                   }
-                  ariaLabel="Firma durumu"
+                  ariaLabel={t('companies.statusAria')}
                   options={companyStatusOptions.map((option) => ({
                     value: option.value,
                     label: option.label,
@@ -224,21 +224,21 @@ function CompanyManagementDialog({
                 />
               </div>
               <div className="space-y-2 text-sm md:col-span-2">
-                <span>Sorumlu</span>
+                <span>{t('contacts.owner')}</span>
                 <InlineSelectField
                   value={form.ownerId}
                   onValueChange={(value) =>
                     setForm((current) => ({ ...current, ownerId: value }))
                   }
-                  ariaLabel="Firma sorumlusu"
+                  ariaLabel={t('companies.ownerAria')}
                   options={[
-                    { value: 'unassigned', label: 'Atanmamis' },
+                    { value: 'unassigned', label: t('common.unassigned') },
                     ...users.map((user) => ({ value: user.id, label: user.name })),
                   ]}
                 />
               </div>
               <label className="space-y-2 text-sm md:col-span-2">
-                <span>Adres</span>
+                <span>{t('companies.address')}</span>
                 <Textarea
                   value={form.addressLine1}
                   onChange={(event) =>
@@ -253,20 +253,25 @@ function CompanyManagementDialog({
 
             <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border p-4">
               <div className="space-y-1">
-                <p className="text-sm font-medium">Hizli ozet</p>
+                <p className="text-sm font-medium">{t('contacts.quickSummary')}</p>
                 <p className="text-xs text-muted-foreground">
-                  {company.relatedCustomers} kisi | {company.activeDeals} aktif deal
+                  {t('companies.summaryCounts', {
+                    contacts: company.relatedCustomers,
+                    deals: company.activeDeals,
+                  })}
                 </p>
                 <p className="text-xs text-muted-foreground">
-                  Toplam deal degeri: {formatCurrency(company.totalValue)}
+                  {t('companies.totalDealValue', {
+                    value: formatCurrency(company.totalValue, 'TRY', locale),
+                  })}
                 </p>
               </div>
               <div className="flex gap-2">
                 <Button variant="destructive" onClick={archiveCompany} disabled={isPending}>
-                  Arsivle
+                  {t('contacts.archive')}
                 </Button>
                 <Button onClick={saveCompany} disabled={isPending}>
-                  {isPending ? 'Kaydediliyor...' : 'Kaydet'}
+                  {isPending ? t('common.saving') : t('common.save')}
                 </Button>
               </div>
             </div>
@@ -276,7 +281,7 @@ function CompanyManagementDialog({
             <EntityNotesPanel
               notes={company.notes}
               target={{ companyId: company.id }}
-              emptyLabel="Bu firma icin henuz not yok."
+              emptyLabel={t('companies.noNotes')}
             />
           </TabsContent>
 
@@ -284,7 +289,7 @@ function CompanyManagementDialog({
             <EntityActivityComposer target={{ companyId: company.id }} />
             <EntityActivityFeed
               activities={company.activities}
-              emptyLabel="Bu firma icin henuz aktivite kaydi yok."
+              emptyLabel={t('companies.noActivities')}
             />
           </TabsContent>
         </Tabs>
@@ -300,6 +305,9 @@ export function CompaniesGridClient({
   companies: CompanyRow[]
   users: UserOption[]
 }) {
+  const { t, locale } = useI18n()
+  const labels = useEnumLabels()
+
   if (companies.length === 0) {
     return (
       <Card>
@@ -308,10 +316,8 @@ export function CompaniesGridClient({
             <EmptyMedia variant="icon">
               <SearchX />
             </EmptyMedia>
-            <EmptyTitle>Eslesen firma bulunamadi</EmptyTitle>
-            <EmptyDescription>
-              Filtreleri gevsetin ya da yeni bir firma kaydi olusturun.
-            </EmptyDescription>
+            <EmptyTitle>{t('companies.noMatch')}</EmptyTitle>
+            <EmptyDescription>{t('companies.noMatchDescription')}</EmptyDescription>
           </EmptyHeader>
         </Empty>
       </Card>
@@ -337,8 +343,8 @@ export function CompaniesGridClient({
                   <span className="text-xs text-muted-foreground">{company.id}</span>
                 </div>
               </div>
-              <Badge variant={companyStatusMeta[company.status].variant}>
-                {companyStatusMeta[company.status].label}
+              <Badge variant={companyStatusVariants[company.status]}>
+                {labels.companyStatus[company.status]}
               </Badge>
             </div>
           </CardHeader>
@@ -355,14 +361,14 @@ export function CompaniesGridClient({
                 <Users className="size-4 text-muted-foreground" />
                 <div className="flex flex-col leading-tight">
                   <span className="text-sm font-semibold">{company.relatedCustomers}</span>
-                  <span className="text-xs text-muted-foreground">Kisi</span>
+                  <span className="text-xs text-muted-foreground">{t('companies.contactsShort')}</span>
                 </div>
               </div>
               <div className="flex items-center gap-2">
                 <Handshake className="size-4 text-muted-foreground" />
                 <div className="flex flex-col leading-tight">
                   <span className="text-sm font-semibold">{company.activeDeals}</span>
-                  <span className="text-xs text-muted-foreground">Aktif deal</span>
+                  <span className="text-xs text-muted-foreground">{t('companies.activeDealsShort')}</span>
                 </div>
               </div>
             </div>
@@ -377,7 +383,9 @@ export function CompaniesGridClient({
               <span className="text-xs text-muted-foreground">{company.owner}</span>
             </div>
             <div className="flex items-center gap-2">
-              <span className="text-sm font-semibold">{formatCurrency(company.totalValue)}</span>
+              <span className="text-sm font-semibold">
+                {formatCurrency(company.totalValue, 'TRY', locale)}
+              </span>
               <CompanyManagementDialog company={company} users={users} />
             </div>
           </CardFooter>

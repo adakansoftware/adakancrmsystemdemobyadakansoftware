@@ -24,14 +24,14 @@ export async function getTasksPageData() {
       task.company?.name ??
       (task.contact
         ? `${task.contact.firstName} ${task.contact.lastName}`
-        : task.lead?.title ?? task.deal?.title ?? 'Bagli kayit yok'),
+        : task.lead?.title ?? task.deal?.title ?? 'common.noRelation'),
     priority: task.priority,
     status: task.status,
     dueAt: task.dueAt,
     assigneeId: task.assigneeId,
     assignee: task.assignee
       ? `${task.assignee.firstName} ${task.assignee.lastName}`
-      : 'Atanmamis',
+      : 'common.unassigned',
     assigneeInitials: task.assignee
       ? `${task.assignee.firstName[0] ?? ''}${task.assignee.lastName[0] ?? ''}`
       : '--',
@@ -72,14 +72,16 @@ export async function getCalendarPageData() {
       date: task.dueAt!,
       title: task.title,
       type: 'TASK' as const,
-      with: task.assignee ? `${task.assignee.firstName} ${task.assignee.lastName}` : 'Atanmamis',
+      with: task.assignee
+        ? `${task.assignee.firstName} ${task.assignee.lastName}`
+        : 'common.unassigned',
     })),
     deals: deals.map((deal) => ({
       id: deal.id,
       date: deal.expectedCloseAt!,
       title: deal.title,
       type: 'DEAL' as const,
-      with: deal.company?.name ?? 'Sirket yok',
+      with: deal.company?.name ?? 'common.noCompany',
     })),
   }
 }

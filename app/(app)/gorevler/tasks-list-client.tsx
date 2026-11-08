@@ -2,12 +2,13 @@
 
 import { updateTaskAction } from '@/app/actions/crm'
 import { InlineSelectField } from '@/components/crm/inline-select-field'
-import { useEnumLabels } from '@/components/i18n/locale-provider'
+import { useI18n, useEnumLabels } from '@/components/i18n/locale-provider'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
 import { useOptimisticRowAction } from '@/hooks/use-optimistic-row-action'
 import { type AssignableUsersData, type TasksPageData } from '@/lib/crm/queries'
+import { translateMessage } from '@/lib/i18n'
 import { taskStatuses } from '@/lib/crm/view-models'
 import { formatDate } from '@/lib/format'
 import { priorityMeta } from '@/lib/ui-meta'
@@ -20,6 +21,7 @@ export function TasksListClient({
   users: AssignableUsersData
 }) {
   const { runRowAction, isRowPending } = useOptimisticRowAction<string>()
+  const { t, locale } = useI18n()
   const labels = useEnumLabels()
 
   function updateTask(
@@ -36,7 +38,7 @@ export function TasksListClient({
         }),
       {
         successMessage,
-        errorMessage: 'Gorev guncellemesi basarisiz',
+        errorMessage: t('tasks.updateFailed'),
       },
     )
   }
@@ -58,7 +60,8 @@ export function TasksListClient({
                   {task.title}
                 </span>
                 <span className="truncate text-xs text-muted-foreground">
-                  {task.related} · Son tarih {formatDate(task.dueAt)}
+                  {translateMessage(t, task.related)} ·{' '}
+                  {t('tasks.dueDate', { date: formatDate(task.dueAt, locale) })}
                 </span>
               </div>
               <Badge variant={priorityMeta[task.priority].variant}>
@@ -67,12 +70,12 @@ export function TasksListClient({
               <InlineSelectField
                 value={task.status}
                 onValueChange={(value) =>
-                  updateTask(task.id, { status: value }, 'Gorev durumu guncellendi')
+                  updateTask(task.id, { status: value }, t('tasks.statusUpdated'))
                 }
                 disabled={rowPending}
                 className="w-40"
                 testId={`task-status-${task.id}`}
-                ariaLabel={`${task.title} durumunu degistir`}
+                ariaLabel={t('tasks.changeStatusAria', { title: task.title })}
                 options={taskStatuses.map((status) => ({
                   value: status,
                   label: labels.taskStatus[status],
@@ -90,15 +93,15 @@ export function TasksListClient({
                     updateTask(
                       task.id,
                       { assigneeId: value === 'unassigned' ? null : value },
-                      'Gorev sorumlusu guncellendi',
+                      t('tasks.ownerUpdated'),
                     )
                   }
                   disabled={rowPending}
                   className="w-full"
                   testId={`task-owner-${task.id}`}
-                  ariaLabel={`${task.title} sorumlusunu degistir`}
+                  ariaLabel={t('tasks.changeOwnerAria', { title: task.title })}
                   options={[
-                    { value: 'unassigned', label: 'Atanmamis' },
+                    { value: 'unassigned', label: t('common.unassigned') },
                     ...users.map((user) => ({ value: user.id, label: user.name })),
                   ]}
                 />

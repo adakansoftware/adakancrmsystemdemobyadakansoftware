@@ -31,7 +31,7 @@ export async function getQuickCreateOptions() {
       include: {
         stages: {
           orderBy: { position: 'asc' },
-          select: { id: true, name: true },
+          select: { id: true, key: true, name: true },
         },
       },
       orderBy: [{ isDefault: 'desc' }, { createdAt: 'asc' }],

@@ -36,6 +36,7 @@ import {
 import { getDashboardData } from '@/lib/crm/queries'
 import { createEnumLabels } from '@/lib/i18n/enums'
 import { getI18n } from '@/lib/i18n/server'
+import { translateMessage } from '@/lib/i18n'
 import { formatCurrency, formatDate, formatRelativeDate } from '@/lib/format'
 import { priorityMeta } from '@/lib/ui-meta'
 
@@ -52,56 +53,56 @@ const activityIcon = {
 }
 
 export default async function DashboardPage() {
-  const { t } = await getI18n()
+  const { t, locale } = await getI18n()
   const labels = createEnumLabels(t)
-  const data = await getDashboardData()
+  const data = await getDashboardData(locale)
   const chartDelta =
     data.revenueData[data.revenueData.length - 1]?.gelir -
     data.revenueData[data.revenueData.length - 1]?.hedef
 
   return (
     <>
-      <PageHeader title="Dashboard" description="CRM operasyonunuzun canli gorunumu">
+      <PageHeader title="Dashboard" description={t('dashboard.description')}>
         <Button variant="outline" disabled aria-disabled="true">
-          Bu Ay
+          {t('dashboard.thisMonth')}
         </Button>
         <Button
           nativeButton={false}
-          render={<Link href="/api/export?entity=dashboard">Rapor Indir</Link>}
+          render={<Link href="/api/export?entity=dashboard">{t('dashboard.downloadReport')}</Link>}
         />
       </PageHeader>
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <StatCard
-          title="Aktif Deal"
+          title={t('dashboard.activeDeals')}
           value={String(data.openDeals)}
-          change={formatCurrency(data.totalOpenDealValue)}
+          change={formatCurrency(data.totalOpenDealValue, 'TRY', locale)}
           trend="up"
-          hint="acik pipeline hacmi"
+          hint={t('dashboard.activeDealsHint')}
           icon={Handshake}
         />
         <StatCard
-          title="Bu Ay Kazanilan"
+          title={t('dashboard.wonThisMonth')}
           value={String(data.wonThisMonthCount)}
-          change={formatCurrency(data.wonThisMonthValue)}
+          change={formatCurrency(data.wonThisMonthValue, 'TRY', locale)}
           trend="up"
-          hint="aylik kapanan gelir"
+          hint={t('dashboard.wonThisMonthHint')}
           icon={Trophy}
         />
         <StatCard
-          title="Donusum Orani"
+          title={t('dashboard.conversionRate')}
           value={`%${data.conversionRate}`}
-          change={`${data.openLeads} acik lead`}
+          change={t('dashboard.openLeads', { count: data.openLeads })}
           trend="up"
-          hint="kazanilan / toplam deal"
+          hint={t('dashboard.conversionRateHint')}
           icon={TrendingUp}
         />
         <StatCard
-          title="Ortalama Sure"
-          value={`${data.averageDealCycleDays} gun`}
-          change={`${data.pendingTasks} bekleyen gorev`}
+          title={t('dashboard.avgDuration')}
+          value={t('dashboard.avgDays', { count: data.averageDealCycleDays })}
+          change={t('dashboard.pendingTasks', { count: data.pendingTasks })}
           trend="up"
-          hint="ortalama deal kapanis suresi"
+          hint={t('dashboard.avgDurationHint')}
           icon={CalendarCheck}
         />
       </div>
@@ -109,11 +110,11 @@ export default async function DashboardPage() {
       <div className="grid gap-4 lg:grid-cols-3">
         <Card className="lg:col-span-2">
           <CardHeader>
-            <CardTitle>Pipeline Funnel</CardTitle>
-            <CardDescription>Asama bazli deal sayisi ve toplam deger</CardDescription>
+            <CardTitle>{t('dashboard.pipelineFunnel')}</CardTitle>
+            <CardDescription>{t('dashboard.funnelDescription')}</CardDescription>
             <CardAction>
               <Badge variant={chartDelta >= 0 ? 'success' : 'warning'}>
-                {chartDelta >= 0 ? 'Hedef ustu' : 'Hedefe yakin'}
+                {chartDelta >= 0 ? t('dashboard.aboveTarget') : t('dashboard.nearTarget')}
               </Badge>
             </CardAction>
           </CardHeader>
@@ -124,8 +125,8 @@ export default async function DashboardPage() {
 
         <Card>
           <CardHeader>
-            <CardTitle>Aylik Gelir Grafigi</CardTitle>
-            <CardDescription>Son 6 ay CLOSED_WON toplami</CardDescription>
+            <CardTitle>{t('dashboard.revenueChart')}</CardTitle>
+            <CardDescription>{t('dashboard.revenueDescription')}</CardDescription>
           </CardHeader>
           <CardContent>
             <RevenueChart data={data.revenueData} />
@@ -136,18 +137,18 @@ export default async function DashboardPage() {
       <div className="grid gap-4 lg:grid-cols-3">
         <Card className="lg:col-span-2">
           <CardHeader>
-            <CardTitle>Personel Performansi</CardTitle>
+            <CardTitle>{t('dashboard.staffPerformance')}</CardTitle>
             <CardDescription>Atanan deal ve gorev yuku gorunumu</CardDescription>
           </CardHeader>
           <CardContent className="overflow-x-auto">
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Temsilci</TableHead>
-                  <TableHead className="text-center">Acik Deal</TableHead>
-                  <TableHead className="text-right">Kazanilan Tutar</TableHead>
-                  <TableHead className="text-right max-sm:hidden">Acik Gorev</TableHead>
-                  <TableHead className="text-right max-sm:hidden">Kapanis</TableHead>
+                  <TableHead>{t('dashboard.colRep')}</TableHead>
+                  <TableHead className="text-center">{t('dashboard.colOpenDeals')}</TableHead>
+                  <TableHead className="text-right">{t('dashboard.colWonAmount')}</TableHead>
+                  <TableHead className="text-right max-sm:hidden">{t('dashboard.colOpenTasks')}</TableHead>
+                  <TableHead className="text-right max-sm:hidden">{t('common.colClose')}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -165,7 +166,7 @@ export default async function DashboardPage() {
                     </TableCell>
                     <TableCell className="text-center">{person.deals}</TableCell>
                     <TableCell className="text-right font-medium">
-                      {formatCurrency(person.revenue)}
+                      {formatCurrency(person.revenue, 'TRY', locale)}
                     </TableCell>
                     <TableCell className="text-right max-sm:hidden">{person.taskLoad}</TableCell>
                     <TableCell className="text-right max-sm:hidden">
@@ -180,7 +181,7 @@ export default async function DashboardPage() {
 
         <Card>
           <CardHeader>
-            <CardTitle>Son Aktiviteler</CardTitle>
+            <CardTitle>{t('dashboard.recentActivities')}</CardTitle>
           </CardHeader>
           <CardContent className="flex flex-col gap-4">
             {data.recentActivities.map((activity) => {
@@ -192,10 +193,12 @@ export default async function DashboardPage() {
                   </span>
                   <div className="flex flex-col gap-0.5">
                     <p className="text-sm leading-snug">
-                      <span className="font-medium">{activity.who}</span> {activity.subject}
+                      <span className="font-medium">{translateMessage(t, activity.who)}</span>{' '}
+                      {activity.subject}
                     </p>
                     <span className="text-xs text-muted-foreground">
-                      {labels.activityType[activity.type]} / {formatRelativeDate(activity.occurredAt)}
+                      {labels.activityType[activity.type]} /{' '}
+                      {formatRelativeDate(activity.occurredAt, locale)}
                     </span>
                   </div>
                 </div>
@@ -207,8 +210,8 @@ export default async function DashboardPage() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Yaklasan Gorevler</CardTitle>
-          <CardDescription>Onumuzdeki gunlerde planlanan isler</CardDescription>
+          <CardTitle>{t('dashboard.upcomingTasks')}</CardTitle>
+          <CardDescription>{t('dashboard.upcomingTasksDescription')}</CardDescription>
           <CardAction>
             <Button
               variant="ghost"
@@ -216,7 +219,7 @@ export default async function DashboardPage() {
               nativeButton={false}
               render={
                 <Link href="/gorevler">
-                  Tum gorevler <ArrowRight data-icon="inline-end" />
+                  {t('dashboard.allTasks')} <ArrowRight data-icon="inline-end" />
                 </Link>
               }
             />
@@ -236,12 +239,18 @@ export default async function DashboardPage() {
                 </Avatar>
                 <div className="flex min-w-0 flex-col">
                   <span className="truncate text-sm font-medium">{task.title}</span>
-                  <span className="text-xs text-muted-foreground">{task.related}</span>
+                  <span className="text-xs text-muted-foreground">
+                    {translateMessage(t, task.related)}
+                  </span>
                 </div>
               </div>
               <div className="flex shrink-0 items-center gap-2 self-end sm:self-auto">
-                <Badge variant={priorityMeta[task.priority].variant}>{task.priority}</Badge>
-                <span className="text-xs text-muted-foreground">{formatDate(task.dueAt)}</span>
+                <Badge variant={priorityMeta[task.priority].variant}>
+                  {labels.taskPriority[task.priority]}
+                </Badge>
+                <span className="text-xs text-muted-foreground">
+                  {formatDate(task.dueAt, locale)}
+                </span>
               </div>
             </div>
           ))}

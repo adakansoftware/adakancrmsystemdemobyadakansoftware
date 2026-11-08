@@ -13,12 +13,12 @@ export async function getDealsPageData() {
       company: { select: { name: true } },
       contact: { select: { firstName: true, lastName: true } },
       owner: { select: { firstName: true, lastName: true } },
-      stage: { select: { id: true, name: true, isClosed: true, isWon: true } },
+      stage: { select: { id: true, key: true, name: true, isClosed: true, isWon: true } },
       pipeline: {
         include: {
           stages: {
             orderBy: { position: 'asc' },
-            select: { id: true, name: true, isClosed: true, isWon: true },
+            select: { id: true, key: true, name: true, isClosed: true, isWon: true },
           },
         },
       },
@@ -37,15 +37,17 @@ export async function getDealsPageData() {
     probability: deal.probability,
     expectedCloseAt: deal.expectedCloseAt,
     ownerId: deal.ownerId,
-    owner: deal.owner ? `${deal.owner.firstName} ${deal.owner.lastName}` : 'Atanmamis',
+    owner: deal.owner ? `${deal.owner.firstName} ${deal.owner.lastName}` : 'common.unassigned',
     ownerInitials: deal.owner
       ? `${deal.owner.firstName[0] ?? ''}${deal.owner.lastName[0] ?? ''}`
       : '--',
     stage: deal.stage.name,
+    stageKey: deal.stage.key,
     stageId: deal.stageId,
     pipelineId: deal.pipelineId,
     availableStages: deal.pipeline.stages.map((stage) => ({
       id: stage.id,
+      key: stage.key,
       name: stage.name,
       isClosed: stage.isClosed,
       isWon: stage.isWon,
@@ -98,6 +100,7 @@ export async function getDealDetailPageData(dealId: string) {
       stage: {
         select: {
           id: true,
+          key: true,
           name: true,
           isClosed: true,
           isWon: true,
@@ -111,6 +114,7 @@ export async function getDealDetailPageData(dealId: string) {
             orderBy: { position: 'asc' },
             select: {
               id: true,
+              key: true,
               name: true,
               isClosed: true,
               isWon: true,
@@ -177,8 +181,8 @@ export async function getDealDetailPageData(dealId: string) {
           id: true,
           movedAt: true,
           note: true,
-          fromStage: { select: { name: true } },
-          toStage: { select: { name: true } },
+          fromStage: { select: { key: true, name: true } },
+          toStage: { select: { key: true, name: true } },
           actor: {
             select: {
               firstName: true,
@@ -236,17 +240,19 @@ export async function getDealDetailPageData(dealId: string) {
       ...task,
       assigneeName: task.assignee
         ? `${task.assignee.firstName} ${task.assignee.lastName}`
-        : 'Atanmamis',
+        : 'common.unassigned',
     })),
     history: deal.stageHistory.map((entry) => ({
       id: entry.id,
       movedAt: entry.movedAt,
-      fromStage: entry.fromStage?.name ?? 'Baslangic',
-      toStage: entry.toStage.name,
+      fromStage: entry.fromStage
+        ? { key: entry.fromStage.key, name: entry.fromStage.name }
+        : null,
+      toStage: { key: entry.toStage.key, name: entry.toStage.name },
       note: entry.note ?? '',
       actorName: entry.actor
         ? `${entry.actor.firstName} ${entry.actor.lastName}`
-        : 'Sistem',
+        : 'common.system',
     })),
   }
 }

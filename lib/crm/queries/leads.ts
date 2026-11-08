@@ -12,7 +12,7 @@ export async function getLeadsPageData() {
       company: { select: { name: true } },
       contact: { select: { firstName: true, lastName: true } },
       owner: { select: { firstName: true, lastName: true } },
-      stage: { select: { name: true } },
+      stage: { select: { key: true, name: true } },
     },
     orderBy: { createdAt: 'desc' },
   })
@@ -27,8 +27,9 @@ export async function getLeadsPageData() {
     status: lead.status,
     estimatedValue: toNumber(lead.estimatedValue),
     ownerId: lead.ownerId,
-    owner: lead.owner ? `${lead.owner.firstName} ${lead.owner.lastName}` : 'Atanmamis',
+    owner: lead.owner ? `${lead.owner.firstName} ${lead.owner.lastName}` : 'common.unassigned',
     stage: lead.stage.name,
+    stageKey: lead.stage.key,
     email: lead.email ?? '-',
     phone: lead.phone ?? '-',
   }))

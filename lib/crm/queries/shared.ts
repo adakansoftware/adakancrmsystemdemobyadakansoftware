@@ -19,7 +19,7 @@ export function mapEntityNotes(
     body: note.body,
     isPinned: note.isPinned,
     createdAt: note.createdAt,
-    authorName: note.author ? `${note.author.firstName} ${note.author.lastName}` : 'Sistem',
+    authorName: note.author ? `${note.author.firstName} ${note.author.lastName}` : 'common.system',
   }))
 }
 
@@ -41,6 +41,6 @@ export function mapEntityActivities(
     occurredAt: activity.occurredAt,
     actorName: activity.actor
       ? `${activity.actor.firstName} ${activity.actor.lastName}`
-      : 'Sistem',
+      : 'common.system',
   }))
 }

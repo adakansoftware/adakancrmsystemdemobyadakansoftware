@@ -12,6 +12,7 @@ import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { dealStatusMeta, priorityMeta } from '@/lib/ui-meta'
 import { createEnumLabels } from '@/lib/i18n/enums'
+import { displayStageName } from '@/lib/i18n/stages'
 import { getI18n } from '@/lib/i18n/server'
 import { formatCurrency, formatDateTime } from '@/lib/format'
 
@@ -120,7 +121,8 @@ export default async function DealDetailPage({
                     <div className="flex items-center gap-2 font-medium">
                       <ArrowRightLeft className="size-4 text-muted-foreground" />
                       <span>
-                        {entry.fromStage} {'->'} {entry.toStage}
+                        {entry.fromStage ? displayStageName(entry.fromStage, t) : t('common.start')}{' '}
+                        {'->'} {displayStageName(entry.toStage, t)}
                       </span>
                     </div>
                     <p className="mt-1 text-xs text-muted-foreground">

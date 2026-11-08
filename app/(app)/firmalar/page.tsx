@@ -7,6 +7,8 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { getAssignableUsers, getCompaniesManagementPageData } from '@/lib/crm/queries'
+import { createEnumLabels } from '@/lib/i18n/enums'
+import { getI18n } from '@/lib/i18n/server'
 import { formatCurrency } from '@/lib/format'
 
 const PAGE_SIZE = 24
@@ -17,14 +19,6 @@ type CompaniesPageSearchParams = {
   sort?: string
   page?: string
 }
-
-const statusOptions = [
-  { value: '', label: 'Tum durumlar' },
-  { value: 'ACTIVE', label: 'Aktif' },
-  { value: 'PROSPECT', label: 'Aday' },
-  { value: 'INACTIVE', label: 'Pasif' },
-  { value: 'ARCHIVED', label: 'Arsiv' },
-] as const
 
 function buildCompaniesUrl(params: CompaniesPageSearchParams) {
   const searchParams = new URLSearchParams()
@@ -44,6 +38,8 @@ export default async function CompaniesPage({
 }: {
   searchParams: Promise<CompaniesPageSearchParams>
 }) {
+  const { t, locale } = await getI18n()
+  const labels = createEnumLabels(t)
   const params = await searchParams
   const query = params.q?.trim() ?? ''
   const statusFilter = params.status?.trim() ?? ''
@@ -83,12 +79,19 @@ export default async function CompaniesPage({
   const totalOpenPipelineValue = filteredCompanies.reduce((sum, company) => sum + company.totalValue, 0)
   const totalContacts = filteredCompanies.reduce((sum, company) => sum + company.relatedCustomers, 0)
   const activeCompanies = filteredCompanies.filter((company) => company.status === 'ACTIVE').length
+  const statusOptions = [
+    { value: '', label: t('companies.allStatuses') },
+    { value: 'ACTIVE', label: labels.companyStatus.ACTIVE },
+    { value: 'PROSPECT', label: labels.companyStatus.PROSPECT },
+    { value: 'INACTIVE', label: labels.companyStatus.INACTIVE },
+    { value: 'ARCHIVED', label: labels.companyStatus.ARCHIVED },
+  ]
 
   return (
     <>
       <PageHeader
-        title="Firmalar"
-        description="Kurumsal hesap portfoyunuzu filtreleyin, onceliklendirin ve gelir etkisiyle birlikte izleyin."
+        title={t('companies.title')}
+        description={t('companies.description')}
       >
         <Button
           variant="outline"
@@ -96,7 +99,7 @@ export default async function CompaniesPage({
           render={
             <Link href="/api/export?entity=companies">
               <Download data-icon="inline-start" />
-              CSV Indir
+              {t('companies.downloadCsv')}
             </Link>
           }
         />
@@ -105,7 +108,7 @@ export default async function CompaniesPage({
           render={
             <Link href="/firmalar?quickCreate=company">
               <Plus data-icon="inline-start" />
-              Yeni Firma
+              {t('companies.newCompany')}
             </Link>
           }
         />
@@ -114,23 +117,27 @@ export default async function CompaniesPage({
       <div className="grid gap-4 lg:grid-cols-3">
         <Card>
           <CardContent className="space-y-1 pt-6">
-            <p className="text-sm text-muted-foreground">Filtrelenmis firma sayisi</p>
+            <p className="text-sm text-muted-foreground">{t('companies.filteredCount')}</p>
             <p className="text-3xl font-semibold">{filteredCompanies.length}</p>
-            <p className="text-xs text-muted-foreground">{activeCompanies} aktif hesap</p>
+            <p className="text-xs text-muted-foreground">
+              {t('companies.activeAccounts', { count: activeCompanies })}
+            </p>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="space-y-1 pt-6">
-            <p className="text-sm text-muted-foreground">Toplam iliskili kisi</p>
+            <p className="text-sm text-muted-foreground">{t('companies.totalContacts')}</p>
             <p className="text-3xl font-semibold">{totalContacts}</p>
-            <p className="text-xs text-muted-foreground">hesap bazli musteri baglantisi</p>
+            <p className="text-xs text-muted-foreground">{t('companies.contactsHint')}</p>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="space-y-1 pt-6">
-            <p className="text-sm text-muted-foreground">Toplam deal etkisi</p>
-            <p className="text-3xl font-semibold">{formatCurrency(totalOpenPipelineValue)}</p>
-            <p className="text-xs text-muted-foreground">filtrelenmis portfoy toplam degeri</p>
+            <p className="text-sm text-muted-foreground">{t('companies.totalDealImpact')}</p>
+            <p className="text-3xl font-semibold">
+              {formatCurrency(totalOpenPipelineValue, 'TRY', locale)}
+            </p>
+            <p className="text-xs text-muted-foreground">{t('companies.portfolioHint')}</p>
           </CardContent>
         </Card>
       </div>
@@ -141,15 +148,15 @@ export default async function CompaniesPage({
             <label className="space-y-2 text-sm">
               <span className="flex items-center gap-2 font-medium">
                 <Search className="size-4" />
-                Arama
+                {t('common.search')}
               </span>
-              <Input name="q" defaultValue={query} placeholder="Firma, sektor, sehir veya sorumlu" />
+              <Input name="q" defaultValue={query} placeholder={t('companies.searchPlaceholder')} />
             </label>
 
             <label className="space-y-2 text-sm">
               <span className="flex items-center gap-2 font-medium">
                 <Building2 className="size-4" />
-                Durum
+                {t('common.colStatus')}
               </span>
               <select
                 name="status"
@@ -167,37 +174,37 @@ export default async function CompaniesPage({
             <label className="space-y-2 text-sm">
               <span className="flex items-center gap-2 font-medium">
                 <SlidersHorizontal className="size-4" />
-                Siralama
+                {t('contacts.sort')}
               </span>
               <select
                 name="sort"
                 defaultValue={sort}
                 className="flex h-9 w-full rounded-lg border border-input bg-background px-3 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
               >
-                <option value="name-asc">Firma adina gore</option>
-                <option value="value-desc">Deal etkisine gore</option>
+                <option value="name-asc">{t('companies.sortNameAsc')}</option>
+                <option value="value-desc">{t('companies.sortValueDesc')}</option>
               </select>
             </label>
 
             <div className="flex items-end gap-2">
-              <Button type="submit">Uygula</Button>
+              <Button type="submit">{t('common.apply')}</Button>
               <Button
                 variant="ghost"
                 nativeButton={false}
-                render={<Link href="/firmalar">Temizle</Link>}
+                render={<Link href="/firmalar">{t('common.clear')}</Link>}
               />
             </div>
           </form>
 
           <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
-            <span>{filteredCompanies.length} kayit bulundu</span>
-            <Badge variant="secondary">Sayfa {page} / {totalPages}</Badge>
+            <span>{t('common.recordsFound', { count: filteredCompanies.length })}</span>
+            <Badge variant="secondary">{t('common.pageRange', { page, total: totalPages })}</Badge>
             {statusFilter ? (
               <Badge variant="outline">
                 {statusOptions.find((option) => option.value === statusFilter)?.label ?? statusFilter}
               </Badge>
             ) : null}
-            {query ? <Badge variant="outline">Arama: {query}</Badge> : null}
+            {query ? <Badge variant="outline">{t('common.searchBadge', { query })}</Badge> : null}
           </div>
         </CardContent>
       </Card>
@@ -207,8 +214,11 @@ export default async function CompaniesPage({
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <p className="text-sm text-muted-foreground">
           {filteredCompanies.length === 0
-            ? 'Gosterilecek firma yok.'
-            : `${pageStart + 1}-${Math.min(pageStart + PAGE_SIZE, filteredCompanies.length)} arasi kayitlar gosteriliyor.`}
+            ? t('companies.empty')
+            : t('common.showingRange', {
+                start: pageStart + 1,
+                end: Math.min(pageStart + PAGE_SIZE, filteredCompanies.length),
+              })}
         </p>
         <div className="flex items-center gap-2">
           <Button
@@ -225,7 +235,7 @@ export default async function CompaniesPage({
                 aria-disabled={page <= 1}
                 className={page <= 1 ? 'pointer-events-none opacity-50' : undefined}
               >
-                Onceki
+                {t('common.prev')}
               </Link>
             }
           />
@@ -243,7 +253,7 @@ export default async function CompaniesPage({
                 aria-disabled={page >= totalPages}
                 className={page >= totalPages ? 'pointer-events-none opacity-50' : undefined}
               >
-                Sonraki
+                {t('common.next')}
               </Link>
             }
           />

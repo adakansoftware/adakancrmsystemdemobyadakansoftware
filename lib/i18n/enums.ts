@@ -1,5 +1,6 @@
 import type {
   ActivityType,
+  CompanyStatus,
   DealStatus,
   LeadSource,
   LeadStatus,
@@ -17,6 +18,7 @@ export type EnumLabels = {
   taskStatus: Record<TaskStatus, string>
   taskPriority: Record<TaskPriority, string>
   activityType: Record<ActivityType, string>
+  companyStatus: Record<CompanyStatus, string>
 }
 
 // Same-shaped records as the removed `lib/ui-meta.ts` label maps, so usage
@@ -74,6 +76,12 @@ export function createEnumLabels(t: Translator): EnumLabels {
       STAGE_CHANGE: t('enum.activityType.STAGE_CHANGE'),
       COMMENT: t('enum.activityType.COMMENT'),
       SYSTEM: t('enum.activityType.SYSTEM'),
+    },
+    companyStatus: {
+      ACTIVE: t('enum.companyStatus.ACTIVE'),
+      PROSPECT: t('enum.companyStatus.PROSPECT'),
+      INACTIVE: t('enum.companyStatus.INACTIVE'),
+      ARCHIVED: t('enum.companyStatus.ARCHIVED'),
     },
   }
 }

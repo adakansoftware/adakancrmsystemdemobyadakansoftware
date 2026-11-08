@@ -1,8 +1,9 @@
 import { db } from '@/lib/db/prisma'
 import { requirePermission } from '@/lib/auth/rbac'
 import { toNumber } from '@/lib/format'
+import { DEFAULT_LOCALE, localeToIntl, type Locale } from '@/lib/i18n/config'
 
-export async function getReportsPageData() {
+export async function getReportsPageData(locale: Locale = DEFAULT_LOCALE) {
   await requirePermission('deals:read')
 
   const [users, stageHistory, activities, deals, tags] = await Promise.all([
@@ -30,8 +31,8 @@ export async function getReportsPageData() {
         movedAt: true,
         fromStageId: true,
         toStageId: true,
-        fromStage: { select: { name: true } },
-        toStage: { select: { name: true } },
+        fromStage: { select: { key: true, name: true } },
+        toStage: { select: { key: true, name: true } },
       },
     }),
     db.activity.findMany({
@@ -64,6 +65,7 @@ export async function getReportsPageData() {
         status: true,
         stage: {
           select: {
+            key: true,
             name: true,
           },
         },
@@ -97,7 +99,7 @@ export async function getReportsPageData() {
     const last6Months = Array.from({ length: 6 }, (_, index) => {
       const date = new Date()
       date.setMonth(date.getMonth() - (5 - index), 1)
-      const month = new Intl.DateTimeFormat('tr-TR', { month: 'short' }).format(date)
+      const month = new Intl.DateTimeFormat(localeToIntl(locale), { month: 'short' }).format(date)
       const count = wonDeals.filter((deal) => {
         if (!deal.wonAt) {
           return false
@@ -127,7 +129,7 @@ export async function getReportsPageData() {
   const monthlyClosedByUser = Array.from({ length: 6 }, (_, index) => {
     const date = new Date()
     date.setMonth(date.getMonth() - (5 - index), 1)
-    const month = new Intl.DateTimeFormat('tr-TR', { month: 'short' }).format(date)
+    const month = new Intl.DateTimeFormat(localeToIntl(locale), { month: 'short' }).format(date)
     const entry: Record<string, number | string> = { month }
 
     for (const person of salesPerformance) {
@@ -138,7 +140,10 @@ export async function getReportsPageData() {
     return entry
   })
 
-  const stageDurations = new Map<string, { name: string; totalMs: number; count: number }>()
+  const stageDurations = new Map<
+    string,
+    { key: string | null; name: string; totalMs: number; count: number }
+  >()
 
   for (let index = 1; index < stageHistory.length; index += 1) {
     const previous = stageHistory[index - 1]
@@ -150,7 +155,8 @@ export async function getReportsPageData() {
 
     const diffMs = current.movedAt.getTime() - previous.movedAt.getTime()
     const bucket = stageDurations.get(previous.toStageId) ?? {
-      name: previous.toStage?.name ?? 'Bilinmeyen Asama',
+      key: previous.toStage?.key ?? null,
+      name: previous.toStage?.name ?? 'reports.unknownStage',
       totalMs: 0,
       count: 0,
     }
@@ -162,6 +168,7 @@ export async function getReportsPageData() {
 
   const pipelineAnalysis = Array.from(stageDurations.entries())
     .map(([, value]) => ({
+      stageKey: value.key,
       stage: value.name,
       avgDays: value.count === 0 ? 0 : Math.round(value.totalMs / value.count / (1000 * 60 * 60 * 24)),
       transitions: value.count,
@@ -247,6 +254,7 @@ export async function getReportsPageData() {
       id: deal.id,
       title: deal.title,
       stage: deal.stage.name,
+      stageKey: deal.stage.key,
       amount: toNumber(deal.amount),
       ageDays: Math.round(
         (Date.now() - (deal.expectedCloseAt ?? deal.createdAt).getTime()) /
@@ -272,9 +280,9 @@ export async function getReportsPageData() {
     forecastCoverage,
     stalledDeals,
     activityMix: [
-      { name: 'Arama', value: activityMixTotals.call },
-      { name: 'E-posta', value: activityMixTotals.email },
-      { name: 'Toplanti', value: activityMixTotals.meeting },
+      { type: 'CALL' as const, value: activityMixTotals.call },
+      { type: 'EMAIL' as const, value: activityMixTotals.email },
+      { type: 'MEETING' as const, value: activityMixTotals.meeting },
     ],
     tagPerformance: tags.map((tag) => ({
       id: tag.id,

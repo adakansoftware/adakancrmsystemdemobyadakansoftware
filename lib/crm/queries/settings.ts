@@ -16,6 +16,7 @@ export async function getSettingsOverviewData() {
           orderBy: { position: 'asc' },
           select: {
             id: true,
+            key: true,
             name: true,
             position: true,
             probability: true,

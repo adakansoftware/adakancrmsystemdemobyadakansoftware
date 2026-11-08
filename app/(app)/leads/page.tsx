@@ -6,6 +6,7 @@ import { SummaryCard } from '@/components/shared/summary-card'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { getAssignableUsers, getLeadsPageData } from '@/lib/crm/queries'
+import { getI18n } from '@/lib/i18n/server'
 import { formatCurrency } from '@/lib/format'
 
 export default async function LeadsPage({
@@ -13,6 +14,7 @@ export default async function LeadsPage({
 }: {
   searchParams: Promise<{ q?: string }>
 }) {
+  const { t, locale } = await getI18n()
   const { q } = await searchParams
   const normalizedQuery = q?.trim().toLowerCase() ?? ''
   const [leads, users] = await Promise.all([getLeadsPageData(), getAssignableUsers()])
@@ -28,11 +30,11 @@ export default async function LeadsPage({
   return (
     <>
       <PageHeader
-        title="Leads"
+        title={t('leads.title')}
         description={
           normalizedQuery
-            ? `"${q}" icin lead sonuclari`
-            : 'Potansiyel musterileri gercek CRM kayitlarindan takip edin'
+            ? t('leads.searchResults', { query: q ?? '' })
+            : t('leads.description')
         }
       >
         <Button
@@ -41,7 +43,7 @@ export default async function LeadsPage({
           render={
             <Link href="/api/export?entity=leads">
               <Download data-icon="inline-start" />
-              Disa Aktar
+              {t('leads.export')}
             </Link>
           }
         />
@@ -50,29 +52,33 @@ export default async function LeadsPage({
           render={
             <Link href="/leads?quickCreate=lead">
               <Plus data-icon="inline-start" />
-              Yeni Lead
+              {t('leads.newLead')}
             </Link>
           }
         />
       </PageHeader>
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <SummaryCard label="Toplam Lead" value={filteredLeads.length} badge="Lead" badgeVariant="info" />
+        <SummaryCard label={t('leads.total')} value={filteredLeads.length} badge="Lead" badgeVariant="info" />
         <SummaryCard
-          label="Acik"
+          label={t('leads.open')}
           value={filteredLeads.filter((lead) => lead.status === 'OPEN').length}
-          badge="Durum"
+          badge={t('leads.badgeStatus')}
           badgeVariant="info"
         />
         <SummaryCard
-          label="Nitelikli"
+          label={t('leads.qualified')}
           value={filteredLeads.filter((lead) => lead.status === 'QUALIFIED').length}
-          badge="Durum"
+          badge={t('leads.badgeStatus')}
           badgeVariant="success"
         />
         <SummaryCard
-          label="Tahmini Deger"
-          value={formatCurrency(filteredLeads.reduce((sum, lead) => sum + lead.estimatedValue, 0))}
+          label={t('leads.estimatedValue')}
+          value={formatCurrency(
+            filteredLeads.reduce((sum, lead) => sum + lead.estimatedValue, 0),
+            'TRY',
+            locale,
+          )}
           badge="TRY"
           badgeVariant="warning"
         />

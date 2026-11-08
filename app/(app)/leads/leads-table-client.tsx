@@ -2,7 +2,7 @@
 
 import { updateLeadAction } from '@/app/actions/crm'
 import { InlineSelectField } from '@/components/crm/inline-select-field'
-import { useEnumLabels } from '@/components/i18n/locale-provider'
+import { useI18n, useEnumLabels } from '@/components/i18n/locale-provider'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
 import {
@@ -27,6 +27,7 @@ export function LeadsTableClient({
   users: AssignableUsersData
 }) {
   const { runRowAction, isRowPending } = useOptimisticRowAction<string>()
+  const { t, locale } = useI18n()
   const labels = useEnumLabels()
 
   function updateLead(
@@ -43,7 +44,7 @@ export function LeadsTableClient({
         }),
       {
         successMessage,
-        errorMessage: 'Lead guncellemesi basarisiz',
+        errorMessage: t('leads.updateFailed'),
       },
     )
   }
@@ -52,14 +53,14 @@ export function LeadsTableClient({
     <Table>
       <TableHeader>
         <TableRow>
-          <TableHead>Lead</TableHead>
-          <TableHead className="max-lg:hidden">Firma / Kisi</TableHead>
-          <TableHead>Kaynak</TableHead>
-          <TableHead>Sicaklik</TableHead>
-          <TableHead>Durum</TableHead>
-          <TableHead className="text-right max-md:hidden">Deger</TableHead>
-          <TableHead className="min-w-44">Sorumlu</TableHead>
-          <TableHead className="max-lg:hidden">Asama</TableHead>
+          <TableHead>{t('leads.colLead')}</TableHead>
+          <TableHead className="max-lg:hidden">{t('common.colCompanyContact')}</TableHead>
+          <TableHead>{t('leads.colSource')}</TableHead>
+          <TableHead>{t('leads.colTemperature')}</TableHead>
+          <TableHead>{t('common.colStatus')}</TableHead>
+          <TableHead className="text-right max-md:hidden">{t('leads.colValue')}</TableHead>
+          <TableHead className="min-w-44">{t('common.colOwner')}</TableHead>
+          <TableHead className="max-lg:hidden">{t('common.colStage')}</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
@@ -95,11 +96,11 @@ export function LeadsTableClient({
                 <InlineSelectField
                   value={lead.status}
                   onValueChange={(value) =>
-                    updateLead(lead.id, { status: value }, 'Lead durumu guncellendi')
+                    updateLead(lead.id, { status: value }, t('leads.statusUpdated'))
                   }
                   disabled={rowPending}
                   testId={`lead-status-${lead.id}`}
-                  ariaLabel={`${lead.title} durumunu degistir`}
+                  ariaLabel={t('leads.changeStatusAria', { title: lead.title })}
                   options={leadStatuses.map((status) => ({
                     value: status,
                     label: labels.leadStatus[status],
@@ -107,7 +108,7 @@ export function LeadsTableClient({
                 />
               </TableCell>
               <TableCell className="text-right font-medium max-md:hidden">
-                {formatCurrency(lead.estimatedValue)}
+                {formatCurrency(lead.estimatedValue, 'TRY', locale)}
               </TableCell>
               <TableCell className="min-w-44">
                 <InlineSelectField
@@ -116,14 +117,14 @@ export function LeadsTableClient({
                     updateLead(
                       lead.id,
                       { ownerId: value === 'unassigned' ? null : value },
-                      'Lead sorumlusu guncellendi',
+                      t('leads.ownerUpdated'),
                     )
                   }
                   disabled={rowPending}
                   testId={`lead-owner-${lead.id}`}
-                  ariaLabel={`${lead.title} sorumlusunu degistir`}
+                  ariaLabel={t('leads.changeOwnerAria', { title: lead.title })}
                   options={[
-                    { value: 'unassigned', label: 'Atanmamis' },
+                    { value: 'unassigned', label: t('common.unassigned') },
                     ...users.map((user) => ({ value: user.id, label: user.name })),
                   ]}
                 />

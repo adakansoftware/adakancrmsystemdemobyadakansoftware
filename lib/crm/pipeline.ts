@@ -126,7 +126,7 @@ export async function getDealPipelineBoard(pipelineId?: string | null) {
         currency: deal.currency,
         ownerName: deal.owner
           ? `${deal.owner.firstName} ${deal.owner.lastName}`
-          : 'Atanmamis',
+          : 'common.unassigned',
         ownerInitials: deal.owner
           ? `${deal.owner.firstName[0] ?? ''}${deal.owner.lastName[0] ?? ''}`
           : '--',

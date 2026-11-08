@@ -1,6 +1,7 @@
 import { db } from '@/lib/db/prisma'
 import { requirePermission } from '@/lib/auth/rbac'
 import { toNumber } from '@/lib/format'
+import { DEFAULT_LOCALE, localeToIntl, type Locale } from '@/lib/i18n/config'
 
 // Shared open-state metrics used by both the dashboard page and the
 // dashboard CSV export. No permission check: callers enforce their own.
@@ -28,7 +29,7 @@ export async function getOpenCrmMetrics() {
   }
 }
 
-export async function getDashboardData() {
+export async function getDashboardData(locale: Locale = DEFAULT_LOCALE) {
   await requirePermission('deals:read')
 
   const now = new Date()
@@ -148,7 +149,7 @@ export async function getDashboardData() {
     const gelir = dealRevenueByMonth.get(key) ?? 0
 
     return {
-      month: new Intl.DateTimeFormat('tr-TR', { month: 'short' }).format(date),
+      month: new Intl.DateTimeFormat(localeToIntl(locale), { month: 'short' }).format(date),
       gelir,
       hedef: Math.max(gelir * 0.9, 50000),
     }
@@ -173,7 +174,7 @@ export async function getDashboardData() {
     pendingTasks,
     recentActivities: recentActivities.map((activity) => ({
       id: activity.id,
-      who: activity.actor ? `${activity.actor.firstName} ${activity.actor.lastName}` : 'Sistem',
+      who: activity.actor ? `${activity.actor.firstName} ${activity.actor.lastName}` : 'common.system',
       subject: activity.subject,
       description: activity.description,
       type: activity.type,
@@ -182,6 +183,7 @@ export async function getDashboardData() {
     pipelineValueByStage: stageRows.map((stage) => ({
       id: stage.id,
       stage: stage.name,
+      stageKey: stage.key,
       count: stage.deals.filter((deal) => deal.status === 'OPEN').length,
       value: stage.deals
         .filter((deal) => deal.status === 'OPEN')
@@ -210,11 +212,13 @@ export async function getDashboardData() {
       title: task.title,
       related:
         task.company?.name ??
-        (task.contact ? `${task.contact.firstName} ${task.contact.lastName}` : 'Iliski yok'),
+        (task.contact
+          ? `${task.contact.firstName} ${task.contact.lastName}`
+          : 'common.noRelation'),
       dueAt: task.dueAt,
       assigneeName: task.assignee
         ? `${task.assignee.firstName} ${task.assignee.lastName}`
-        : 'Atanmamis',
+        : 'common.unassigned',
       assigneeInitials: task.assignee
         ? `${task.assignee.firstName[0] ?? ''}${task.assignee.lastName[0] ?? ''}`
         : '--',

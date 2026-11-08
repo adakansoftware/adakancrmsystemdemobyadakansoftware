@@ -1,6 +1,7 @@
 'use client'
 
 import { useRouter } from 'next/navigation'
+import { useI18n } from '@/components/i18n/locale-provider'
 import {
   Select,
   SelectContent,
@@ -18,6 +19,7 @@ export function PipelineSwitcher({
   value: string
 }) {
   const router = useRouter()
+  const { t } = useI18n()
 
   return (
     <Select
@@ -27,7 +29,7 @@ export function PipelineSwitcher({
       }}
     >
       <SelectTrigger className="min-w-[220px]">
-        <SelectValue placeholder="Pipeline seçin" />
+        <SelectValue placeholder={t('pipeline.selectPlaceholder')} />
       </SelectTrigger>
       <SelectContent>
         <SelectGroup>
