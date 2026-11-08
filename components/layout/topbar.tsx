@@ -9,6 +9,7 @@ import {
   CheckSquare,
   FileText,
   Handshake,
+  Languages,
   LogOut,
   Moon,
   Plus,
@@ -19,6 +20,7 @@ import {
   UserPlus,
 } from 'lucide-react'
 import { logoutAction } from '@/app/actions/auth'
+import { useI18n } from '@/components/i18n/locale-provider'
 import { QuickCreateDialog } from '@/components/layout/quick-create-dialog'
 import { SearchInput } from '@/components/shared/search-input'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
@@ -47,6 +49,7 @@ import type {
   QuickCreateKind,
   QuickCreateOptions,
 } from '@/lib/crm/view-models'
+import { LOCALE_COOKIE } from '@/lib/i18n/config'
 
 const notifications = [
   {
@@ -155,6 +158,7 @@ function SearchResultsPanel({
 
 export function Topbar({ currentUser, quickCreateOptions }: TopbarProps) {
   const { resolvedTheme, setTheme } = useTheme()
+  const { locale, t } = useI18n()
   const router = useRouter()
   const pathname = usePathname()
   const searchParams = useSearchParams()
@@ -280,6 +284,12 @@ export function Topbar({ currentUser, quickCreateOptions }: TopbarProps) {
     setCommandOpen(false)
   }
 
+  function toggleLocale() {
+    const nextLocale = locale === 'tr' ? 'en' : 'tr'
+    document.cookie = `${LOCALE_COOKIE}=${nextLocale}; path=/; max-age=31536000; samesite=lax`
+    router.refresh()
+  }
+
   function updateSearchValue(value: string) {
     setSearchValue(value)
     const hasQuery = value.trim().length >= 2
@@ -341,6 +351,17 @@ export function Topbar({ currentUser, quickCreateOptions }: TopbarProps) {
           >
             <Sun className="hidden dark:block" />
             <Moon className="block dark:hidden" />
+          </Button>
+
+          <Button
+            variant="ghost"
+            size="icon"
+            className="rounded-lg"
+            aria-label={t('common.switchLanguage')}
+            title={locale === 'tr' ? 'EN' : 'TR'}
+            onClick={toggleLocale}
+          >
+            <Languages />
           </Button>
 
           <DropdownMenu>

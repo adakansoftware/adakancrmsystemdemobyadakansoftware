@@ -2,9 +2,11 @@ import type { Metadata } from 'next'
 import { Geist, Geist_Mono } from 'next/font/google'
 import { Analytics } from '@vercel/analytics/next'
 import { ThemeProvider } from '@/components/theme-provider'
+import { LocaleProvider } from '@/components/i18n/locale-provider'
 import { Toaster } from '@/components/ui/sonner'
 import { TooltipProvider } from '@/components/ui/tooltip'
 import { env } from '@/lib/env'
+import { getLocale } from '@/lib/i18n/server'
 import './globals.css'
 
 const geistSans = Geist({ variable: '--font-geist-sans', subsets: ['latin'] })
@@ -19,14 +21,16 @@ export const metadata: Metadata = {
     'Kucuk isletmeler icin modern, sade ve guclu CRM. Lead takibi, satis hatti ve gorev yonetimi tek panelde.',
 }
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode
 }>) {
+  const locale = await getLocale()
+
   return (
     <html
-      lang="tr"
+      lang={locale}
       suppressHydrationWarning
       className={`${geistSans.variable} ${geistMono.variable} bg-background`}
     >
@@ -37,7 +41,9 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          <TooltipProvider delay={200}>{children}</TooltipProvider>
+          <LocaleProvider locale={locale}>
+            <TooltipProvider delay={200}>{children}</TooltipProvider>
+          </LocaleProvider>
           <Toaster />
         </ThemeProvider>
         {env.isProduction && <Analytics />}
