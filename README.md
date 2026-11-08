@@ -40,6 +40,16 @@ npm run seed
 - E-posta: `admin@adakancrm.com`
 - Sifre: `Admin123!`
 
+Bu degerler sadece yerel kurulum icin varsayilanlardir. Paylasilan bir ortama
+seed atacaksan parolalari cevre degiskenleriyle donusturun:
+
+```bash
+SEED_ADMIN_PASSWORD=... SEED_MANAGER_PASSWORD=... SEED_STAFF_PASSWORD=... npm run seed
+```
+
+Tarayici testleri de `E2E_ADMIN_EMAIL` ve `E2E_ADMIN_PASSWORD` degiskenlerini
+destekler; belirtilmezse ayni varsayilanlari kullanir.
+
 ## Komutlar
 
 ```bash

@@ -1,7 +1,7 @@
 import { expect, test, type Page } from '@playwright/test'
 
-const adminEmail = 'admin@adakancrm.com'
-const adminPassword = 'Admin123!'
+const adminEmail = process.env.E2E_ADMIN_EMAIL ?? 'admin@adakancrm.com'
+const adminPassword = process.env.E2E_ADMIN_PASSWORD ?? 'Admin123!'
 
 async function login(page: Page) {
   await page.goto('/login')

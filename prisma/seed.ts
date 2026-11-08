@@ -49,7 +49,13 @@ async function main() {
   const roles = await db.role.findMany()
   const roleBySlug = Object.fromEntries(roles.map((role) => [role.slug, role.id]))
 
-  const passwordHash = await hashPassword('Admin123!')
+  // Demo fallbacks keep local setup zero-config. Set the SEED_*_PASSWORD
+  // environment variables to rotate credentials for any shared deployment.
+  const adminPassword = process.env.SEED_ADMIN_PASSWORD ?? 'Admin123!'
+  const managerPassword = process.env.SEED_MANAGER_PASSWORD ?? 'Manager123!'
+  const staffPassword = process.env.SEED_STAFF_PASSWORD ?? 'Staff123!'
+
+  const passwordHash = await hashPassword(adminPassword)
 
   const users = await Promise.all([
     db.user.create({
@@ -70,7 +76,7 @@ async function main() {
         name: 'Selin Yonetici',
         firstName: 'Selin',
         lastName: 'Yönetici',
-        passwordHash: await hashPassword('Manager123!'),
+        passwordHash: await hashPassword(managerPassword),
         roles: {
           create: [{ roleId: roleBySlug.manager }],
         },
@@ -82,7 +88,7 @@ async function main() {
         name: 'Mert Sahin',
         firstName: 'Mert',
         lastName: 'Şahin',
-        passwordHash: await hashPassword('Staff123!'),
+        passwordHash: await hashPassword(staffPassword),
         roles: {
           create: [{ roleId: roleBySlug.staff }],
         },
@@ -94,7 +100,7 @@ async function main() {
         name: 'Zeynep Kaya',
         firstName: 'Zeynep',
         lastName: 'Kaya',
-        passwordHash: await hashPassword('Staff123!'),
+        passwordHash: await hashPassword(staffPassword),
         roles: {
           create: [{ roleId: roleBySlug.staff }],
         },
