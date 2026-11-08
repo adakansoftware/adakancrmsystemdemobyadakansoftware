@@ -10,7 +10,9 @@ import { EntityNotesPanel } from '@/components/crm/entity-notes-panel'
 import { PageHeader } from '@/components/shared/page-header'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { dealStatusLabels, dealStatusMeta, priorityMeta, taskStatusLabels } from '@/lib/ui-meta'
+import { dealStatusMeta, priorityMeta } from '@/lib/ui-meta'
+import { createEnumLabels } from '@/lib/i18n/enums'
+import { getI18n } from '@/lib/i18n/server'
 import { formatCurrency, formatDateTime } from '@/lib/format'
 
 export default async function DealDetailPage({
@@ -19,6 +21,8 @@ export default async function DealDetailPage({
   params: Promise<{ id: string }>
 }) {
   const { id } = await params
+  const { t } = await getI18n()
+  const labels = createEnumLabels(t)
   const [deal, users] = await Promise.all([getDealDetailPageData(id), getAssignableUsers()])
 
   if (!deal) {
@@ -31,7 +35,7 @@ export default async function DealDetailPage({
         title={deal.title}
         description="Deal ilerleyisini, iliskili kisileri ve aktivite akisini tek yerde yonetin."
       >
-        <Badge variant={dealStatusMeta[deal.status].variant}>{dealStatusLabels[deal.status]}</Badge>
+        <Badge variant={dealStatusMeta[deal.status].variant}>{labels.dealStatus[deal.status]}</Badge>
       </PageHeader>
 
       <div className="grid gap-6 xl:grid-cols-[320px_minmax(0,1fr)_360px]">
@@ -151,7 +155,7 @@ export default async function DealDetailPage({
                       </div>
                       <div className="flex gap-2">
                         <Badge variant={priorityMeta[task.priority].variant}>{task.priority}</Badge>
-                        <Badge variant="outline">{taskStatusLabels[task.status]}</Badge>
+                        <Badge variant="outline">{labels.taskStatus[task.status]}</Badge>
                       </div>
                     </div>
                   </div>

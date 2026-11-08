@@ -8,7 +8,9 @@ import { PageHeader } from '@/components/shared/page-header'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { getCompanyDetailPageData } from '@/lib/crm/queries'
-import { dealStatusLabels, dealStatusMeta, priorityMeta, taskStatusLabels } from '@/lib/ui-meta'
+import { createEnumLabels } from '@/lib/i18n/enums'
+import { getI18n } from '@/lib/i18n/server'
+import { dealStatusMeta, priorityMeta } from '@/lib/ui-meta'
 import { formatCurrency, formatDateTime } from '@/lib/format'
 
 export default async function CompanyDetailPage({
@@ -17,6 +19,8 @@ export default async function CompanyDetailPage({
   params: Promise<{ id: string }>
 }) {
   const { id } = await params
+  const { t } = await getI18n()
+  const labels = createEnumLabels(t)
   const company = await getCompanyDetailPageData(id)
 
   if (!company) {
@@ -141,7 +145,7 @@ export default async function CompanyDetailPage({
                         </p>
                       </div>
                       <Badge variant={dealStatusMeta[deal.status].variant}>
-                        {dealStatusLabels[deal.status]}
+                        {labels.dealStatus[deal.status]}
                       </Badge>
                     </div>
                     <p className="mt-2 text-sm font-medium">
@@ -172,7 +176,7 @@ export default async function CompanyDetailPage({
                       </div>
                       <div className="flex gap-2">
                         <Badge variant={priorityMeta[task.priority].variant}>{task.priority}</Badge>
-                        <Badge variant="outline">{taskStatusLabels[task.status]}</Badge>
+                        <Badge variant="outline">{labels.taskStatus[task.status]}</Badge>
                       </div>
                     </div>
                   </div>

@@ -2,6 +2,7 @@
 
 import { createContext, useContext, useMemo, type ReactNode } from 'react'
 import type { Locale } from '@/lib/i18n/config'
+import { createEnumLabels, type EnumLabels } from '@/lib/i18n/enums'
 import { createT, dictionaries, type Translator } from '@/lib/i18n'
 
 type I18nContextValue = {
@@ -28,4 +29,9 @@ export function useI18n(): I18nContextValue {
   }
 
   return context
+}
+
+export function useEnumLabels(): EnumLabels {
+  const { t } = useI18n()
+  return useMemo(() => createEnumLabels(t), [t])
 }

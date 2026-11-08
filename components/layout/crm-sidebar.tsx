@@ -16,10 +16,12 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from '@/components/ui/sidebar'
+import { useI18n } from '@/components/i18n/locale-provider'
 import { navItems } from '@/lib/nav'
 
 export function CrmSidebar() {
   const pathname = usePathname()
+  const { t } = useI18n()
 
   return (
     <Sidebar>
@@ -30,13 +32,13 @@ export function CrmSidebar() {
           </span>
           <div className="flex flex-col leading-tight">
             <span className="text-sm font-semibold tracking-tight">Adakan CRM</span>
-            <span className="text-xs text-muted-foreground">Isletme Yonetimi</span>
+            <span className="text-xs text-muted-foreground">{t('sidebar.subtitle')}</span>
           </div>
         </Link>
       </SidebarHeader>
       <SidebarContent>
         <SidebarGroup>
-          <SidebarGroupLabel>Menu</SidebarGroupLabel>
+          <SidebarGroupLabel>{t('sidebar.menu')}</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {navItems.map((item) => {
@@ -47,11 +49,11 @@ export function CrmSidebar() {
                   <SidebarMenuItem key={item.href}>
                     <SidebarMenuButton
                       isActive={isActive}
-                      tooltip={item.title}
+                      tooltip={t(item.title)}
                       render={
                         <Link href={item.href} aria-current={isActive ? 'page' : undefined}>
                           <item.icon />
-                          <span>{item.title}</span>
+                          <span>{t(item.title)}</span>
                         </Link>
                       }
                     />
@@ -65,10 +67,10 @@ export function CrmSidebar() {
       </SidebarContent>
       <SidebarFooter className="border-t border-sidebar-border">
         <div className="rounded-xl bg-sidebar-accent p-3">
-          <p className="text-xs font-medium text-sidebar-accent-foreground">Operasyon durumu</p>
-          <p className="mt-1 text-xs text-muted-foreground">
-            Temel CRM modulleri aktif ve veritabanina bagli calisiyor.
+          <p className="text-xs font-medium text-sidebar-accent-foreground">
+            {t('sidebar.statusTitle')}
           </p>
+          <p className="mt-1 text-xs text-muted-foreground">{t('sidebar.statusText')}</p>
         </div>
       </SidebarFooter>
     </Sidebar>

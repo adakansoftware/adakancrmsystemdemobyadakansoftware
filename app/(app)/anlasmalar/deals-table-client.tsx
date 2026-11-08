@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import { moveDealToStageAction, updateDealAction } from '@/app/actions/crm'
 import { InlineSelectField } from '@/components/crm/inline-select-field'
+import { useEnumLabels } from '@/components/i18n/locale-provider'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import {
   Table,
@@ -16,7 +17,6 @@ import { useOptimisticRowAction } from '@/hooks/use-optimistic-row-action'
 import { type AssignableUsersData, type DealsPageData } from '@/lib/crm/queries'
 import { dealStatuses } from '@/lib/crm/view-models'
 import { formatCurrency, formatDate } from '@/lib/format'
-import { dealStatusLabels } from '@/lib/ui-meta'
 
 export function DealsTableClient({
   deals,
@@ -26,6 +26,7 @@ export function DealsTableClient({
   users: AssignableUsersData
 }) {
   const { runRowAction, isRowPending } = useOptimisticRowAction<string>()
+  const labels = useEnumLabels()
 
   function updateDealOwner(dealId: string, ownerId: string | null) {
     runRowAction(dealId, () => updateDealAction({ id: dealId, ownerId }), {
@@ -125,7 +126,7 @@ export function DealsTableClient({
                   ariaLabel={`${deal.title} durumunu degistir`}
                   options={dealStatuses.map((status) => ({
                     value: status,
-                    label: dealStatusLabels[status],
+                    label: labels.dealStatus[status],
                   }))}
                 />
               </TableCell>

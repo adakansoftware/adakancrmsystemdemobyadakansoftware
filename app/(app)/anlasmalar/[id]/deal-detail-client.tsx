@@ -3,12 +3,12 @@
 import { useState } from 'react'
 import { moveDealToStageAction, updateDealAction } from '@/app/actions/crm'
 import { InlineSelectField } from '@/components/crm/inline-select-field'
+import { useEnumLabels } from '@/components/i18n/locale-provider'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { useServerActionToast } from '@/hooks/use-server-action-toast'
 import { formatCurrency } from '@/lib/format'
-import { dealStatusLabels } from '@/lib/ui-meta'
 import { dealStatuses, type UserOption } from '@/lib/crm/view-models'
 
 export function DealDetailClient({
@@ -38,6 +38,7 @@ export function DealDetailClient({
   users: UserOption[]
 }) {
   const { isPending, runServerAction } = useServerActionToast()
+  const labels = useEnumLabels()
   const [title, setTitle] = useState(deal.title)
   const [amount, setAmount] = useState(String(deal.amount))
   const [ownerId, setOwnerId] = useState(deal.ownerId ?? 'unassigned')
@@ -103,7 +104,7 @@ export function DealDetailClient({
             ariaLabel="Deal durumu"
             options={dealStatuses.map((currentStatus) => ({
               value: currentStatus,
-              label: dealStatusLabels[currentStatus],
+              label: labels.dealStatus[currentStatus],
             }))}
           />
         </div>

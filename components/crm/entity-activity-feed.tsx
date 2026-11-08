@@ -1,5 +1,8 @@
+'use client'
+
 import { CalendarClock, FileText, ListTodo, MessageSquare, Phone, Settings2, Trophy, TrendingUp } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
+import { useEnumLabels, useI18n } from '@/components/i18n/locale-provider'
 import { formatDateTime } from '@/lib/format'
 import { activityTypeMeta } from '@/lib/ui-meta'
 import type { EntityActivityViewModel } from '@/lib/crm/view-models'
@@ -23,6 +26,9 @@ export function EntityActivityFeed({
   activities: EntityActivityViewModel[]
   emptyLabel: string
 }) {
+  const labels = useEnumLabels()
+  const { locale } = useI18n()
+
   if (activities.length === 0) {
     return <p className="text-sm text-muted-foreground">{emptyLabel}</p>
   }
@@ -42,7 +48,7 @@ export function EntityActivityFeed({
                 <div className="space-y-1">
                   <p className="text-sm font-medium">{activity.subject}</p>
                   <p className="text-xs text-muted-foreground">
-                    {activity.actorName} · {formatDateTime(activity.occurredAt)}
+                    {activity.actorName} · {formatDateTime(activity.occurredAt, locale)}
                   </p>
                   {activity.description ? (
                     <p className="text-sm text-muted-foreground">{activity.description}</p>
@@ -50,7 +56,7 @@ export function EntityActivityFeed({
                 </div>
               </div>
               <Badge variant={activityTypeMeta[activity.type].variant}>
-                {activityTypeMeta[activity.type].label}
+                {labels.activityType[activity.type]}
               </Badge>
             </div>
           </div>

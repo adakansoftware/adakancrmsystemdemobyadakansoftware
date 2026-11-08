@@ -8,7 +8,7 @@ import { InlineSelectField } from '@/components/crm/inline-select-field'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
-import { activityTypeMeta } from '@/lib/ui-meta'
+import { useEnumLabels } from '@/components/i18n/locale-provider'
 
 const activityTypes = [
   'CALL',
@@ -36,6 +36,7 @@ export function EntityActivityComposer({
   target: ActivityTarget
 }) {
   const router = useRouter()
+  const labels = useEnumLabels()
   const [isPending, startTransition] = useTransition()
   const [type, setType] = useState<(typeof activityTypes)[number]>('COMMENT')
   const [subject, setSubject] = useState('')
@@ -73,7 +74,7 @@ export function EntityActivityComposer({
         ariaLabel="Aktivite tipi sec"
         options={activityTypes.map((value) => ({
           value,
-          label: activityTypeMeta[value].label,
+          label: labels.activityType[value],
         }))}
       />
       <Input

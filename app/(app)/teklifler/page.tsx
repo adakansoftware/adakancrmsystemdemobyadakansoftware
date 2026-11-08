@@ -14,10 +14,14 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { getDealsPageData } from '@/lib/crm/queries'
-import { dealStatusLabels, dealStatusMeta } from '@/lib/ui-meta'
+import { createEnumLabels } from '@/lib/i18n/enums'
+import { getI18n } from '@/lib/i18n/server'
+import { dealStatusMeta } from '@/lib/ui-meta'
 import { formatCurrency, formatDate } from '@/lib/format'
 
 export default async function QuotesPage() {
+  const { t } = await getI18n()
+  const labels = createEnumLabels(t)
   const deals = await getDealsPageData()
   const currentTime = new Date()
   const quoteDeals = deals.filter((deal) =>
@@ -123,7 +127,7 @@ export default async function QuotesPage() {
                       <TableCell>
                         <div className="flex items-center gap-2">
                           <Badge variant={dealStatusMeta[deal.status].variant}>
-                            {dealStatusLabels[deal.status]}
+                            {labels.dealStatus[deal.status]}
                           </Badge>
                           <span className="text-xs text-muted-foreground">{deal.stage}</span>
                         </div>

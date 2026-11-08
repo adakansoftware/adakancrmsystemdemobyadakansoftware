@@ -2,6 +2,7 @@
 
 import { updateTaskAction } from '@/app/actions/crm'
 import { InlineSelectField } from '@/components/crm/inline-select-field'
+import { useEnumLabels } from '@/components/i18n/locale-provider'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
@@ -9,7 +10,7 @@ import { useOptimisticRowAction } from '@/hooks/use-optimistic-row-action'
 import { type AssignableUsersData, type TasksPageData } from '@/lib/crm/queries'
 import { taskStatuses } from '@/lib/crm/view-models'
 import { formatDate } from '@/lib/format'
-import { priorityMeta, taskPriorityLabels, taskStatusLabels } from '@/lib/ui-meta'
+import { priorityMeta } from '@/lib/ui-meta'
 
 export function TasksListClient({
   tasks,
@@ -19,6 +20,7 @@ export function TasksListClient({
   users: AssignableUsersData
 }) {
   const { runRowAction, isRowPending } = useOptimisticRowAction<string>()
+  const labels = useEnumLabels()
 
   function updateTask(
     taskId: string,
@@ -60,7 +62,7 @@ export function TasksListClient({
                 </span>
               </div>
               <Badge variant={priorityMeta[task.priority].variant}>
-                {taskPriorityLabels[task.priority]}
+                {labels.taskPriority[task.priority]}
               </Badge>
               <InlineSelectField
                 value={task.status}
@@ -73,7 +75,7 @@ export function TasksListClient({
                 ariaLabel={`${task.title} durumunu degistir`}
                 options={taskStatuses.map((status) => ({
                   value: status,
-                  label: taskStatusLabels[status],
+                  label: labels.taskStatus[status],
                 }))}
               />
               <div className="flex min-w-44 items-center gap-2">

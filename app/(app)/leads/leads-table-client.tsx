@@ -2,6 +2,7 @@
 
 import { updateLeadAction } from '@/app/actions/crm'
 import { InlineSelectField } from '@/components/crm/inline-select-field'
+import { useEnumLabels } from '@/components/i18n/locale-provider'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
 import {
@@ -17,11 +18,6 @@ import { type AssignableUsersData, type LeadsPageData } from '@/lib/crm/queries'
 import { leadStatuses } from '@/lib/crm/view-models'
 import { formatCurrency } from '@/lib/format'
 import { getInitials } from '@/lib/helpers'
-import {
-  leadSourceLabels,
-  leadStatusLabels,
-  leadTemperatureLabels,
-} from '@/lib/ui-meta'
 
 export function LeadsTableClient({
   leads,
@@ -31,6 +27,7 @@ export function LeadsTableClient({
   users: AssignableUsersData
 }) {
   const { runRowAction, isRowPending } = useOptimisticRowAction<string>()
+  const labels = useEnumLabels()
 
   function updateLead(
     leadId: string,
@@ -91,9 +88,9 @@ export function LeadsTableClient({
                 </div>
               </TableCell>
               <TableCell>
-                <Badge variant="outline">{leadSourceLabels[lead.source]}</Badge>
+                <Badge variant="outline">{labels.leadSource[lead.source]}</Badge>
               </TableCell>
-              <TableCell>{leadTemperatureLabels[lead.temperature]}</TableCell>
+              <TableCell>{labels.leadTemperature[lead.temperature]}</TableCell>
               <TableCell className="min-w-40">
                 <InlineSelectField
                   value={lead.status}
@@ -105,7 +102,7 @@ export function LeadsTableClient({
                   ariaLabel={`${lead.title} durumunu degistir`}
                   options={leadStatuses.map((status) => ({
                     value: status,
-                    label: leadStatusLabels[status],
+                    label: labels.leadStatus[status],
                   }))}
                 />
               </TableCell>

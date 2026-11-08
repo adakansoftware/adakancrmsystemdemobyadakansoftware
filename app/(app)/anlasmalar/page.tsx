@@ -9,7 +9,8 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from '@/components/ui/empty'
 import { Input } from '@/components/ui/input'
 import { getAssignableUsers, getDealsPageData } from '@/lib/crm/queries'
-import { dealStatusLabels } from '@/lib/ui-meta'
+import { createEnumLabels } from '@/lib/i18n/enums'
+import { getI18n } from '@/lib/i18n/server'
 import { formatCurrency } from '@/lib/format'
 
 const PAGE_SIZE = 25
@@ -41,6 +42,8 @@ export default async function DealsPage({
   searchParams: Promise<DealsPageSearchParams>
 }) {
   const params = await searchParams
+  const { t } = await getI18n()
+  const labels = createEnumLabels(t)
   const query = params.q?.trim() ?? ''
   const statusFilter = params.status?.trim() ?? ''
   const ownerFilter = params.owner?.trim() ?? ''
@@ -145,7 +148,7 @@ export default async function DealsPage({
                 className="flex h-9 w-full rounded-lg border border-input bg-background px-3 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
               >
                 <option value="">Tum durumlar</option>
-                {Object.entries(dealStatusLabels).map(([value, label]) => (
+                {Object.entries(labels.dealStatus).map(([value, label]) => (
                   <option key={value} value={value}>
                     {label}
                   </option>
@@ -198,7 +201,7 @@ export default async function DealsPage({
           <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
             <span>{filteredDeals.length} kayit bulundu</span>
             <Badge variant="secondary">Sayfa {page} / {totalPages}</Badge>
-            {statusFilter ? <Badge variant="outline">{dealStatusLabels[statusFilter as keyof typeof dealStatusLabels]}</Badge> : null}
+            {statusFilter ? <Badge variant="outline">{labels.dealStatus[statusFilter as keyof typeof labels.dealStatus]}</Badge> : null}
             {selectedOwner ? <Badge variant="outline">{selectedOwner.name}</Badge> : null}
             {ownerFilter === 'unassigned' ? <Badge variant="outline">Atanmamis</Badge> : null}
             {query ? <Badge variant="outline">Arama: {query}</Badge> : null}

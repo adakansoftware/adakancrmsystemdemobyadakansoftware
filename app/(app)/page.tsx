@@ -34,8 +34,10 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { getDashboardData } from '@/lib/crm/queries'
+import { createEnumLabels } from '@/lib/i18n/enums'
+import { getI18n } from '@/lib/i18n/server'
 import { formatCurrency, formatDate, formatRelativeDate } from '@/lib/format'
-import { activityTypeMeta, priorityMeta } from '@/lib/ui-meta'
+import { priorityMeta } from '@/lib/ui-meta'
 
 const activityIcon = {
   CALL: Phone,
@@ -50,6 +52,8 @@ const activityIcon = {
 }
 
 export default async function DashboardPage() {
+  const { t } = await getI18n()
+  const labels = createEnumLabels(t)
   const data = await getDashboardData()
   const chartDelta =
     data.revenueData[data.revenueData.length - 1]?.gelir -
@@ -191,7 +195,7 @@ export default async function DashboardPage() {
                       <span className="font-medium">{activity.who}</span> {activity.subject}
                     </p>
                     <span className="text-xs text-muted-foreground">
-                      {activityTypeMeta[activity.type].label} / {formatRelativeDate(activity.occurredAt)}
+                      {labels.activityType[activity.type]} / {formatRelativeDate(activity.occurredAt)}
                     </span>
                   </div>
                 </div>
