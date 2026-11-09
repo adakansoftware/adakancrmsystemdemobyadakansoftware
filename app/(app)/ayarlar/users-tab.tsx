@@ -35,11 +35,11 @@ import { passwordPolicyDescription, strongPasswordSchema } from '@/lib/validatio
 import { ErrorText } from './settings-shared'
 
 const createUserFormSchema = z.object({
-  firstName: z.string().trim().min(1, 'Ad zorunlu'),
-  lastName: z.string().trim().min(1, 'Soyad zorunlu'),
-  email: z.email('Gecerli bir e-posta girin'),
+  firstName: z.string().trim().min(1, 'validation.firstNameRequired'),
+  lastName: z.string().trim().min(1, 'validation.lastNameRequired'),
+  email: z.email('validation.emailInvalid'),
   password: strongPasswordSchema(passwordPolicyDescription),
-  roleId: z.string().min(1, 'Rol secin'),
+  roleId: z.string().min(1, 'validation.roleRequired'),
   status: z.enum(userStatuses),
 })
 

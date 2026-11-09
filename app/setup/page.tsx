@@ -2,6 +2,7 @@ import { redirect } from 'next/navigation'
 import { setupFormAction } from '@/app/actions/auth'
 import { db } from '@/lib/db/prisma'
 import { getCurrentSession } from '@/lib/auth/session'
+import { getI18n } from '@/lib/i18n/server'
 
 export default async function SetupPage({
   searchParams,
@@ -20,6 +21,8 @@ export default async function SetupPage({
     redirect('/login')
   }
 
+  const { t } = await getI18n()
+
   return (
     <main className="flex min-h-screen items-center justify-center bg-background p-6">
       <form
@@ -27,19 +30,19 @@ export default async function SetupPage({
         className="flex w-full max-w-lg flex-col gap-4 rounded-xl border bg-card p-6 shadow-sm"
       >
         <div className="space-y-1">
-          <h1 className="text-2xl font-semibold">Initial CRM Setup</h1>
+          <h1 className="text-2xl font-semibold">{t('auth.setupTitle')}</h1>
           <p className="text-sm text-muted-foreground">
-            Create the first owner account for this workspace.
+            {t('auth.setupDescription')}
           </p>
         </div>
         {params.error ? (
           <p className="rounded-md border border-destructive/20 bg-destructive/10 px-3 py-2 text-sm text-destructive">
-            Setup failed. Please verify the form and try again.
+            {t('auth.setupFailed')}
           </p>
         ) : null}
         <div className="grid gap-4 sm:grid-cols-2">
           <label className="flex flex-col gap-1 text-sm">
-            <span>First name</span>
+            <span>{t('auth.firstName')}</span>
             <input
               name="firstName"
               required
@@ -47,7 +50,7 @@ export default async function SetupPage({
             />
           </label>
           <label className="flex flex-col gap-1 text-sm">
-            <span>Last name</span>
+            <span>{t('auth.lastName')}</span>
             <input
               name="lastName"
               required
@@ -56,7 +59,7 @@ export default async function SetupPage({
           </label>
         </div>
         <label className="flex flex-col gap-1 text-sm">
-          <span>Email</span>
+          <span>{t('auth.email')}</span>
           <input
             name="email"
             type="email"
@@ -65,7 +68,7 @@ export default async function SetupPage({
           />
         </label>
         <label className="flex flex-col gap-1 text-sm">
-          <span>Password</span>
+          <span>{t('auth.password')}</span>
           <input
             name="password"
             type="password"
@@ -77,7 +80,7 @@ export default async function SetupPage({
           type="submit"
           className="h-10 rounded-md bg-primary px-4 text-primary-foreground"
         >
-          Create owner account
+          {t('auth.createOwner')}
         </button>
       </form>
     </main>

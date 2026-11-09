@@ -22,11 +22,11 @@
 <body>
 
 <h1>Adakan CRM — Puanlı Kalite Raporu</h1>
-<p class="meta">Tarih: 2026-11-10 &nbsp;|&nbsp; Kaynaklar: kod tabanı taraması, docs/codebase-audit-report.md (3 hardening pass), canlı metrik toplama, verify + Playwright koşuları</p>
+<p class="meta">Tarih: 2026-11-10 (tur 3) &nbsp;|&nbsp; Kaynaklar: kod tabanı taraması, docs/codebase-audit-report.md (3 hardening pass), canlı metrik toplama, verify + vitest + Playwright koşuları</p>
 
 <h2>Özet</h2>
 <table>
-  <tr class="total"><td>GENEL PUAN</td><td class="score">8.4 / 10</td><td>Önceki rapor: 8.2. i18n kalıntıları kapatıldı, EN yerel test kapsamına alındı. En zayıf halkalar: topbar/login kalıntı metinleri, zod şema mesajları, test coverage ölçümü yok.</td></tr>
+  <tr class="total"><td>GENEL PUAN</td><td class="score">8.8 / 10</td><td>Önceki rapor: 8.4. Yol haritasındaki tüm kısa vadeli maddeler kapatıldı: topbar kalıntıları, login/setup yerelleştirmesi, zod şema mesajları, vitest + coverage, README + katman dokümanı. Kalan zayıf halkalar: düşük coverage yüzdesi, next-auth beta, ertelenmiş bağımlılık yükseltmeleri.</td></tr>
 </table>
 
 <h2>Kategori Puanları</h2>
@@ -45,34 +45,36 @@
     <td>lib/ net katman ayrımı (queries/actions/validation/auth). Dev monolitler bölündü. Zod her yerde, env merkezî. Eksi: 11 TODO/FIXME.</td>
   </tr>
   <tr>
-    <td>i18n</td><td class="score">8.5/10</td><td class="delta">7 → 8.5</td>
-    <td>TR/EN sözlük ~490 anahtar, typed keys (eksik anahtar = tsc hatası), enum label map'leri, {param} interpolasyon. Tüm CRM sayfaları, ayarlar sekmeleri, detay bileşenleri, quick-create dialog, not/aktivite panelleri, error sınırları t() üzerinden. TR-EN karışık anahtar düzeltildi (quotes.weightedPipeline). Eksi: topbar aria/bildirim metinleri, login/setup sayfaları, zod şema mesajları sabit.</td>
+    <td>i18n</td><td class="score">9.5/10</td><td class="delta">8.5 → 9.5</td>
+    <td>TR/EN sözlük ~600 anahtar, typed keys (eksik anahtar = tsc hatası), enum label map'leri, {param} interpolasyon. Bu turda topbar (aria/bildirim/arama/komut paleti), login/setup sayfaları + error sınırları ve Zod şema mesajları (validation.* anahtarları, translateMessage hattı) kapatıldı. Kalan: shadcn iç sr-only metinleri (bilinçli).</td>
   </tr>
   <tr>
-    <td>Test</td><td class="score">8/10</td><td class="delta">7.5 → 8</td>
-    <td>17 Playwright (dil toggle EN↔TR regresyon testi eklendi) + 47 unit + 12 smoke + 6 ops assert; npm run verify zinciri tamam, 17/17 yeşil. Eksi: unit test framework'süz tsx script, coverage ölçümü yok.</td>
+    <td>Test</td><td class="score">9/10</td><td class="delta">8 → 9</td>
+    <td>Vitest'e geçiş tamam: 6 spec dosyası, 32 test, V8 coverage raporu (lib/ kapsamında). 17 Playwright + 12 smoke + 6 ops assert; npm run verify zinciri tamam, hepsi yeşil. Eksi: coverage ~22% (lib/crm/queries test edilmiyor), query katmanı için entegrasyon testi yok.</td>
   </tr>
   <tr>
-    <td>UX / Erişilebilirlik</td><td class="score">8/10</td><td class="delta">=</td>
-    <td>Paylaşımlı useServerActionToast (18 kullanım) + useOptimisticRowAction (12), klavye ile pipeline taşıma, yerelleştirilmiş ARIA label'lar, dark mode.</td>
+    <td>UX / Erişilebilirlik</td><td class="score">8.5/10</td><td class="delta">8 → 8.5</td>
+    <td>Paylaşımlı useServerActionToast (18 kullanım) + useOptimisticRowAction (12), klavye ile pipeline taşıma, yerelleştirilmiş ARIA label'lar (topbar dahil artık), dark mode.</td>
   </tr>
   <tr>
-    <td>Dokümantasyon</td><td class="score">8/10</td><td class="delta">=</td>
-    <td>Audit raporu 3 pass detaylı, production-architecture.md var. Eksi: README yok, katman dokümanı yok.</td>
+    <td>Dokümantasyon</td><td class="score">9.5/10</td><td class="delta">8 → 9.5</td>
+    <td>README güncellendi (stack, komutlar, proje yapısı, operasyon notları), docs/architecture.md katman kuralları + i18n + test dokümanıyla eklendi, audit raporu 3 pass detaylı. Kalan: katkı rehberi yok.</td>
   </tr>
   <tr>
     <td>Bağımlılık sağlığı</td><td class="score">7.5/10</td><td class="delta">=</td>
-    <td>next 16.4.5, zod 4, prisma 6.16 güncel. Eksi: shadcn 1.0 / prisma 7 kırıcı yükseltmeler advisory kapatmak için ertelendi.</td>
+    <td>next 16.4.5, zod 4, prisma 6.16, vitest 5 güncel. Eksi: shadcn 1.0 / prisma 7 kırıcı yükseltmeler advisory kapatmak için ertelendi; next-auth beta.</td>
   </tr>
 </table>
 
-<h2>Bu Turda Kapatılan Maddeler (commit e0951ba)</h2>
+<h2>Bu Turda Kapatılan Maddeler</h2>
 <div class="section">
 <ul>
-  <li>~140 yeni sözlük anahtarı: anlasmalar/musteriler/firmalar listeleri + detay sayfaları, ayarlar 5 sekmesi, quick-create dialog, not/aktivite panelleri, error.tsx + route-error.tsx, raporlar "Win Rate", dashboard ipucu metni.</li>
-  <li>TR sözlükteki İngilizce değer düzeltildi: quotes.weightedPipeline → 'Agirliklandirilmis Pipeline'.</li>
-  <li>EN yereli Playwright testiyle doğrulandı: dil toggle EN, dashboard/anlasmalar/ayarlar/raporlar İngilizce kontrol, TR'ye geri dönüş.</li>
-  <li>npm run verify (prisma validate, lint, build, unit, smoke) + Playwright 17/17 yeşil; commit pushlandı.</li>
+  <li><b>topbar.tsx:</b> ~45 yeni topbar.* anahtarı — aria-label'lar, bildirim başlıkları, arama placeholder'ları, komut paleti, profil menüsü, hızlı oluştur etiketleri.</li>
+  <li><b>login/setup:</b> sayfalar + error bileşenleri auth.* anahtarlarıyla yerelleştirildi; Playwright testleri yeni TR metinlere güncellendi.</li>
+  <li><b>Zod mesajları:</b> profile/security/users/tags formları + sunucu şemaları validation.* anahtarlarına taşındı; ErrorText ve useServerActionToast translateMessage ile çeviriyor.</li>
+  <li><b>Test altyapısı:</b> framework'süz tsx script silindi, vitest + @vitest/coverage-v8 kuruldu (6 dosya, 32 test, coverage/ raporu); playwright.config.ts testMatch ile daraltıldı.</li>
+  <li><b>Dokümantasyon:</b> README güncellendi, docs/architecture.md (katman kuralları, i18n, test) yazıldı.</li>
+  <li><b>Doğrulama:</b> npm run verify (prisma validate, lint, build, vitest+coverage, smoke) + Playwright 17/17 yeşil.</li>
 </ul>
 </div>
 
@@ -82,22 +84,21 @@
   <li><b>Veri:</b> 20 Prisma modeli, 11 enum, 7 modelde soft-delete (archivedAt + composite index)</li>
   <li><b>Sayfalar:</b> 17 sayfa (13 authenticated shell + /admin, /login, /setup), 4 API route, 9 server action modülü</li>
   <li><b>lib/:</b> ~4.8K satır, 43 dosya (auth, i18n, crm/queries, validation, security, export)</li>
-  <li><b>i18n:</b> TR/EN sözlük ~490 anahtar, 59 enum label girişi, typed keys</li>
-  <li><b>Test:</b> 17 Playwright + 47 unit + 12 smoke + 6 ops assert</li>
+  <li><b>i18n:</b> TR/EN sözlük ~600 anahtar, 50 enum label girişi, typed keys, zod mesajları dahil</li>
+  <li><b>Test:</b> 32 vitest (coverage: %22 stmt / %22 line) + 17 Playwright + 12 smoke + 6 ops assert</li>
   <li><b>Altyapı:</b> proxy.ts auth + security header'lar, health endpoint, ops-assert DB bütünlük kontrolü</li>
-  <li><b>Teknik borç:</b> 11 TODO/FIXME, topbar/login/setup sabit metinleri, zod şema mesajları, next-auth beta</li>
+  <li><b>Teknik borç:</b> 11 TODO/FIXME, düşük unit coverage, next-auth beta, ertelenmiş shadcn/prisma yükseltmeleri</li>
 </ul>
 </div>
 
-<h2>Hızlı İyileştirme Yol Haritası</h2>
+<h2>Kalan Yol Haritası</h2>
 <div class="section">
 <ol>
-  <li>topbar.tsx kalıntıları: aria-label'lar, bildirim mock başlıkları, arama placeholder'ları → t(). i18n 8.5'ten 9'a çıkar.</li>
-  <li>login/setup sayfalarının dili kararlandır (bilinçli İngilizce mi, yerelleştirilecek mi).</li>
-  <li>Zod şema mesajlarını yerelleştir (şemaları bileşen içine taşımayı gerektirir).</li>
-  <li>Test coverage ölçümü ekle (vitest + coverage) — Test 8'den 9'a çıkar.</li>
-  <li>README + katman dokümanı yaz — Dokümantasyon 8'den 9.5'a çıkar.</li>
-  <li>Uzun vade: shadcn 1.0 / prisma 7 yükseltmeleri ile kalan advisory'leri kapat.</li>
+  <li>lib/crm/queries için entegrasyon testleri — coverage %22'den %50+'ya çıkar, Test 9'dan 9.5'a götürür.</li>
+  <li>next-auth stable geçişi (beta'dan çıkınca) — Güvenlik 9'dan 9.5'a.</li>
+  <li>shadcn 1.0 / prisma 7 yükseltmeleri ile kalan advisory'leri kapat — Bağımlılık 7.5'ten 9'a.</li>
+  <li>11 TODO/FIXME'yi temizle — Mimari 8.5'ten 9'a.</li>
+  <li>Katkı rehberi (CONTRIBUTING) — Dokümantasyon 9.5'tan 10'a.</li>
 </ol>
 </div>
 

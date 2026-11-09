@@ -11,6 +11,8 @@ Adakan CRM, Next.js App Router uzerinde calisan, Prisma ve PostgreSQL ile gercek
 - Zod
 - Server Actions
 - Custom session auth + RBAC
+- TR/EN i18n (typed sozlukler, cookie tabanli dil degistirme)
+- Vitest (unit + coverage) ve Playwright testleri
 - Health endpoint + lightweight smoke checks
 
 ## Ortam Degiskenleri
@@ -55,6 +57,7 @@ destekler; belirtilmezse ayni varsayilanlari kullanir.
 ```bash
 npm run lint
 npm run build
+npm run test:unit
 npm run test:smoke
 npm run test:smoke:browser
 npm run verify
@@ -62,9 +65,10 @@ npm run verify
 
 Anlamlari:
 
+- `test:unit`: Vitest unit testleri, V8 coverage raporuyla (`coverage/`)
 - `test:smoke`: hizli operasyon smoke kontrolu
 - `test:smoke:browser`: tarayici tabanli daha agir regresyon akisi
-- `verify`: prisma schema, lint, build ve hizli smoke kontrolu
+- `verify`: prisma schema, lint, build, unit ve hizli smoke kontrolu
 
 ## Health Endpoint
 
@@ -114,3 +118,23 @@ curl http://localhost:3000/api/health
 - Varsayilan rate limiter paylasimli PostgreSQL store kullanir; `RATE_LIMIT_STORE=memory` sadece tek-instance yerel gelistirme icin dusunulmelidir.
 - `TRUST_PROXY_HEADERS=true` yalnizca Vercel veya guvendiginiz reverse proxy arkasinda kullanilmalidir.
 - Uretim kontrolunde once `/api/health`, sonra `npm run verify` calistirilmasi tavsiye edilir.
+
+## Proje Yapisi
+
+```
+app/            Routelar: (app) authenticated shell, /login, /setup, /admin, api/
+components/     UI + CRM istemci bilesenleri, i18n provider
+lib/            Sunucu katmanlari (bkz. docs/architecture.md)
+  auth/         Session, RBAC, login rate limit
+  crm/          queries/ (okuma) + view-models
+  validation/   Zod semalari (mesajlar i18n anahtari tasir)
+  i18n/         Typed TR/EN sozlukler, enum etiketleri
+  export/       CSV export + formula injection korumasi
+  security/     Rate limit store
+prisma/         Schema + seed
+tests/          unit/ (Vitest) + smoke.spec.ts (Playwright)
+docs/           Mimari notlar, audit raporu, puan raporu
+```
+
+Katman kurallari ve veri akisi icin [docs/architecture.md](docs/architecture.md),
+guvenlik hardening gecmisi icin [docs/codebase-audit-report.md](docs/codebase-audit-report.md).

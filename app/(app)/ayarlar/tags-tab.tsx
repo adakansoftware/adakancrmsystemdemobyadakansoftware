@@ -18,8 +18,11 @@ import type { SettingsOverviewData } from '@/lib/crm/queries'
 import { ErrorText } from './settings-shared'
 
 const tagFormSchema = z.object({
-  name: z.string().trim().min(2, 'Etiket adi en az 2 karakter olmali'),
-  color: z.string().regex(/^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/, 'Hex renk girin'),
+  name: z.string().trim().min(2, 'validation.tagNameMin'),
+  color: z.string().regex(
+    /^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/,
+    'validation.hexColor',
+  ),
 })
 
 type TagsTabProps = {

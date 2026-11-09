@@ -14,9 +14,9 @@ import type { SettingsCurrentUser } from '@/lib/crm/settings-view-models'
 import { ErrorText } from './settings-shared'
 
 const profileFormSchema = z.object({
-  firstName: z.string().trim().min(1, 'Ad zorunlu'),
-  lastName: z.string().trim().min(1, 'Soyad zorunlu'),
-  email: z.email('Gecerli bir e-posta girin'),
+  firstName: z.string().trim().min(1, 'validation.firstNameRequired'),
+  lastName: z.string().trim().min(1, 'validation.lastNameRequired'),
+  email: z.email('validation.emailInvalid'),
 })
 
 export function ProfileTab({ currentUser }: { currentUser: SettingsCurrentUser }) {

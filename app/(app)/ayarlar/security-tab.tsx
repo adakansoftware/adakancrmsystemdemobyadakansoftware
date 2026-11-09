@@ -14,12 +14,12 @@ import { ErrorText } from './settings-shared'
 
 const passwordFormSchema = z
   .object({
-    currentPassword: z.string().min(8, 'Mevcut sifre en az 8 karakter olmali'),
+    currentPassword: z.string().min(8, 'validation.currentPasswordMin'),
     nextPassword: strongPasswordSchema(passwordPolicyDescription),
-    confirmPassword: z.string().min(8, 'Tekrar alanini doldurun'),
+    confirmPassword: z.string().min(8, 'validation.confirmPasswordRequired'),
   })
   .refine((value) => value.nextPassword === value.confirmPassword, {
-    message: 'Sifreler eslesmiyor',
+    message: 'validation.passwordsDoNotMatch',
     path: ['confirmPassword'],
   })
 

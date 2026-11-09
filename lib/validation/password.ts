@@ -2,8 +2,7 @@ import { z } from 'zod'
 
 export const PASSWORD_MIN_LENGTH = 8
 export const PASSWORD_MAX_LENGTH = 128
-export const passwordPolicyDescription =
-  'Sifre en az 8 karakter olmali ve buyuk harf, kucuk harf ile rakam icermeli'
+export const passwordPolicyDescription = 'validation.passwordPolicy'
 
 function hasUppercase(value: string) {
   return /[A-Z]/.test(value)
@@ -25,7 +24,7 @@ export function strongPasswordSchema(message = passwordPolicyDescription) {
   return z
     .string()
     .min(PASSWORD_MIN_LENGTH, message)
-    .max(PASSWORD_MAX_LENGTH, 'Sifre en fazla 128 karakter olabilir')
+    .max(PASSWORD_MAX_LENGTH, 'validation.passwordMax')
     .refine(isStrongPassword, {
       message,
     })

@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation'
 import { loginFormAction } from '@/app/actions/auth'
 import { getCurrentSession } from '@/lib/auth/session'
+import { getI18n } from '@/lib/i18n/server'
 
 export default async function LoginPage({
   searchParams,
@@ -14,6 +15,8 @@ export default async function LoginPage({
     redirect('/')
   }
 
+  const { t } = await getI18n()
+
   return (
     <main className="flex min-h-screen items-center justify-center bg-background p-6">
       <form
@@ -21,18 +24,18 @@ export default async function LoginPage({
         className="flex w-full max-w-md flex-col gap-4 rounded-xl border bg-card p-6 shadow-sm"
       >
         <div className="space-y-1">
-          <h1 className="text-2xl font-semibold">CRM Login</h1>
+          <h1 className="text-2xl font-semibold">{t('auth.loginTitle')}</h1>
           <p className="text-sm text-muted-foreground">
-            Sign in to access the CRM workspace.
+            {t('auth.loginDescription')}
           </p>
         </div>
         {params.error ? (
           <p className="rounded-md border border-destructive/20 bg-destructive/10 px-3 py-2 text-sm text-destructive">
-            Invalid email or password.
+            {t('auth.invalidCredentials')}
           </p>
         ) : null}
         <label className="flex flex-col gap-1 text-sm">
-          <span>Email</span>
+          <span>{t('auth.email')}</span>
           <input
             name="email"
             type="email"
@@ -41,7 +44,7 @@ export default async function LoginPage({
           />
         </label>
         <label className="flex flex-col gap-1 text-sm">
-          <span>Password</span>
+          <span>{t('auth.password')}</span>
           <input
             name="password"
             type="password"
@@ -53,7 +56,7 @@ export default async function LoginPage({
           type="submit"
           className="h-10 rounded-md bg-primary px-4 text-primary-foreground"
         >
-          Sign in
+          {t('auth.signIn')}
         </button>
       </form>
     </main>

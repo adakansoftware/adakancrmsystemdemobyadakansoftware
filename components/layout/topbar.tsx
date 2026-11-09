@@ -51,38 +51,38 @@ import type {
 } from '@/lib/crm/view-models'
 import { LOCALE_COOKIE } from '@/lib/i18n/config'
 
-const notifications = [
+const notificationKeys = [
   {
-    title: 'Yeni lead atandi',
-    description: 'Takip bekleyen kayitlar guncellendi',
-    time: '5 dk',
+    titleKey: 'topbar.notifLeadTitle',
+    descriptionKey: 'topbar.notifLeadDescription',
+    timeKey: 'topbar.notifLeadTime',
   },
   {
-    title: 'Pipeline hareketi islendi',
-    description: 'Asama degisiklikleri veritabanina kaydedildi',
-    time: '1 saat',
+    titleKey: 'topbar.notifPipelineTitle',
+    descriptionKey: 'topbar.notifPipelineDescription',
+    timeKey: 'topbar.notifPipelineTime',
   },
   {
-    title: 'Gorev teslim tarihi yaklasiyor',
-    description: 'Bugun kapanacak gorevler takvimde gorunuyor',
-    time: '3 saat',
+    titleKey: 'topbar.notifTaskTitle',
+    descriptionKey: 'topbar.notifTaskDescription',
+    timeKey: 'topbar.notifTaskTime',
   },
 ] as const
 
 const quickCreateItems = [
-  { label: 'Yeni Kisi', icon: UserPlus, kind: 'contact' },
-  { label: 'Yeni Anlasma', icon: Handshake, kind: 'deal' },
-  { label: 'Yeni Gorev', icon: CheckSquare, kind: 'task' },
-  { label: 'Yeni Firma', icon: FileText, kind: 'company' },
+  { labelKey: 'topbar.newContact', icon: UserPlus, kind: 'contact' },
+  { labelKey: 'topbar.newDeal', icon: Handshake, kind: 'deal' },
+  { labelKey: 'topbar.newTask', icon: CheckSquare, kind: 'task' },
+  { labelKey: 'topbar.newCompany', icon: FileText, kind: 'company' },
 ] as const
 
-const searchKindLabels: Record<GlobalSearchResultItem['kind'], string> = {
-  company: 'Firma',
-  contact: 'Musteri',
-  lead: 'Lead',
-  deal: 'Deal',
-  task: 'Gorev',
-}
+const searchKindLabelKeys = {
+  company: 'topbar.kindCompany',
+  contact: 'topbar.kindContact',
+  lead: 'topbar.kindLead',
+  deal: 'topbar.kindDeal',
+  task: 'topbar.kindTask',
+} as const satisfies Record<GlobalSearchResultItem['kind'], string>
 
 type TopbarProps = {
   currentUser: {
@@ -110,6 +110,8 @@ function SearchResultsPanel({
   onSelect,
   className,
 }: SearchResultsPanelProps) {
+  const { t } = useI18n()
+
   if (!open) {
     return null
   }
@@ -118,21 +120,21 @@ function SearchResultsPanel({
     <div
       className={`rounded-xl border bg-background p-2 shadow-xl ${className ?? ''}`}
       role="listbox"
-      aria-label="Arama sonuclari"
+      aria-label={t('topbar.searchResultsAria')}
     >
       {query.trim().length < 2 ? (
         <div className="px-3 py-2 text-sm text-muted-foreground">
-          Arama icin en az 2 karakter girin.
+          {t('topbar.searchMinChars')}
         </div>
       ) : null}
 
       {query.trim().length >= 2 && loading ? (
-        <div className="px-3 py-2 text-sm text-muted-foreground">Araniyor...</div>
+        <div className="px-3 py-2 text-sm text-muted-foreground">{t('topbar.searching')}</div>
       ) : null}
 
       {query.trim().length >= 2 && !loading && results.length === 0 ? (
         <div className="px-3 py-2 text-sm text-muted-foreground">
-          Eslesen kayit bulunamadi.
+          {t('topbar.searchNoResults')}
         </div>
       ) : null}
 
@@ -148,7 +150,7 @@ function SearchResultsPanel({
             <p className="truncate text-xs text-muted-foreground">{result.subtitle}</p>
           </div>
           <Badge variant="secondary" className="shrink-0">
-            {searchKindLabels[result.kind]}
+            {t(searchKindLabelKeys[result.kind])}
           </Badge>
         </Link>
       ))}
@@ -212,7 +214,7 @@ export function Topbar({ currentUser, quickCreateOptions }: TopbarProps) {
     })
       .then(async (response) => {
         if (!response.ok) {
-          throw new Error('Arama istegi basarisiz oldu')
+          throw new Error(t('topbar.searchRequestFailed'))
         }
 
         const payload = (await response.json()) as {
@@ -314,7 +316,7 @@ export function Topbar({ currentUser, quickCreateOptions }: TopbarProps) {
               setSearchOpen(true)
             }}
             onFocus={() => setSearchOpen(true)}
-            placeholder="Musteri, anlasma veya lead ara... (Ctrl+K)"
+            placeholder={t('topbar.searchPlaceholder')}
             inputClassName="h-9 rounded-lg"
           />
           <SearchResultsPanel
@@ -332,7 +334,7 @@ export function Topbar({ currentUser, quickCreateOptions }: TopbarProps) {
             variant="ghost"
             size="icon"
             className="rounded-lg md:hidden"
-            aria-label={mobileSearchOpen ? 'Aramayi kapat' : 'Aramayi ac'}
+            aria-label={mobileSearchOpen ? t('topbar.closeSearchAria') : t('topbar.openSearchAria')}
             onClick={() => {
               setMobileSearchOpen((current) => !current)
               setSearchOpen(false)
@@ -346,7 +348,7 @@ export function Topbar({ currentUser, quickCreateOptions }: TopbarProps) {
             variant="ghost"
             size="icon"
             className="rounded-lg"
-            aria-label="Temayi degistir"
+            aria-label={t('topbar.toggleThemeAria')}
             onClick={() => setTheme(resolvedTheme === 'dark' ? 'light' : 'dark')}
           >
             <Sun className="hidden dark:block" />
@@ -367,7 +369,12 @@ export function Topbar({ currentUser, quickCreateOptions }: TopbarProps) {
           <DropdownMenu>
             <DropdownMenuTrigger
               render={
-                <Button variant="ghost" size="icon" className="relative rounded-lg" aria-label="Bildirimler">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="relative rounded-lg"
+                  aria-label={t('topbar.notifications')}
+                >
                   <Bell />
                   <span className="absolute right-1.5 top-1.5 size-2 rounded-full bg-destructive ring-2 ring-background" />
                 </Button>
@@ -376,18 +383,22 @@ export function Topbar({ currentUser, quickCreateOptions }: TopbarProps) {
             <DropdownMenuContent align="end" className="w-80">
               <DropdownMenuGroup>
                 <DropdownMenuLabel className="flex items-center justify-between">
-                  Bildirimler
-                  <Badge variant="info">3 yeni</Badge>
+                  {t('topbar.notifications')}
+                  <Badge variant="info">{t('topbar.newNotifications', { count: 3 })}</Badge>
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
-                {notifications.map((notification) => (
+                {notificationKeys.map((notification) => (
                   <DropdownMenuItem
-                    key={notification.title}
+                    key={notification.titleKey}
                     className="flex flex-col items-start gap-0.5 py-2"
                   >
-                    <span className="text-sm font-medium">{notification.title}</span>
-                    <span className="text-xs text-muted-foreground">{notification.description}</span>
-                    <span className="text-[11px] text-muted-foreground">{notification.time} once</span>
+                    <span className="text-sm font-medium">{t(notification.titleKey)}</span>
+                    <span className="text-xs text-muted-foreground">
+                      {t(notification.descriptionKey)}
+                    </span>
+                    <span className="text-[11px] text-muted-foreground">
+                      {t('topbar.timeAgo', { time: t(notification.timeKey) })}
+                    </span>
                   </DropdownMenuItem>
                 ))}
               </DropdownMenuGroup>
@@ -399,18 +410,18 @@ export function Topbar({ currentUser, quickCreateOptions }: TopbarProps) {
               render={
                 <Button className="rounded-lg max-sm:size-9 max-sm:p-0">
                   <Plus data-icon="inline-start" />
-                  <span className="max-sm:hidden">Hizli Olustur</span>
+                  <span className="max-sm:hidden">{t('quickCreate.title')}</span>
                 </Button>
               }
             />
             <DropdownMenuContent align="end" className="w-52">
               <DropdownMenuGroup>
-                <DropdownMenuLabel>Yeni kayit</DropdownMenuLabel>
+                <DropdownMenuLabel>{t('topbar.newRecord')}</DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 {quickCreateItems.map((item) => (
-                  <DropdownMenuItem key={item.label} onClick={() => openQuickCreate(item.kind)}>
+                  <DropdownMenuItem key={item.kind} onClick={() => openQuickCreate(item.kind)}>
                     <item.icon />
-                    {item.label}
+                    {t(item.labelKey)}
                   </DropdownMenuItem>
                 ))}
               </DropdownMenuGroup>
@@ -443,17 +454,17 @@ export function Topbar({ currentUser, quickCreateOptions }: TopbarProps) {
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={() => router.push('/ayarlar')}>
                   <User />
-                  Profil
+                  {t('topbar.profile')}
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => router.push('/ayarlar')}>
                   <Settings />
-                  Ayarlar
+                  {t('nav.ayarlar')}
                 </DropdownMenuItem>
               </DropdownMenuGroup>
               <DropdownMenuSeparator />
               <DropdownMenuItem variant="destructive" onClick={() => logoutAction()}>
                 <LogOut />
-                Cikis Yap
+                {t('topbar.logout')}
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
@@ -471,7 +482,7 @@ export function Topbar({ currentUser, quickCreateOptions }: TopbarProps) {
               }}
               onFocus={() => setMobileSearchOpen(true)}
               autoFocus
-              placeholder="CRM icinde ara..."
+              placeholder={t('topbar.mobileSearchPlaceholder')}
               inputClassName="h-9 rounded-lg"
             />
             <SearchResultsPanel
@@ -489,10 +500,8 @@ export function Topbar({ currentUser, quickCreateOptions }: TopbarProps) {
       <Dialog open={commandOpen} onOpenChange={setCommandOpen}>
         <DialogContent className="max-w-2xl gap-3 p-0" showCloseButton={false}>
           <DialogHeader className="border-b px-4 py-3">
-            <DialogTitle>Hizli Arama</DialogTitle>
-            <DialogDescription>
-              Kisiler, firmalar, leadler, deal&apos;lar ve gorevler arasinda gezin.
-            </DialogDescription>
+            <DialogTitle>{t('topbar.quickSearchTitle')}</DialogTitle>
+            <DialogDescription>{t('topbar.quickSearchDescription')}</DialogDescription>
           </DialogHeader>
           <div className="px-4 pt-1">
             <SearchInput
@@ -500,8 +509,8 @@ export function Topbar({ currentUser, quickCreateOptions }: TopbarProps) {
               onChange={updateSearchValue}
               onFocus={() => setCommandOpen(true)}
               autoFocus
-              placeholder="Aramaya baslayin..."
-              ariaLabel="Global arama komut paleti"
+              placeholder={t('topbar.commandPlaceholder')}
+              ariaLabel={t('topbar.commandAria')}
               inputClassName="h-11 rounded-xl"
             />
           </div>

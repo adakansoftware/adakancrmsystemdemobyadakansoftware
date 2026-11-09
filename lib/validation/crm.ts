@@ -115,7 +115,7 @@ export const changePasswordSchema = z
     confirmPassword: z.string().min(PASSWORD_MIN_LENGTH).max(PASSWORD_MAX_LENGTH),
   })
   .refine((value) => value.nextPassword === value.confirmPassword, {
-    message: 'Passwords do not match',
+    message: 'validation.passwordsDoNotMatch',
     path: ['confirmPassword'],
   })
 
@@ -344,7 +344,7 @@ export const timelineFilterSchema = z
           value.taskId,
       ),
     {
-      message: 'At least one timeline target is required',
+      message: 'validation.timelineTargetRequired',
       path: ['companyId'],
     },
   )

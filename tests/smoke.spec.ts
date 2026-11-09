@@ -5,12 +5,12 @@ const adminPassword = process.env.E2E_ADMIN_PASSWORD ?? 'Admin123!'
 
 async function login(page: Page) {
   await page.goto('/login')
-  const emailField = page.getByRole('textbox', { name: 'Email' })
+  const emailField = page.getByRole('textbox', { name: 'E-posta' })
 
   if (await emailField.count()) {
     await emailField.fill(adminEmail)
-    await page.getByRole('textbox', { name: 'Password' }).fill(adminPassword)
-    await page.getByRole('button', { name: 'Sign in' }).click()
+    await page.getByRole('textbox', { name: 'Sifre' }).fill(adminPassword)
+    await page.getByRole('button', { name: 'Giris Yap' }).click()
   }
 
   await expect(page.getByRole('heading', { name: 'Dashboard' })).toBeVisible({ timeout: 30_000 })
@@ -33,7 +33,7 @@ test.describe('CRM smoke flows', () => {
   test('protects authenticated routes', async ({ page }) => {
     await page.goto('/musteriler')
     await expect(page).toHaveURL(/\/login$/)
-    await expect(page.getByRole('heading', { name: 'CRM Login' })).toBeVisible()
+    await expect(page.getByRole('heading', { name: 'CRM Giris' })).toBeVisible()
   })
 
   test('logs in with seeded admin user', async ({ page }) => {

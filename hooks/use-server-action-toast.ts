@@ -3,10 +3,12 @@
 import { useRouter } from 'next/navigation'
 import { useTransition } from 'react'
 import { toast } from 'sonner'
+import { useI18n } from '@/components/i18n/locale-provider'
 import {
   getFirstValidationError,
   type ValidatedActionResult,
 } from '@/lib/actions/create-validated-action'
+import { translateMessage } from '@/lib/i18n'
 
 type RunServerActionOptions<TResult> = {
   successMessage: string
@@ -40,6 +42,7 @@ function getErrorMessage(error: unknown, fallbackMessage: string) {
 
 export function useServerActionToast() {
   const router = useRouter()
+  const { t } = useI18n()
   const [isPending, startTransition] = useTransition()
 
   function runServerAction<TResult>(
@@ -51,7 +54,9 @@ export function useServerActionToast() {
         const result = await action()
 
         if (!result.success) {
-          throw new Error(getFirstValidationError(result.errors) ?? options.errorMessage)
+          throw new Error(
+            translateMessage(t, getFirstValidationError(result.errors) ?? options.errorMessage),
+          )
         }
 
         options.onSuccess?.(result.data)
@@ -61,7 +66,7 @@ export function useServerActionToast() {
           router.refresh()
         }
       } catch (error) {
-        toast.error(getErrorMessage(error, options.errorMessage))
+        toast.error(translateMessage(t, getErrorMessage(error, options.errorMessage)))
       }
     })
   }
