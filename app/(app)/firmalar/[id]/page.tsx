@@ -29,10 +29,7 @@ export default async function CompanyDetailPage({
 
   return (
     <div className="space-y-6">
-      <PageHeader
-        title={company.name}
-        description="Kurumsal hesap bilgileri, bagli kisiler ve aktif pipeline etkisi."
-      >
+      <PageHeader title={company.name} description={t('companyDetail.description')}>
         <Badge variant="outline">
           <Building2 className="size-3.5" />
           {company.status}
@@ -43,7 +40,7 @@ export default async function CompanyDetailPage({
         <div className="space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle>Hesap Karti</CardTitle>
+              <CardTitle>{t('companyDetail.accountCard')}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3 text-sm">
               <div className="flex items-center gap-2">
@@ -63,11 +60,11 @@ export default async function CompanyDetailPage({
                 <span>{[company.city, company.country].filter(Boolean).join(', ') || '-'}</span>
               </div>
               <div>
-                <p className="text-muted-foreground">Sorumlu</p>
+                <p className="text-muted-foreground">{t('contacts.owner')}</p>
                 <p className="font-medium">{company.ownerName}</p>
               </div>
               <div>
-                <p className="text-muted-foreground">Toplam deal etkisi</p>
+                <p className="text-muted-foreground">{t('companies.totalDealImpact')}</p>
                 <p className="font-medium">
                   {formatCurrency(company.deals.reduce((sum, deal) => sum + deal.amount, 0))}
                 </p>
@@ -78,31 +75,31 @@ export default async function CompanyDetailPage({
           <EntityNotesPanel
             notes={company.notes}
             target={{ companyId: company.id }}
-            emptyLabel="Bu firma icin henuz not yok."
+            emptyLabel={t('companyDetail.noNotes')}
           />
         </div>
 
         <div className="space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle>Aktivite Akisi</CardTitle>
+              <CardTitle>{t('dealDetail.activityFeed')}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <EntityActivityComposer target={{ companyId: company.id }} />
               <EntityActivityFeed
                 activities={company.activities}
-                emptyLabel="Bu firma icin henuz aktivite kaydi yok."
+                emptyLabel={t('companyDetail.noActivities')}
               />
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader>
-              <CardTitle>Bagli Kisiler</CardTitle>
+              <CardTitle>{t('companyDetail.contacts')}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
               {company.contacts.length === 0 ? (
-                <p className="text-sm text-muted-foreground">Bagli kisi yok.</p>
+                <p className="text-sm text-muted-foreground">{t('companyDetail.noContacts')}</p>
               ) : (
                 company.contacts.map((contact) => (
                   <Link
@@ -125,11 +122,11 @@ export default async function CompanyDetailPage({
         <div className="space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle>Aktif Deal Kayitlari</CardTitle>
+              <CardTitle>{t('companyDetail.activeDeals')}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
               {company.deals.length === 0 ? (
-                <p className="text-sm text-muted-foreground">Bagli deal yok.</p>
+                <p className="text-sm text-muted-foreground">{t('companyDetail.noDeals')}</p>
               ) : (
                 company.deals.map((deal) => (
                   <Link
@@ -159,11 +156,11 @@ export default async function CompanyDetailPage({
 
           <Card>
             <CardHeader>
-              <CardTitle>Gorevler</CardTitle>
+              <CardTitle>{t('companyDetail.tasks')}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
               {company.tasks.length === 0 ? (
-                <p className="text-sm text-muted-foreground">Bagli gorev yok.</p>
+                <p className="text-sm text-muted-foreground">{t('companyDetail.noTasks')}</p>
               ) : (
                 company.tasks.map((task) => (
                   <div key={task.id} className="rounded-lg border p-3">
@@ -171,7 +168,7 @@ export default async function CompanyDetailPage({
                       <div>
                         <p className="font-medium">{task.title}</p>
                         <p className="text-xs text-muted-foreground">
-                          {task.dueAt ? formatDateTime(task.dueAt) : 'Teslim tarihi yok'}
+                          {task.dueAt ? formatDateTime(task.dueAt) : t('common.noDueDate')}
                         </p>
                       </div>
                       <div className="flex gap-2">

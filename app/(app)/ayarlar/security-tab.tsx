@@ -6,6 +6,7 @@ import { z } from 'zod'
 import { changePasswordAction } from '@/app/actions/auth'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { useI18n } from '@/components/i18n/locale-provider'
 import { Input } from '@/components/ui/input'
 import { useServerActionToast } from '@/hooks/use-server-action-toast'
 import { passwordPolicyDescription, strongPasswordSchema } from '@/lib/validation/password'
@@ -24,6 +25,7 @@ const passwordFormSchema = z
 
 export function SecurityTab() {
   const { isPending, runServerAction } = useServerActionToast()
+  const { t } = useI18n()
 
   const passwordForm = useForm({
     resolver: zodResolver(passwordFormSchema),
@@ -36,8 +38,8 @@ export function SecurityTab() {
 
   const handlePasswordSubmit = passwordForm.handleSubmit((values) => {
     runServerAction(() => changePasswordAction(values), {
-      successMessage: 'Sifre basariyla degistirildi',
-      errorMessage: 'Sifre degistirilemedi',
+      successMessage: t('settings.passwordChanged'),
+      errorMessage: t('settings.passwordChangeFailed'),
       onSuccess: () => {
         passwordForm.reset()
       },
@@ -47,28 +49,28 @@ export function SecurityTab() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Sifre Degistir</CardTitle>
+        <CardTitle>{t('settings.changePassword')}</CardTitle>
       </CardHeader>
       <CardContent>
         <form onSubmit={handlePasswordSubmit} className="grid gap-4 md:grid-cols-2">
           <label className="space-y-2 text-sm md:col-span-2">
-            <span>Mevcut Sifre</span>
+            <span>{t('settings.currentPassword')}</span>
             <Input type="password" {...passwordForm.register('currentPassword')} />
             <ErrorText message={passwordForm.formState.errors.currentPassword?.message} />
           </label>
           <label className="space-y-2 text-sm">
-            <span>Yeni Sifre</span>
+            <span>{t('settings.newPassword')}</span>
             <Input type="password" {...passwordForm.register('nextPassword')} />
             <ErrorText message={passwordForm.formState.errors.nextPassword?.message} />
           </label>
           <label className="space-y-2 text-sm">
-            <span>Yeni Sifre Tekrar</span>
+            <span>{t('settings.confirmPassword')}</span>
             <Input type="password" {...passwordForm.register('confirmPassword')} />
             <ErrorText message={passwordForm.formState.errors.confirmPassword?.message} />
           </label>
           <div className="flex justify-end md:col-span-2">
             <Button type="submit" disabled={isPending}>
-              {isPending ? 'Guncelleniyor...' : 'Sifreyi Degistir'}
+              {isPending ? t('common.updating') : t('settings.changePassword')}
             </Button>
           </div>
         </form>

@@ -62,7 +62,7 @@ export default async function DashboardPage() {
 
   return (
     <>
-      <PageHeader title="Dashboard" description={t('dashboard.description')}>
+      <PageHeader title={t('nav.dashboard')} description={t('dashboard.description')}>
         <Button variant="outline" disabled aria-disabled="true">
           {t('dashboard.thisMonth')}
         </Button>
@@ -138,7 +138,7 @@ export default async function DashboardPage() {
         <Card className="lg:col-span-2">
           <CardHeader>
             <CardTitle>{t('dashboard.staffPerformance')}</CardTitle>
-            <CardDescription>Atanan deal ve gorev yuku gorunumu</CardDescription>
+            <CardDescription>{t('dashboard.staffPerformanceHint')}</CardDescription>
           </CardHeader>
           <CardContent className="overflow-x-auto">
             <Table>

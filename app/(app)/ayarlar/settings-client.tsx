@@ -1,5 +1,6 @@
 'use client'
 
+import { useI18n } from '@/components/i18n/locale-provider'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import type { SettingsClientProps } from '@/lib/crm/settings-view-models'
 import { PipelineTab } from './pipeline-tab'
@@ -15,16 +16,18 @@ export function SettingsClient({
   roles,
   overview,
 }: SettingsClientProps) {
+  const { t } = useI18n()
+
   return (
     <Tabs defaultValue="profile" className="gap-6">
       <TabsList className="grid w-full grid-cols-2 md:grid-cols-5">
-        <TabsTrigger value="profile">Profil</TabsTrigger>
-        <TabsTrigger value="security">Guvenlik</TabsTrigger>
+        <TabsTrigger value="profile">{t('settings.tabProfile')}</TabsTrigger>
+        <TabsTrigger value="security">{t('settings.tabSecurity')}</TabsTrigger>
         <TabsTrigger value="users" disabled={!canManageUsers}>
-          Kullanicilar
+          {t('settings.tabUsers')}
         </TabsTrigger>
-        <TabsTrigger value="pipeline">Pipeline</TabsTrigger>
-        <TabsTrigger value="tags">Etiketler</TabsTrigger>
+        <TabsTrigger value="pipeline">{t('settings.tabPipeline')}</TabsTrigger>
+        <TabsTrigger value="tags">{t('settings.tabTags')}</TabsTrigger>
       </TabsList>
 
       <TabsContent value="profile">

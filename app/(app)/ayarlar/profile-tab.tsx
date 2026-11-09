@@ -7,6 +7,7 @@ import { updateProfileAction } from '@/app/actions/auth'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { useI18n } from '@/components/i18n/locale-provider'
 import { Input } from '@/components/ui/input'
 import { useServerActionToast } from '@/hooks/use-server-action-toast'
 import type { SettingsCurrentUser } from '@/lib/crm/settings-view-models'
@@ -20,6 +21,7 @@ const profileFormSchema = z.object({
 
 export function ProfileTab({ currentUser }: { currentUser: SettingsCurrentUser }) {
   const { isPending, runServerAction } = useServerActionToast()
+  const { t } = useI18n()
   const [firstName = '', lastName = ''] = currentUser.name.split(' ')
 
   const profileForm = useForm({
@@ -33,30 +35,30 @@ export function ProfileTab({ currentUser }: { currentUser: SettingsCurrentUser }
 
   const handleProfileSubmit = profileForm.handleSubmit((values) => {
     runServerAction(() => updateProfileAction(values), {
-      successMessage: 'Profil bilgileri guncellendi',
-      errorMessage: 'Profil guncellenemedi',
+      successMessage: t('settings.profileUpdated'),
+      errorMessage: t('settings.profileUpdateFailed'),
     })
   })
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Profil Bilgileri</CardTitle>
+        <CardTitle>{t('settings.profileInfo')}</CardTitle>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleProfileSubmit} className="grid gap-4 md:grid-cols-2">
           <label className="space-y-2 text-sm">
-            <span>Ad</span>
+            <span>{t('contacts.firstName')}</span>
             <Input {...profileForm.register('firstName')} />
             <ErrorText message={profileForm.formState.errors.firstName?.message} />
           </label>
           <label className="space-y-2 text-sm">
-            <span>Soyad</span>
+            <span>{t('contacts.lastName')}</span>
             <Input {...profileForm.register('lastName')} />
             <ErrorText message={profileForm.formState.errors.lastName?.message} />
           </label>
           <label className="space-y-2 text-sm md:col-span-2">
-            <span>E-posta</span>
+            <span>{t('contacts.email')}</span>
             <Input type="email" {...profileForm.register('email')} />
             <ErrorText message={profileForm.formState.errors.email?.message} />
           </label>
@@ -69,7 +71,7 @@ export function ProfileTab({ currentUser }: { currentUser: SettingsCurrentUser }
               ))}
             </div>
             <Button type="submit" disabled={isPending}>
-              {isPending ? 'Kaydediliyor...' : 'Profili Kaydet'}
+              {isPending ? t('common.saving') : t('settings.saveProfile')}
             </Button>
           </div>
         </form>

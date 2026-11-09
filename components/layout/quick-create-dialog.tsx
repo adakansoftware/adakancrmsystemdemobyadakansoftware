@@ -10,6 +10,7 @@ import {
   createLeadAction,
   createTaskAction,
 } from '@/app/actions/crm'
+import { useEnumLabels, useI18n } from '@/components/i18n/locale-provider'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -54,12 +55,7 @@ type FormState = {
   leadId: string
 }
 
-const leadSourceOptions = [
-  { value: 'WEBSITE', label: 'Website' },
-  { value: 'REFERRAL', label: 'Referans' },
-  { value: 'WHATSAPP', label: 'WhatsApp' },
-  { value: 'PHONE', label: 'Telefon' },
-]
+const leadSourceValues = ['WEBSITE', 'REFERRAL', 'WHATSAPP', 'PHONE'] as const
 
 const initialState: FormState = {
   name: '',
@@ -83,6 +79,8 @@ export function QuickCreateDialog({
   options,
 }: QuickCreateDialogProps) {
   const router = useRouter()
+  const { t } = useI18n()
+  const labels = useEnumLabels()
   const [activeTab, setActiveTab] = useState<QuickCreateKind>(initialKind)
   const [form, setForm] = useState<FormState>(initialState)
   const [isPending, startTransition] = useTransition()
@@ -140,7 +138,7 @@ export function QuickCreateDialog({
             phone: form.phone || null,
             ownerId: form.ownerId || null,
           })
-          if (!result.success) throw new Error('Firma olusturulamadi')
+          if (!result.success) throw new Error(t('quickCreate.companyCreateFailed'))
         }
 
         if (activeTab === 'contact') {
@@ -154,7 +152,7 @@ export function QuickCreateDialog({
             phone: form.phone || null,
             mobilePhone: form.phone || null,
           })
-          if (!result.success) throw new Error('Kisi olusturulamadi')
+          if (!result.success) throw new Error(t('quickCreate.contactCreateFailed'))
         }
 
         if (activeTab === 'lead') {
@@ -170,7 +168,7 @@ export function QuickCreateDialog({
             source: (form.source as 'WEBSITE' | 'REFERRAL' | 'WHATSAPP' | 'PHONE') || 'WEBSITE',
             estimatedValue: form.amount ? Number(form.amount) : null,
           })
-          if (!result.success) throw new Error('Lead olusturulamadi')
+          if (!result.success) throw new Error(t('quickCreate.leadCreateFailed'))
         }
 
         if (activeTab === 'deal') {
@@ -184,7 +182,7 @@ export function QuickCreateDialog({
             amount: Number(form.amount || 0),
             expectedCloseAt: form.dueAt ? new Date(form.dueAt) : null,
           })
-          if (!result.success) throw new Error('Anlasma olusturulamadi')
+          if (!result.success) throw new Error(t('quickCreate.dealCreateFailed'))
         }
 
         if (activeTab === 'task') {
@@ -196,19 +194,20 @@ export function QuickCreateDialog({
             assigneeId: form.ownerId || null,
             dueAt: form.dueAt ? new Date(form.dueAt) : null,
           })
-          if (!result.success) throw new Error('Gorev olusturulamadi')
+          if (!result.success) throw new Error(t('quickCreate.taskCreateFailed'))
         }
 
-        toast.success('Kayit olusturuldu', {
-          description: 'Yeni kayit veritabanina basariyla kaydedildi.',
+        toast.success(t('quickCreate.recordCreated'), {
+          description: t('quickCreate.recordCreatedDescription'),
         })
         onOpenChange(false)
         window.setTimeout(() => {
           router.refresh()
         }, 0)
       } catch (error) {
-        toast.error('Islem basarisiz', {
-          description: error instanceof Error ? error.message : 'Beklenmeyen bir hata olustu.',
+        toast.error(t('quickCreate.operationFailed'), {
+          description:
+            error instanceof Error ? error.message : t('quickCreate.unexpectedError'),
         })
       }
     })
@@ -218,39 +217,41 @@ export function QuickCreateDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
-          <DialogTitle>Hizli Olustur</DialogTitle>
-          <DialogDescription>
-            Sirket, kisi, lead, anlasma veya gorev kaydini dogrudan CRM veritabanina ekleyin.
-          </DialogDescription>
+          <DialogTitle>{t('quickCreate.title')}</DialogTitle>
+          <DialogDescription>{t('quickCreate.description')}</DialogDescription>
         </DialogHeader>
 
         <Tabs value={activeTab} onValueChange={(value) => resetForm(value as QuickCreateKind)}>
           <TabsList className="grid w-full grid-cols-5">
-            <TabsTrigger value="company">Firma</TabsTrigger>
-            <TabsTrigger value="contact">Kisi</TabsTrigger>
-            <TabsTrigger value="lead">Lead</TabsTrigger>
-            <TabsTrigger value="deal">Deal</TabsTrigger>
-            <TabsTrigger value="task">Gorev</TabsTrigger>
+            <TabsTrigger value="company">{t('quickCreate.tabCompany')}</TabsTrigger>
+            <TabsTrigger value="contact">{t('quickCreate.tabContact')}</TabsTrigger>
+            <TabsTrigger value="lead">{t('quickCreate.tabLead')}</TabsTrigger>
+            <TabsTrigger value="deal">{t('quickCreate.tabDeal')}</TabsTrigger>
+            <TabsTrigger value="task">{t('quickCreate.tabTask')}</TabsTrigger>
           </TabsList>
         </Tabs>
 
         <FieldGroup>
           <Field>
-            <FieldLabel htmlFor="qc-name">Baslik / Ad Soyad</FieldLabel>
+            <FieldLabel htmlFor="qc-name">{t('quickCreate.nameLabel')}</FieldLabel>
             <Input
               id="qc-name"
               value={form.name}
               onChange={(event) => updateField('name', event.target.value)}
-              placeholder={activeTab === 'company' ? 'Orn. Aydin Hafriyat' : 'Orn. Caner Aydin'}
+              placeholder={
+                activeTab === 'company'
+                  ? t('quickCreate.companyNamePlaceholder')
+                  : t('quickCreate.contactNamePlaceholder')
+              }
             />
           </Field>
 
           <div className="grid gap-4 sm:grid-cols-2">
             <Field>
-              <FieldLabel>Firma</FieldLabel>
+              <FieldLabel>{t('quickCreate.tabCompany')}</FieldLabel>
               <Select value={form.companyId} onValueChange={(value) => updateField('companyId', value ?? '')}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Firma secin" />
+                  <SelectValue placeholder={t('quickCreate.selectCompany')} />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectGroup>
@@ -264,10 +265,10 @@ export function QuickCreateDialog({
               </Select>
             </Field>
             <Field>
-              <FieldLabel>Sorumlu</FieldLabel>
+              <FieldLabel>{t('common.colOwner')}</FieldLabel>
               <Select value={form.ownerId} onValueChange={(value) => updateField('ownerId', value ?? '')}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Sorumlu secin" />
+                  <SelectValue placeholder={t('quickCreate.selectOwner')} />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectGroup>
@@ -285,10 +286,10 @@ export function QuickCreateDialog({
           {activeTab !== 'company' ? (
             <div className="grid gap-4 sm:grid-cols-2">
               <Field>
-                <FieldLabel>Kisi</FieldLabel>
+                <FieldLabel>{t('quickCreate.tabContact')}</FieldLabel>
                 <Select value={form.contactId} onValueChange={(value) => updateField('contactId', value ?? '')}>
                   <SelectTrigger>
-                    <SelectValue placeholder="Kisi secin" />
+                    <SelectValue placeholder={t('quickCreate.selectContact')} />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectGroup>
@@ -302,7 +303,7 @@ export function QuickCreateDialog({
                 </Select>
               </Field>
               <Field>
-                <FieldLabel>Telefon</FieldLabel>
+                <FieldLabel>{t('contacts.phone')}</FieldLabel>
                 <Input
                   value={form.phone}
                   onChange={(event) => updateField('phone', event.target.value)}
@@ -314,7 +315,7 @@ export function QuickCreateDialog({
 
           <div className="grid gap-4 sm:grid-cols-2">
             <Field>
-              <FieldLabel>E-posta</FieldLabel>
+              <FieldLabel>{t('contacts.email')}</FieldLabel>
               <Input
                 value={form.email}
                 onChange={(event) => updateField('email', event.target.value)}
@@ -322,7 +323,7 @@ export function QuickCreateDialog({
               />
             </Field>
             <Field>
-              <FieldLabel>Tutar / Deger</FieldLabel>
+              <FieldLabel>{t('quickCreate.amountLabel')}</FieldLabel>
               <Input
                 type="number"
                 value={form.amount}
@@ -334,16 +335,16 @@ export function QuickCreateDialog({
 
           {activeTab === 'lead' ? (
             <Field>
-              <FieldLabel>Kaynak</FieldLabel>
+              <FieldLabel>{t('quickCreate.sourceLabel')}</FieldLabel>
               <Select value={form.source} onValueChange={(value) => updateField('source', value ?? 'WEBSITE')}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectGroup>
-                    {leadSourceOptions.map((source) => (
-                      <SelectItem key={source.value} value={source.value}>
-                        {source.label}
+                    {leadSourceValues.map((source) => (
+                      <SelectItem key={source} value={source}>
+                        {labels.leadSource[source]}
                       </SelectItem>
                     ))}
                   </SelectGroup>
@@ -355,7 +356,7 @@ export function QuickCreateDialog({
           {(activeTab === 'lead' || activeTab === 'deal') ? (
             <div className="grid gap-4 sm:grid-cols-2">
               <Field>
-                <FieldLabel>Pipeline</FieldLabel>
+                <FieldLabel>{t('nav.pipeline')}</FieldLabel>
                 <Select
                   value={form.pipelineId || options.pipelines[0]?.id}
                   onValueChange={(value) => {
@@ -365,7 +366,7 @@ export function QuickCreateDialog({
                   }}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Pipeline secin" />
+                    <SelectValue placeholder={t('quickCreate.selectPipeline')} />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectGroup>
@@ -379,10 +380,10 @@ export function QuickCreateDialog({
                 </Select>
               </Field>
               <Field>
-                <FieldLabel>Asama</FieldLabel>
+                <FieldLabel>{t('common.colStage')}</FieldLabel>
                 <Select value={form.stageId || selectedPipeline?.stages[0]?.id} onValueChange={(value) => updateField('stageId', value ?? '')}>
                   <SelectTrigger>
-                    <SelectValue placeholder="Asama secin" />
+                    <SelectValue placeholder={t('quickCreate.selectStage')} />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectGroup>
@@ -401,10 +402,10 @@ export function QuickCreateDialog({
           {activeTab === 'task' ? (
             <div className="grid gap-4 sm:grid-cols-2">
               <Field>
-                <FieldLabel>Lead</FieldLabel>
+                <FieldLabel>{t('quickCreate.tabLead')}</FieldLabel>
                 <Select value={form.leadId} onValueChange={(value) => updateField('leadId', value ?? '')}>
                   <SelectTrigger>
-                    <SelectValue placeholder="Lead secin" />
+                    <SelectValue placeholder={t('quickCreate.selectLead')} />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectGroup>
@@ -418,7 +419,7 @@ export function QuickCreateDialog({
                 </Select>
               </Field>
               <Field>
-                <FieldLabel>Termin</FieldLabel>
+                <FieldLabel>{t('quickCreate.dueLabel')}</FieldLabel>
                 <Input
                   type="date"
                   value={form.dueAt}
@@ -430,7 +431,7 @@ export function QuickCreateDialog({
 
           {activeTab === 'deal' ? (
             <Field>
-              <FieldLabel>Beklenen Kapanis</FieldLabel>
+              <FieldLabel>{t('quickCreate.expectedCloseLabel')}</FieldLabel>
               <Input
                 type="date"
                 value={form.dueAt}
@@ -442,10 +443,10 @@ export function QuickCreateDialog({
 
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Iptal
+            {t('common.cancel')}
           </Button>
           <Button onClick={submit} disabled={isPending || !form.name.trim()}>
-            {isPending ? 'Kaydediliyor...' : 'Kaydet'}
+            {isPending ? t('common.saving') : t('common.save')}
           </Button>
         </DialogFooter>
       </DialogContent>

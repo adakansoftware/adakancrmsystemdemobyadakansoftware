@@ -99,7 +99,7 @@ export default async function ReportsPage() {
                     <TableHead>{t('reports.colUser')}</TableHead>
                     <TableHead className="text-right">{t('reports.colTotalDeals')}</TableHead>
                     <TableHead className="text-right">{t('reports.colWon')}</TableHead>
-                    <TableHead className="text-right">Win Rate</TableHead>
+                    <TableHead className="text-right">{t('reports.colWinRate')}</TableHead>
                     <TableHead className="text-right">{t('reports.colRevenue')}</TableHead>
                   </TableRow>
                 </TableHeader>

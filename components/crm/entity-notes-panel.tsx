@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { Pin, PinOff, Trash2 } from 'lucide-react'
 import { toast } from 'sonner'
 import { createNoteAction, deleteNoteAction, updateNoteAction } from '@/app/actions/crm'
+import { useI18n } from '@/components/i18n/locale-provider'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
@@ -29,6 +30,7 @@ export function EntityNotesPanel({
   emptyLabel: string
 }) {
   const router = useRouter()
+  const { t } = useI18n()
   const [isPending, startTransition] = useTransition()
   const [title, setTitle] = useState('')
   const [body, setBody] = useState('')
@@ -48,14 +50,14 @@ export function EntityNotesPanel({
         })
 
         if (!result.success) {
-          throw new Error('Not kaydedilemedi')
+          throw new Error(t('notes.saveFailed'))
         }
 
         setTitle('')
         setBody('')
-        refresh('Not eklendi')
+        refresh(t('notes.added'))
       } catch (error) {
-        toast.error(error instanceof Error ? error.message : 'Not eklenemedi')
+        toast.error(error instanceof Error ? error.message : t('notes.addFailed'))
       }
     })
   }
@@ -69,12 +71,12 @@ export function EntityNotesPanel({
         })
 
         if (!result.success) {
-          throw new Error('Not sabitleme durumu guncellenemedi')
+          throw new Error(t('notes.pinUpdateFailed'))
         }
 
-        refresh(note.isPinned ? 'Not sabitlemeden kaldirildi' : 'Not sabitlendi')
+        refresh(note.isPinned ? t('notes.unpinned') : t('notes.pinned'))
       } catch (error) {
-        toast.error(error instanceof Error ? error.message : 'Not guncellenemedi')
+        toast.error(error instanceof Error ? error.message : t('notes.updateFailed'))
       }
     })
   }
@@ -84,12 +86,12 @@ export function EntityNotesPanel({
       try {
         const result = await deleteNoteAction({ id: noteId })
         if (!result.success) {
-          throw new Error('Not silinemedi')
+          throw new Error(t('notes.deleteFailed'))
         }
 
-        refresh('Not silindi')
+        refresh(t('notes.deleted'))
       } catch (error) {
-        toast.error(error instanceof Error ? error.message : 'Not silinemedi')
+        toast.error(error instanceof Error ? error.message : t('notes.deleteFailed'))
       }
     })
   }
@@ -98,18 +100,18 @@ export function EntityNotesPanel({
     <div className="space-y-4">
       <div className="space-y-3 rounded-lg border p-4">
         <Input
-          placeholder="Not basligi (opsiyonel)"
+          placeholder={t('notes.titlePlaceholder')}
           value={title}
           onChange={(event) => setTitle(event.target.value)}
         />
         <Textarea
-          placeholder="Kayda eklemek istedigin notu yaz"
+          placeholder={t('notes.bodyPlaceholder')}
           value={body}
           onChange={(event) => setBody(event.target.value)}
         />
         <div className="flex justify-end">
           <Button onClick={submitNote} disabled={isPending || body.trim().length === 0}>
-            {isPending ? 'Kaydediliyor...' : 'Not Ekle'}
+            {isPending ? t('common.saving') : t('notes.add')}
           </Button>
         </div>
       </div>
@@ -123,9 +125,11 @@ export function EntityNotesPanel({
               <div className="flex items-start justify-between gap-3">
                 <div className="space-y-1">
                   <div className="flex items-center gap-2">
-                    <p className="text-sm font-medium">{note.title ?? 'Not'}</p>
+                    <p className="text-sm font-medium">{note.title ?? t('notes.defaultTitle')}</p>
                     {note.isPinned ? (
-                      <span className="text-xs text-muted-foreground">Sabitlendi</span>
+                      <span className="text-xs text-muted-foreground">
+                        {t('notes.pinnedLabel')}
+                      </span>
                     ) : null}
                   </div>
                   <p className="text-xs text-muted-foreground">
@@ -139,7 +143,7 @@ export function EntityNotesPanel({
                     size="icon-sm"
                     onClick={() => togglePin(note)}
                     disabled={isPending}
-                    aria-label={note.isPinned ? 'Notu sabitlemeden kaldir' : 'Notu sabitle'}
+                    aria-label={note.isPinned ? t('notes.unpinAria') : t('notes.pinAria')}
                   >
                     {note.isPinned ? <PinOff /> : <Pin />}
                   </Button>
@@ -149,7 +153,7 @@ export function EntityNotesPanel({
                     size="icon-sm"
                     onClick={() => removeNote(note.id)}
                     disabled={isPending}
-                    aria-label="Notu sil"
+                    aria-label={t('notes.deleteAria')}
                   >
                     <Trash2 />
                   </Button>

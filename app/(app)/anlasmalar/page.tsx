@@ -91,17 +91,14 @@ export default async function DealsPage({
 
   return (
     <>
-      <PageHeader
-        title="Anlasmalar"
-        description="Satis hunisini kaybetmeden tum deal kayitlarini filtreleyin, onceliklendirin ve guncelleyin."
-      >
+      <PageHeader title={t('deals.title')} description={t('deals.description')}>
         <Button
           variant="outline"
           nativeButton={false}
           render={
             <Link href="/pipeline">
               <KanbanSquare data-icon="inline-start" />
-              Pipeline Gorunumu
+              {t('deals.pipelineView')}
             </Link>
           }
         />
@@ -110,17 +107,21 @@ export default async function DealsPage({
           render={
             <Link href="/anlasmalar?quickCreate=deal">
               <Plus data-icon="inline-start" />
-              Yeni Anlasma
+              {t('deals.newDeal')}
             </Link>
           }
         />
       </PageHeader>
 
       <div className="grid gap-4 sm:grid-cols-3">
-        <SummaryCard label="Toplam Anlasma" value={filteredDeals.length} badge={`${openDeals} acik`} />
-        <SummaryCard label="Acik Deal Degeri" value={formatCurrency(openValue)} />
         <SummaryCard
-          label="Kazanilan Deger"
+          label={t('deals.totalDeals')}
+          value={filteredDeals.length}
+          badge={t('deals.openBadge', { count: openDeals })}
+        />
+        <SummaryCard label={t('deals.openDealValue')} value={formatCurrency(openValue)} />
+        <SummaryCard
+          label={t('deals.wonValue')}
           value={formatCurrency(wonValue)}
           valueClassName="text-2xl font-semibold text-success"
         />
@@ -132,22 +133,22 @@ export default async function DealsPage({
             <label className="space-y-2 text-sm">
               <span className="flex items-center gap-2 font-medium">
                 <Search className="size-4" />
-                Arama
+                {t('common.search')}
               </span>
-              <Input name="q" defaultValue={query} placeholder="Deal, firma, kisi veya asama" />
+              <Input name="q" defaultValue={query} placeholder={t('deals.searchPlaceholder')} />
             </label>
 
             <label className="space-y-2 text-sm">
               <span className="flex items-center gap-2 font-medium">
                 <SlidersHorizontal className="size-4" />
-                Durum
+                {t('common.colStatus')}
               </span>
               <select
                 name="status"
                 defaultValue={statusFilter}
                 className="flex h-9 w-full rounded-lg border border-input bg-background px-3 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
               >
-                <option value="">Tum durumlar</option>
+                <option value="">{t('deals.allStatuses')}</option>
                 {Object.entries(labels.dealStatus).map(([value, label]) => (
                   <option key={value} value={value}>
                     {label}
@@ -159,15 +160,15 @@ export default async function DealsPage({
             <label className="space-y-2 text-sm">
               <span className="flex items-center gap-2 font-medium">
                 <UserRound className="size-4" />
-                Sorumlu
+                {t('common.colOwner')}
               </span>
               <select
                 name="owner"
                 defaultValue={ownerFilter}
                 className="flex h-9 w-full rounded-lg border border-input bg-background px-3 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
               >
-                <option value="">Tum sorumlular</option>
-                <option value="unassigned">Atanmamis</option>
+                <option value="">{t('deals.allOwners')}</option>
+                <option value="unassigned">{t('common.unassigned')}</option>
                 {users.map((user) => (
                   <option key={user.id} value={user.id}>
                     {user.name}
@@ -177,34 +178,34 @@ export default async function DealsPage({
             </label>
 
             <label className="space-y-2 text-sm">
-              <span className="font-medium">Siralama</span>
+              <span className="font-medium">{t('contacts.sort')}</span>
               <select
                 name="sort"
                 defaultValue={sort}
                 className="flex h-9 w-full rounded-lg border border-input bg-background px-3 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
               >
-                <option value="close-asc">Tahmini kapanisa gore</option>
-                <option value="value-desc">Tutara gore</option>
+                <option value="close-asc">{t('deals.sortByClose')}</option>
+                <option value="value-desc">{t('deals.sortByValue')}</option>
               </select>
             </label>
 
             <div className="flex items-end gap-2">
-              <Button type="submit">Uygula</Button>
+              <Button type="submit">{t('common.apply')}</Button>
               <Button
                 variant="ghost"
                 nativeButton={false}
-                render={<Link href="/anlasmalar">Temizle</Link>}
+                render={<Link href="/anlasmalar">{t('common.clear')}</Link>}
               />
             </div>
           </form>
 
           <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
-            <span>{filteredDeals.length} kayit bulundu</span>
-            <Badge variant="secondary">Sayfa {page} / {totalPages}</Badge>
+            <span>{t('common.recordsFound', { count: filteredDeals.length })}</span>
+            <Badge variant="secondary">{t('common.pageRange', { page, total: totalPages })}</Badge>
             {statusFilter ? <Badge variant="outline">{labels.dealStatus[statusFilter as keyof typeof labels.dealStatus]}</Badge> : null}
             {selectedOwner ? <Badge variant="outline">{selectedOwner.name}</Badge> : null}
-            {ownerFilter === 'unassigned' ? <Badge variant="outline">Atanmamis</Badge> : null}
-            {query ? <Badge variant="outline">Arama: {query}</Badge> : null}
+            {ownerFilter === 'unassigned' ? <Badge variant="outline">{t('common.unassigned')}</Badge> : null}
+            {query ? <Badge variant="outline">{t('common.searchBadge', { query })}</Badge> : null}
           </div>
         </CardContent>
       </Card>
@@ -216,10 +217,8 @@ export default async function DealsPage({
               <EmptyMedia variant="icon">
                 <Search />
               </EmptyMedia>
-              <EmptyTitle>Eslesen anlasma bulunamadi</EmptyTitle>
-              <EmptyDescription>
-                Filtreleri gevsetin ya da yeni bir anlasma kaydi olusturun.
-              </EmptyDescription>
+              <EmptyTitle>{t('deals.noMatch')}</EmptyTitle>
+              <EmptyDescription>{t('deals.noMatchDescription')}</EmptyDescription>
             </EmptyHeader>
           </Empty>
         </Card>
@@ -234,8 +233,11 @@ export default async function DealsPage({
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <p className="text-sm text-muted-foreground">
           {filteredDeals.length === 0
-            ? 'Gosterilecek anlasma yok.'
-            : `${pageStart + 1}-${Math.min(pageStart + PAGE_SIZE, filteredDeals.length)} arasi kayitlar gosteriliyor.`}
+            ? t('deals.empty')
+            : t('common.showingRange', {
+                start: pageStart + 1,
+                end: Math.min(pageStart + PAGE_SIZE, filteredDeals.length),
+              })}
         </p>
         <div className="flex items-center gap-2">
           <Button
@@ -253,7 +255,7 @@ export default async function DealsPage({
                 aria-disabled={page <= 1}
                 className={page <= 1 ? 'pointer-events-none opacity-50' : undefined}
               >
-                Onceki
+                {t('common.prev')}
               </Link>
             }
           />
@@ -272,7 +274,7 @@ export default async function DealsPage({
                 aria-disabled={page >= totalPages}
                 className={page >= totalPages ? 'pointer-events-none opacity-50' : undefined}
               >
-                Sonraki
+                {t('common.next')}
               </Link>
             }
           />

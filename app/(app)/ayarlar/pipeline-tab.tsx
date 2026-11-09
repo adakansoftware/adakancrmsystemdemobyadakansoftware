@@ -12,6 +12,7 @@ import {
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { useI18n } from '@/components/i18n/locale-provider'
 import { Input } from '@/components/ui/input'
 import { useOptimisticRowAction } from '@/hooks/use-optimistic-row-action'
 import { useServerActionToast } from '@/hooks/use-server-action-toast'
@@ -19,6 +20,7 @@ import type { SettingsOverviewData } from '@/lib/crm/queries'
 
 export function PipelineTab({ overview }: { overview: SettingsOverviewData }) {
   const { isPending } = useServerActionToast()
+  const { t } = useI18n()
   const pipelineActions = useOptimisticRowAction<string>()
   const [newStageNames, setNewStageNames] = useState<Record<string, string>>({})
   const [pipelineNames, setPipelineNames] = useState<Record<string, string>>(
@@ -46,8 +48,8 @@ export function PipelineTab({ overview }: { overview: SettingsOverviewData }) {
           name: pipelineNames[pipelineId],
         }),
       {
-        successMessage: 'Pipeline adi guncellendi',
-        errorMessage: 'Pipeline guncellenemedi',
+        successMessage: t('settings.pipelineNameUpdated'),
+        errorMessage: t('settings.pipelineUpdateFailed'),
       },
     )
   }
@@ -67,8 +69,8 @@ export function PipelineTab({ overview }: { overview: SettingsOverviewData }) {
           probability: Number(edit.probability),
         }),
       {
-        successMessage: 'Stage guncellendi',
-        errorMessage: 'Stage guncellenemedi',
+        successMessage: t('settings.stageUpdated'),
+        errorMessage: t('settings.stageUpdateFailed'),
       },
     )
   }
@@ -94,22 +96,22 @@ export function PipelineTab({ overview }: { overview: SettingsOverviewData }) {
       async () => {
         const tempPosition = 999
         const tempResult = await updateStageAction({ id: currentStage.id, position: tempPosition })
-        if (!tempResult.success) throw new Error('Stage sirasi gecici olarak guncellenemedi')
+        if (!tempResult.success) throw new Error(t('settings.stageTempOrderFailed'))
         const targetResult = await updateStageAction({
           id: targetStage.id,
           position: currentStage.position,
         })
-        if (!targetResult.success) throw new Error('Hedef stage guncellenemedi')
+        if (!targetResult.success) throw new Error(t('settings.targetStageUpdateFailed'))
         const currentResult = await updateStageAction({
           id: currentStage.id,
           position: targetStage.position,
         })
-        if (!currentResult.success) throw new Error('Stage sirasi guncellenemedi')
+        if (!currentResult.success) throw new Error(t('settings.stageOrderUpdateFailed'))
         return currentResult
       },
       {
-        successMessage: 'Stage sirasi guncellendi',
-        errorMessage: 'Stage sirasi guncellenemedi',
+        successMessage: t('settings.stageOrderUpdated'),
+        errorMessage: t('settings.stageOrderUpdateFailed'),
       },
     )
   }
@@ -119,7 +121,7 @@ export function PipelineTab({ overview }: { overview: SettingsOverviewData }) {
     const stageName = newStageNames[pipelineId]?.trim()
 
     if (!pipeline || !stageName) {
-      toast.error('Yeni stage icin ad girin')
+      toast.error(t('settings.stageNameRequired'))
       return
     }
 
@@ -136,8 +138,8 @@ export function PipelineTab({ overview }: { overview: SettingsOverviewData }) {
           isWon: false,
         }),
       {
-        successMessage: 'Yeni stage olusturuldu',
-        errorMessage: 'Stage olusturulamadi',
+        successMessage: t('settings.stageCreated'),
+        errorMessage: t('settings.stageCreateFailed'),
         onSuccess: () => {
           setNewStageNames((current) => ({ ...current, [pipelineId]: '' }))
         },
@@ -150,26 +152,26 @@ export function PipelineTab({ overview }: { overview: SettingsOverviewData }) {
       <div className="grid gap-4 md:grid-cols-4">
         <Card>
           <CardHeader>
-            <CardTitle>Sistem Ozeti</CardTitle>
+            <CardTitle>{t('settings.systemSummary')}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-1 text-sm">
-            <p>{overview.counts.companies} firma</p>
-            <p>{overview.counts.contacts} kisi</p>
-            <p>{overview.counts.deals} deal</p>
-            <p>{overview.counts.tasks} gorev</p>
-            <p>{overview.tags.length} etiket</p>
+            <p>{t('common.countCompanies', { count: overview.counts.companies })}</p>
+            <p>{t('common.countContacts', { count: overview.counts.contacts })}</p>
+            <p>{t('common.countDeals', { count: overview.counts.deals })}</p>
+            <p>{t('common.countTasks', { count: overview.counts.tasks })}</p>
+            <p>{t('common.countTags', { count: overview.tags.length })}</p>
           </CardContent>
         </Card>
         <Card className="md:col-span-3">
           <CardHeader>
-            <CardTitle>Pipeline Yonetimi</CardTitle>
+            <CardTitle>{t('settings.pipelineManagement')}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3 text-sm text-muted-foreground">
-            <p>Pipeline isimlerini, stage olasiliklarini ve sira duzenini bu alandan yonetin.</p>
+            <p>{t('settings.pipelineManagementHint')}</p>
             <Button
               variant="outline"
               nativeButton={false}
-              render={<Link href="/pipeline">Pipeline ekranina git</Link>}
+              render={<Link href="/pipeline">{t('settings.goToPipeline')}</Link>}
             />
           </CardContent>
         </Card>
@@ -179,9 +181,13 @@ export function PipelineTab({ overview }: { overview: SettingsOverviewData }) {
         <Card key={pipeline.id}>
           <CardHeader>
             <CardTitle className="flex items-center justify-between gap-3">
-              <span>{pipeline.isDefault ? `${pipeline.name} (Varsayilan)` : pipeline.name}</span>
+              <span>
+                {pipeline.isDefault
+                  ? `${pipeline.name} ${t('settings.defaultBadge')}`
+                  : pipeline.name}
+              </span>
               <Badge variant={pipeline.isDefault ? 'success' : 'secondary'}>
-                {pipeline.stages.length} stage
+                {t('common.countStages', { count: pipeline.stages.length })}
               </Badge>
             </CardTitle>
           </CardHeader>
@@ -200,7 +206,7 @@ export function PipelineTab({ overview }: { overview: SettingsOverviewData }) {
                 onClick={() => updatePipelineName(pipeline.id)}
                 disabled={pipelineActions.isRowPending(pipeline.id)}
               >
-                Pipeline Adini Kaydet
+                {t('settings.savePipelineName')}
               </Button>
             </div>
 
@@ -259,7 +265,7 @@ export function PipelineTab({ overview }: { overview: SettingsOverviewData }) {
                         <ArrowDown />
                       </Button>
                       <Button onClick={() => updateStage(stage.id)} disabled={isPending}>
-                        Stage Kaydet
+                        {t('settings.saveStage')}
                       </Button>
                     </div>
                   </div>
@@ -268,7 +274,7 @@ export function PipelineTab({ overview }: { overview: SettingsOverviewData }) {
 
             <div className="flex flex-col gap-3 md:flex-row">
               <Input
-                placeholder="Yeni stage adi"
+                placeholder={t('settings.newStagePlaceholder')}
                 value={newStageNames[pipeline.id] ?? ''}
                 onChange={(event) =>
                   setNewStageNames((current) => ({
@@ -279,7 +285,7 @@ export function PipelineTab({ overview }: { overview: SettingsOverviewData }) {
               />
               <Button onClick={() => createStage(pipeline.id)} disabled={isPending}>
                 <Plus data-icon="inline-start" />
-                Stage Ekle
+                {t('settings.addStage')}
               </Button>
             </div>
           </CardContent>

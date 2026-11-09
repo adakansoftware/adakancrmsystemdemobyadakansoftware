@@ -210,7 +210,7 @@ test.describe('CRM smoke flows', () => {
     await page.goto('/teklifler')
 
     await expect(page.getByRole('heading', { name: 'Teklifler' })).toBeVisible()
-    await expect(page.getByText('Weighted Pipeline')).toBeVisible()
+    await expect(page.getByText('Agirliklandirilmis Pipeline')).toBeVisible()
     await expect(page.getByText('Teklif Oncelik Listesi')).toBeVisible()
   })
 
@@ -257,5 +257,28 @@ test.describe('CRM smoke flows', () => {
     await page.getByRole('button', { name: 'Kaydet' }).click()
 
     await expect(page.getByText(/Smoke Unvan/)).toBeVisible()
+  })
+
+  test('toggles the interface to English and back to Turkish', async ({ page }) => {
+    await login(page)
+
+    await page.getByRole('button', { name: 'Dili degistir' }).click()
+    await expect(page.getByRole('link', { name: 'Deals' }).first()).toBeVisible()
+    await expect(page.getByText('Live view of your CRM operations')).toBeVisible()
+
+    await page.goto('/anlasmalar')
+    await expect(page.getByRole('heading', { name: 'Deals', exact: true })).toBeVisible()
+    await expect(page.getByRole('button', { name: 'New Deal' })).toBeVisible()
+
+    await page.goto('/ayarlar')
+    await expect(page.getByRole('heading', { name: 'Settings', exact: true })).toBeVisible()
+    await expect(page.getByRole('tab', { name: 'Security' })).toBeVisible()
+
+    await page.goto('/raporlar')
+    await expect(page.getByRole('columnheader', { name: 'Win Rate' })).toBeVisible()
+
+    await page.getByRole('button', { name: 'Switch language' }).click()
+    await expect(page.getByRole('heading', { name: 'Raporlar' })).toBeVisible()
+    await expect(page.getByRole('columnheader', { name: 'Gelir' })).toBeVisible()
   })
 })

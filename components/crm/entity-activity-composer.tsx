@@ -8,7 +8,7 @@ import { InlineSelectField } from '@/components/crm/inline-select-field'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
-import { useEnumLabels } from '@/components/i18n/locale-provider'
+import { useEnumLabels, useI18n } from '@/components/i18n/locale-provider'
 
 const activityTypes = [
   'CALL',
@@ -37,6 +37,7 @@ export function EntityActivityComposer({
 }) {
   const router = useRouter()
   const labels = useEnumLabels()
+  const { t } = useI18n()
   const [isPending, startTransition] = useTransition()
   const [type, setType] = useState<(typeof activityTypes)[number]>('COMMENT')
   const [subject, setSubject] = useState('')
@@ -53,15 +54,15 @@ export function EntityActivityComposer({
         })
 
         if (!result.success) {
-          throw new Error('Aktivite kaydedilemedi')
+          throw new Error(t('activity.saveFailed'))
         }
 
         setSubject('')
         setDescription('')
-        toast.success('Aktivite eklendi')
+        toast.success(t('activity.added'))
         router.refresh()
       } catch (error) {
-        toast.error(error instanceof Error ? error.message : 'Aktivite eklenemedi')
+        toast.error(error instanceof Error ? error.message : t('activity.addFailed'))
       }
     })
   }
@@ -71,25 +72,25 @@ export function EntityActivityComposer({
       <InlineSelectField
         value={type}
         onValueChange={setType}
-        ariaLabel="Aktivite tipi sec"
+        ariaLabel={t('activity.typeAria')}
         options={activityTypes.map((value) => ({
           value,
           label: labels.activityType[value],
         }))}
       />
       <Input
-        placeholder="Aktivite basligi"
+        placeholder={t('activity.subjectPlaceholder')}
         value={subject}
         onChange={(event) => setSubject(event.target.value)}
       />
       <Textarea
-        placeholder="Aktivite aciklamasi (opsiyonel)"
+        placeholder={t('activity.descriptionPlaceholder')}
         value={description}
         onChange={(event) => setDescription(event.target.value)}
       />
       <div className="flex justify-end">
         <Button onClick={submitActivity} disabled={isPending || subject.trim().length < 2}>
-          {isPending ? 'Kaydediliyor...' : 'Aktivite Ekle'}
+          {isPending ? t('common.saving') : t('activity.add')}
         </Button>
       </div>
     </div>

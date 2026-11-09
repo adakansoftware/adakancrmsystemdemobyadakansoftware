@@ -35,10 +35,7 @@ export default async function ContactDetailPage({
 
   return (
     <div className="space-y-6">
-      <PageHeader
-        title={contact.name}
-        description="Kisi bilgileri, son aktiviteler ve bagli satis isleri tek ekranda."
-      >
+      <PageHeader title={contact.name} description={t('contactDetail.description')}>
         {contact.company ? (
           <Badge variant="outline">
             <Building2 className="size-3.5" />
@@ -57,7 +54,7 @@ export default async function ContactDetailPage({
 
           <Card>
             <CardHeader>
-              <CardTitle>Hizli Ozet</CardTitle>
+              <CardTitle>{t('contactDetail.quickSummary')}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3 text-sm">
               <div className="flex items-center gap-2">
@@ -69,12 +66,12 @@ export default async function ContactDetailPage({
                 <span>{contact.phone}</span>
               </div>
               <div>
-                <p className="text-muted-foreground">Son guncelleme</p>
+                <p className="text-muted-foreground">{t('contactDetail.lastUpdate')}</p>
                 <p className="font-medium">{formatDateTime(contact.updatedAt)}</p>
               </div>
               <div>
-                <p className="text-muted-foreground">Notlar</p>
-                <p className="font-medium">{contact.notes.length} kayit</p>
+                <p className="text-muted-foreground">{t('contactDetail.notes')}</p>
+                <p className="font-medium">{t('common.countRecords', { count: contact.notes.length })}</p>
               </div>
             </CardContent>
           </Card>
@@ -82,20 +79,20 @@ export default async function ContactDetailPage({
           <EntityNotesPanel
             notes={contact.notes}
             target={{ companyId: contact.companyId, contactId: contact.id }}
-            emptyLabel="Bu kisi icin henuz not yok."
+            emptyLabel={t('contactDetail.noNotes')}
           />
         </div>
 
         <div className="space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle>Aktivite Akisi</CardTitle>
+              <CardTitle>{t('dealDetail.activityFeed')}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <EntityActivityComposer target={{ companyId: contact.companyId, contactId: contact.id }} />
               <EntityActivityFeed
                 activities={contact.activities}
-                emptyLabel="Bu kisi icin henuz aktivite kaydi yok."
+                emptyLabel={t('contactDetail.noActivities')}
               />
             </CardContent>
           </Card>
@@ -104,11 +101,11 @@ export default async function ContactDetailPage({
         <div className="space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle>Iliskili Deal Kayitlari</CardTitle>
+              <CardTitle>{t('contactDetail.relatedDeals')}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
               {contact.deals.length === 0 ? (
-                <p className="text-sm text-muted-foreground">Bagli deal yok.</p>
+                <p className="text-sm text-muted-foreground">{t('contactDetail.noDeals')}</p>
               ) : (
                 contact.deals.map((deal) => (
                   <Link
@@ -136,11 +133,11 @@ export default async function ContactDetailPage({
 
           <Card>
             <CardHeader>
-              <CardTitle>Gorevler</CardTitle>
+              <CardTitle>{t('contactDetail.tasks')}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
               {contact.tasks.length === 0 ? (
-                <p className="text-sm text-muted-foreground">Bagli gorev yok.</p>
+                <p className="text-sm text-muted-foreground">{t('contactDetail.noTasks')}</p>
               ) : (
                 contact.tasks.map((task) => (
                   <div key={task.id} className="rounded-lg border p-3">
@@ -148,7 +145,7 @@ export default async function ContactDetailPage({
                       <div>
                         <p className="font-medium">{task.title}</p>
                         <p className="text-xs text-muted-foreground">
-                          {task.dueAt ? formatDateTime(task.dueAt) : 'Teslim tarihi yok'}
+                          {task.dueAt ? formatDateTime(task.dueAt) : t('common.noDueDate')}
                         </p>
                       </div>
                       <div className="flex gap-2">

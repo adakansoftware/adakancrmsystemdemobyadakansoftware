@@ -32,10 +32,7 @@ export default async function DealDetailPage({
 
   return (
     <div className="space-y-6">
-      <PageHeader
-        title={deal.title}
-        description="Deal ilerleyisini, iliskili kisileri ve aktivite akisini tek yerde yonetin."
-      >
+      <PageHeader title={deal.title} description={t('dealDetail.description')}>
         <Badge variant={dealStatusMeta[deal.status].variant}>{labels.dealStatus[deal.status]}</Badge>
       </PageHeader>
 
@@ -45,7 +42,7 @@ export default async function DealDetailPage({
 
           <Card>
             <CardHeader>
-              <CardTitle>Iliskili Kayitlar</CardTitle>
+              <CardTitle>{t('dealDetail.relatedRecords')}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3 text-sm">
               <div className="flex items-center gap-2">
@@ -69,17 +66,17 @@ export default async function DealDetailPage({
                 )}
               </div>
               <div>
-                <p className="text-muted-foreground">Pipeline / Asama</p>
+                <p className="text-muted-foreground">{t('dealDetail.pipelineStage')}</p>
                 <p className="font-medium">
                   {deal.pipeline.name} / {deal.stage.name}
                 </p>
               </div>
               <div>
-                <p className="text-muted-foreground">Tahmini Kapanis</p>
+                <p className="text-muted-foreground">{t('common.expectedClose')}</p>
                 <p className="font-medium">{formatDateTime(deal.expectedCloseAt)}</p>
               </div>
               <div>
-                <p className="text-muted-foreground">Deal Degeri</p>
+                <p className="text-muted-foreground">{t('dealDetail.dealValue')}</p>
                 <p className="font-medium">{formatCurrency(deal.amount, deal.currency)}</p>
               </div>
             </CardContent>
@@ -88,14 +85,14 @@ export default async function DealDetailPage({
           <EntityNotesPanel
             notes={deal.notes}
             target={{ companyId: deal.companyId, contactId: deal.contactId, dealId: deal.id }}
-            emptyLabel="Bu deal icin henuz not yok."
+            emptyLabel={t('dealDetail.noNotes')}
           />
         </div>
 
         <div className="space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle>Aktivite Akisi</CardTitle>
+              <CardTitle>{t('dealDetail.activityFeed')}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <EntityActivityComposer
@@ -103,18 +100,18 @@ export default async function DealDetailPage({
               />
               <EntityActivityFeed
                 activities={deal.activities}
-                emptyLabel="Bu deal icin henuz aktivite kaydi yok."
+                emptyLabel={t('dealDetail.noActivities')}
               />
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader>
-              <CardTitle>Stage Gecmisleri</CardTitle>
+              <CardTitle>{t('dealDetail.stageHistory')}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
               {deal.history.length === 0 ? (
-                <p className="text-sm text-muted-foreground">Stage gecmisi yok.</p>
+                <p className="text-sm text-muted-foreground">{t('dealDetail.noHistory')}</p>
               ) : (
                 deal.history.map((entry) => (
                   <div key={entry.id} className="rounded-lg border p-3 text-sm">
@@ -139,11 +136,11 @@ export default async function DealDetailPage({
         <div className="space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle>Bagli Gorevler</CardTitle>
+              <CardTitle>{t('dealDetail.tasks')}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
               {deal.tasks.length === 0 ? (
-                <p className="text-sm text-muted-foreground">Bagli gorev yok.</p>
+                <p className="text-sm text-muted-foreground">{t('dealDetail.noTasks')}</p>
               ) : (
                 deal.tasks.map((task) => (
                   <div key={task.id} className="rounded-lg border p-3">
@@ -152,7 +149,7 @@ export default async function DealDetailPage({
                         <p className="font-medium">{task.title}</p>
                         <p className="text-xs text-muted-foreground">{task.assigneeName}</p>
                         <p className="mt-1 text-xs text-muted-foreground">
-                          {task.dueAt ? formatDateTime(task.dueAt) : 'Teslim tarihi yok'}
+                          {task.dueAt ? formatDateTime(task.dueAt) : t('common.noDueDate')}
                         </p>
                       </div>
                       <div className="flex gap-2">

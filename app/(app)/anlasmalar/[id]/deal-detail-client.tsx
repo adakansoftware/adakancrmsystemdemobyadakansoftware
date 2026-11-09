@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { moveDealToStageAction, updateDealAction } from '@/app/actions/crm'
 import { InlineSelectField } from '@/components/crm/inline-select-field'
-import { useEnumLabels } from '@/components/i18n/locale-provider'
+import { useEnumLabels, useI18n } from '@/components/i18n/locale-provider'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -39,6 +39,7 @@ export function DealDetailClient({
 }) {
   const { isPending, runServerAction } = useServerActionToast()
   const labels = useEnumLabels()
+  const { t } = useI18n()
   const [title, setTitle] = useState(deal.title)
   const [amount, setAmount] = useState(String(deal.amount))
   const [ownerId, setOwnerId] = useState(deal.ownerId ?? 'unassigned')
@@ -56,8 +57,8 @@ export function DealDetailClient({
           status,
         }),
       {
-        successMessage: 'Deal bilgileri guncellendi',
-        errorMessage: 'Deal guncellenemedi',
+        successMessage: t('dealDetail.updated'),
+        errorMessage: t('dealDetail.updateFailed'),
       },
     )
   }
@@ -73,8 +74,8 @@ export function DealDetailClient({
           toStageId: nextStageId,
         }),
       {
-        successMessage: 'Deal asamasi guncellendi',
-        errorMessage: 'Asama guncellenemedi',
+        successMessage: t('dealDetail.stageUpdated'),
+        errorMessage: t('dealDetail.stageUpdateFailed'),
       },
     )
   }
@@ -82,26 +83,26 @@ export function DealDetailClient({
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Deal Bilgileri</CardTitle>
+        <CardTitle>{t('dealDetail.info')}</CardTitle>
       </CardHeader>
       <CardContent className="space-y-3">
         <label className="space-y-1.5 text-sm">
-          <span>Baslik</span>
+          <span>{t('common.colTitle')}</span>
           <Input value={title} onChange={(event) => setTitle(event.target.value)} />
         </label>
         <label className="space-y-1.5 text-sm">
-          <span>Tutar</span>
+          <span>{t('common.colAmount')}</span>
           <Input value={amount} onChange={(event) => setAmount(event.target.value)} />
           <span className="text-xs text-muted-foreground">
-            Guncel gorunum: {formatCurrency(Number(amount || 0), deal.currency)}
+            {t('dealDetail.currentView', { value: formatCurrency(Number(amount || 0), deal.currency) })}
           </span>
         </label>
         <div className="space-y-1.5 text-sm">
-          <span>Durum</span>
+          <span>{t('common.colStatus')}</span>
           <InlineSelectField
             value={status}
             onValueChange={(value) => setStatus(value as typeof status)}
-            ariaLabel="Deal durumu"
+            ariaLabel={t('dealDetail.statusAria')}
             options={dealStatuses.map((currentStatus) => ({
               value: currentStatus,
               label: labels.dealStatus[currentStatus],
@@ -109,11 +110,11 @@ export function DealDetailClient({
           />
         </div>
         <div className="space-y-1.5 text-sm">
-          <span>Asama</span>
+          <span>{t('common.colStage')}</span>
           <InlineSelectField
             value={stageId}
             onValueChange={moveStage}
-            ariaLabel="Deal asamasi"
+            ariaLabel={t('dealDetail.stageAria')}
             options={deal.pipeline.stages.map((stage) => ({
               value: stage.id,
               label: stage.name,
@@ -121,20 +122,20 @@ export function DealDetailClient({
           />
         </div>
         <div className="space-y-1.5 text-sm">
-          <span>Sorumlu</span>
+          <span>{t('common.colOwner')}</span>
           <InlineSelectField
             value={ownerId}
             onValueChange={setOwnerId}
-            ariaLabel="Deal sorumlusu"
+            ariaLabel={t('dealDetail.ownerAria')}
             options={[
-              { value: 'unassigned', label: 'Atanmamis' },
+              { value: 'unassigned', label: t('common.unassigned') },
               ...users.map((user) => ({ value: user.id, label: user.name })),
             ]}
           />
         </div>
 
         <Button onClick={persistCoreFields} disabled={isPending} className="w-full">
-          {isPending ? 'Kaydediliyor...' : 'Degisiklikleri Kaydet'}
+          {isPending ? t('common.saving') : t('common.saveChanges')}
         </Button>
       </CardContent>
     </Card>

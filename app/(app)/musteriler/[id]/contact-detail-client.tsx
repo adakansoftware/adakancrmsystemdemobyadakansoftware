@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { updateContactAction } from '@/app/actions/crm'
 import { InlineSelectField } from '@/components/crm/inline-select-field'
+import { useI18n } from '@/components/i18n/locale-provider'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -35,6 +36,7 @@ export function ContactDetailClient({
   companies: CompanyOption[]
 }) {
   const { isPending, runServerAction } = useServerActionToast()
+  const { t } = useI18n()
   const [form, setForm] = useState({
     firstName: contact.firstName,
     lastName: contact.lastName,
@@ -63,8 +65,8 @@ export function ContactDetailClient({
           linkedinUrl: form.linkedinUrl.trim() || null,
         }),
       {
-        successMessage: 'Kisi bilgileri guncellendi',
-        errorMessage: 'Kisi guncellenemedi',
+        successMessage: t('contactDetail.updated'),
+        errorMessage: t('contactDetail.updateFailed'),
       },
     )
   }
@@ -72,46 +74,46 @@ export function ContactDetailClient({
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Kisi Bilgileri</CardTitle>
+        <CardTitle>{t('contactDetail.info')}</CardTitle>
       </CardHeader>
       <CardContent className="space-y-3">
         <label className="space-y-1.5 text-sm">
-          <span>Ad</span>
+          <span>{t('contacts.firstName')}</span>
           <Input
             value={form.firstName}
             onChange={(event) => setForm((current) => ({ ...current, firstName: event.target.value }))}
           />
         </label>
         <label className="space-y-1.5 text-sm">
-          <span>Soyad</span>
+          <span>{t('contacts.lastName')}</span>
           <Input
             value={form.lastName}
             onChange={(event) => setForm((current) => ({ ...current, lastName: event.target.value }))}
           />
         </label>
         <label className="space-y-1.5 text-sm">
-          <span>Unvan</span>
+          <span>{t('contacts.jobTitle')}</span>
           <Input
             value={form.jobTitle}
             onChange={(event) => setForm((current) => ({ ...current, jobTitle: event.target.value }))}
           />
         </label>
         <label className="space-y-1.5 text-sm">
-          <span>E-posta</span>
+          <span>{t('contacts.email')}</span>
           <Input
             value={form.email}
             onChange={(event) => setForm((current) => ({ ...current, email: event.target.value }))}
           />
         </label>
         <label className="space-y-1.5 text-sm">
-          <span>Telefon</span>
+          <span>{t('contacts.phone')}</span>
           <Input
             value={form.phone}
             onChange={(event) => setForm((current) => ({ ...current, phone: event.target.value }))}
           />
         </label>
         <label className="space-y-1.5 text-sm">
-          <span>Mobil</span>
+          <span>{t('contacts.mobile')}</span>
           <Input
             value={form.mobilePhone}
             onChange={(event) => setForm((current) => ({ ...current, mobilePhone: event.target.value }))}
@@ -125,32 +127,32 @@ export function ContactDetailClient({
           />
         </label>
         <div className="space-y-1.5 text-sm">
-          <span>Firma</span>
+          <span>{t('contacts.company')}</span>
           <InlineSelectField
             value={form.companyId}
             onValueChange={(value) => setForm((current) => ({ ...current, companyId: value }))}
-            ariaLabel="Kisinin bagli oldugu firma"
+            ariaLabel={t('contactDetail.companyAria')}
             options={[
-              { value: 'none', label: 'Firma bagli degil' },
+              { value: 'none', label: t('contacts.noCompanyOption') },
               ...companies.map((company) => ({ value: company.id, label: company.name })),
             ]}
           />
         </div>
         <div className="space-y-1.5 text-sm">
-          <span>Sorumlu</span>
+          <span>{t('contacts.owner')}</span>
           <InlineSelectField
             value={form.ownerId}
             onValueChange={(value) => setForm((current) => ({ ...current, ownerId: value }))}
-            ariaLabel="Kisi sorumlusu"
+            ariaLabel={t('contactDetail.ownerAria')}
             options={[
-              { value: 'unassigned', label: 'Atanmamis' },
+              { value: 'unassigned', label: t('common.unassigned') },
               ...users.map((user) => ({ value: user.id, label: user.name })),
             ]}
           />
         </div>
 
         <Button onClick={save} disabled={isPending} className="w-full">
-          {isPending ? 'Kaydediliyor...' : 'Degisiklikleri Kaydet'}
+          {isPending ? t('common.saving') : t('common.saveChanges')}
         </Button>
       </CardContent>
     </Card>

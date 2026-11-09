@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { moveDealToStageAction, updateDealAction } from '@/app/actions/crm'
 import { InlineSelectField } from '@/components/crm/inline-select-field'
-import { useEnumLabels } from '@/components/i18n/locale-provider'
+import { useEnumLabels, useI18n } from '@/components/i18n/locale-provider'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import {
   Table,
@@ -27,11 +27,12 @@ export function DealsTableClient({
 }) {
   const { runRowAction, isRowPending } = useOptimisticRowAction<string>()
   const labels = useEnumLabels()
+  const { t } = useI18n()
 
   function updateDealOwner(dealId: string, ownerId: string | null) {
     runRowAction(dealId, () => updateDealAction({ id: dealId, ownerId }), {
-      successMessage: 'Anlasma sorumlusu guncellendi',
-      errorMessage: 'Anlasma guncellemesi basarisiz',
+      successMessage: t('deals.ownerUpdated'),
+      errorMessage: t('deals.updateFailed'),
     })
   }
 
@@ -45,8 +46,8 @@ export function DealsTableClient({
           toStageId: stageId,
         }),
       {
-        successMessage: 'Anlasma asamasi guncellendi',
-        errorMessage: 'Asama degisikligi basarisiz',
+        successMessage: t('deals.stageUpdated'),
+        errorMessage: t('deals.stageChangeFailed'),
       },
     )
   }
@@ -67,7 +68,7 @@ export function DealsTableClient({
               )
 
         if (!targetStage) {
-          throw new Error('Bu durum icin uygun stage bulunamadi')
+          throw new Error(t('deals.noStageForStatus'))
         }
 
         return moveDealToStageAction({
@@ -77,8 +78,8 @@ export function DealsTableClient({
         })
       },
       {
-        successMessage: 'Anlasma durumu guncellendi',
-        errorMessage: 'Durum degisikligi basarisiz',
+        successMessage: t('deals.statusUpdated'),
+        errorMessage: t('deals.statusChangeFailed'),
       },
     )
   }
@@ -87,14 +88,14 @@ export function DealsTableClient({
     <Table>
       <TableHeader>
         <TableRow>
-          <TableHead>Anlasma</TableHead>
-          <TableHead className="max-lg:hidden">Firma / Kisi</TableHead>
-          <TableHead className="min-w-40">Durum</TableHead>
-          <TableHead className="min-w-44 max-lg:hidden">Asama</TableHead>
-          <TableHead className="text-right">Tutar</TableHead>
-          <TableHead className="text-right max-md:hidden">Olasilik</TableHead>
-          <TableHead className="min-w-44 max-xl:hidden">Sorumlu</TableHead>
-          <TableHead className="text-right max-sm:hidden">Kapanis</TableHead>
+          <TableHead>{t('deals.colDeal')}</TableHead>
+          <TableHead className="max-lg:hidden">{t('common.colCompanyContact')}</TableHead>
+          <TableHead className="min-w-40">{t('common.colStatus')}</TableHead>
+          <TableHead className="min-w-44 max-lg:hidden">{t('common.colStage')}</TableHead>
+          <TableHead className="text-right">{t('common.colAmount')}</TableHead>
+          <TableHead className="text-right max-md:hidden">{t('common.colProbability')}</TableHead>
+          <TableHead className="min-w-44 max-xl:hidden">{t('common.colOwner')}</TableHead>
+          <TableHead className="text-right max-sm:hidden">{t('common.colClose')}</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
@@ -123,7 +124,7 @@ export function DealsTableClient({
                   onValueChange={(value) => updateDealStatus(deal, value)}
                   disabled={rowPending}
                   testId={`deal-status-${deal.id}`}
-                  ariaLabel={`${deal.title} durumunu degistir`}
+                  ariaLabel={t('deals.changeStatusAria', { title: deal.title })}
                   options={dealStatuses.map((status) => ({
                     value: status,
                     label: labels.dealStatus[status],
@@ -136,7 +137,7 @@ export function DealsTableClient({
                   onValueChange={(value) => updateDealStage(deal, value)}
                   disabled={rowPending}
                   testId={`deal-stage-${deal.id}`}
-                  ariaLabel={`${deal.title} asamasini degistir`}
+                  ariaLabel={t('deals.changeStageAria', { title: deal.title })}
                   options={deal.availableStages.map((stage) => ({
                     value: stage.id,
                     label: stage.name,
@@ -162,9 +163,9 @@ export function DealsTableClient({
                     disabled={rowPending}
                     className="w-full"
                     testId={`deal-owner-${deal.id}`}
-                    ariaLabel={`${deal.title} sorumlusunu degistir`}
+                    ariaLabel={t('deals.changeOwnerAria', { title: deal.title })}
                     options={[
-                      { value: 'unassigned', label: 'Atanmamis' },
+                      { value: 'unassigned', label: t('common.unassigned') },
                       ...users.map((user) => ({ value: user.id, label: user.name })),
                     ]}
                   />

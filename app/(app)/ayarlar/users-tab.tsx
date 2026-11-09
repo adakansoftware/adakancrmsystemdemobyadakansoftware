@@ -11,6 +11,7 @@ import {
   updateUserStatusAction,
 } from '@/app/actions/auth'
 import { InlineSelectField } from '@/components/crm/inline-select-field'
+import { useI18n } from '@/components/i18n/locale-provider'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -49,6 +50,7 @@ type UsersTabProps = {
 
 export function UsersTab({ users, roles }: UsersTabProps) {
   const { isPending, runServerAction } = useServerActionToast()
+  const { t } = useI18n()
   const userActions = useOptimisticRowAction<string>()
   const [createUserRoleId, setCreateUserRoleId] = useState(roles[0]?.id ?? '')
   const [createUserStatus, setCreateUserStatus] = useState<(typeof userStatuses)[number]>('INVITED')
@@ -79,27 +81,27 @@ export function UsersTab({ users, roles }: UsersTabProps) {
         for (const roleId of user.roleIds) {
           const removeResult = await removeRoleAction({ userId, roleId })
           if (!removeResult.success) {
-            throw new Error('Mevcut roller temizlenemedi')
+            throw new Error(t('settings.rolesClearFailed'))
           }
         }
 
         const assignResult = await assignRoleAction({ userId, roleId: nextRole.id })
         if (!assignResult.success) {
-          throw new Error('Yeni rol atanamadi')
+          throw new Error(t('settings.roleAssignFailed'))
         }
         return assignResult
       },
       {
-        successMessage: 'Kullanici rolu guncellendi',
-        errorMessage: 'Rol guncellemesi basarisiz oldu',
+        successMessage: t('settings.roleUpdated'),
+        errorMessage: t('settings.roleUpdateFailed'),
       },
     )
   }
 
   function updateUserStatus(userId: string, status: (typeof userStatuses)[number]) {
     userActions.runRowAction(userId, () => updateUserStatusAction({ userId, status }), {
-      successMessage: 'Kullanici durumu guncellendi',
-      errorMessage: 'Durum guncellemesi basarisiz oldu',
+      successMessage: t('settings.userStatusUpdated'),
+      errorMessage: t('settings.userStatusUpdateFailed'),
     })
   }
 
@@ -112,8 +114,8 @@ export function UsersTab({ users, roles }: UsersTabProps) {
           status: createUserStatus,
         }),
       {
-        successMessage: 'Yeni kullanici olusturuldu',
-        errorMessage: 'Kullanici olusturulamadi',
+        successMessage: t('settings.userCreated'),
+        errorMessage: t('settings.userCreateFailed'),
         onSuccess: () => {
           createUserForm.reset({
             firstName: '',
@@ -134,16 +136,16 @@ export function UsersTab({ users, roles }: UsersTabProps) {
     <div className="grid gap-6 xl:grid-cols-[1.25fr_0.9fr]">
       <Card>
         <CardHeader>
-          <CardTitle>Kullanici Yonetimi</CardTitle>
+          <CardTitle>{t('settings.userManagement')}</CardTitle>
         </CardHeader>
         <CardContent className="overflow-x-auto">
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Kullanici</TableHead>
-                <TableHead>Durum</TableHead>
-                <TableHead>Rol</TableHead>
-                <TableHead className="text-right">Guncelleme</TableHead>
+                <TableHead>{t('settings.colUser')}</TableHead>
+                <TableHead>{t('common.colStatus')}</TableHead>
+                <TableHead>{t('settings.role')}</TableHead>
+                <TableHead className="text-right">{t('settings.colUpdate')}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -165,7 +167,7 @@ export function UsersTab({ users, roles }: UsersTabProps) {
                           updateUserStatus(user.id, value as (typeof userStatuses)[number])
                         }
                         disabled={rowPending}
-                        ariaLabel={`${user.name} durumunu degistir`}
+                        ariaLabel={t('settings.changeStatusAria', { name: user.name })}
                         options={userStatuses.map((status) => ({
                           value: status,
                           label: status,
@@ -177,7 +179,7 @@ export function UsersTab({ users, roles }: UsersTabProps) {
                         value={user.roleSlugs[0] ?? roles[0]?.slug ?? ''}
                         onValueChange={(value) => updateUserRole(user.id, value)}
                         disabled={rowPending}
-                        ariaLabel={`${user.name} rolunu degistir`}
+                        ariaLabel={t('settings.changeRoleAria', { name: user.name })}
                         options={roles.map((role) => ({
                           value: role.slug,
                           label: role.name,
@@ -186,7 +188,7 @@ export function UsersTab({ users, roles }: UsersTabProps) {
                     </TableCell>
                     <TableCell className="text-right">
                       <Badge variant={rowPending ? 'warning' : 'secondary'}>
-                        {rowPending ? 'Isleniyor' : 'Guncel'}
+                        {rowPending ? t('common.processing') : t('common.upToDate')}
                       </Badge>
                     </TableCell>
                   </TableRow>
@@ -199,37 +201,37 @@ export function UsersTab({ users, roles }: UsersTabProps) {
 
       <Card>
         <CardHeader>
-          <CardTitle>Yeni Kullanici Olustur</CardTitle>
+          <CardTitle>{t('settings.createUser')}</CardTitle>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleCreateUser} className="grid gap-4">
             <label className="space-y-2 text-sm">
-              <span>Ad</span>
+              <span>{t('contacts.firstName')}</span>
               <Input {...createUserForm.register('firstName')} />
               <ErrorText message={createUserForm.formState.errors.firstName?.message} />
             </label>
             <label className="space-y-2 text-sm">
-              <span>Soyad</span>
+              <span>{t('contacts.lastName')}</span>
               <Input {...createUserForm.register('lastName')} />
               <ErrorText message={createUserForm.formState.errors.lastName?.message} />
             </label>
             <label className="space-y-2 text-sm">
-              <span>E-posta</span>
+              <span>{t('contacts.email')}</span>
               <Input type="email" {...createUserForm.register('email')} />
               <ErrorText message={createUserForm.formState.errors.email?.message} />
             </label>
             <label className="space-y-2 text-sm">
-              <span>Gecici Sifre</span>
+              <span>{t('settings.tempPassword')}</span>
               <Input type="password" {...createUserForm.register('password')} />
               <ErrorText message={createUserForm.formState.errors.password?.message} />
             </label>
             <div className="grid gap-4 md:grid-cols-2">
               <div className="space-y-2 text-sm">
-                <span>Rol</span>
+                <span>{t('settings.role')}</span>
                 <InlineSelectField
                   value={createUserRoleId}
                   onValueChange={(value) => setCreateUserRoleId(value)}
-                  ariaLabel="Yeni kullanici rolunu sec"
+                  ariaLabel={t('settings.newUserRoleAria')}
                   options={roles.map((role) => ({
                     value: role.id,
                     label: role.name,
@@ -237,11 +239,11 @@ export function UsersTab({ users, roles }: UsersTabProps) {
                 />
               </div>
               <div className="space-y-2 text-sm">
-                <span>Durum</span>
+                <span>{t('common.colStatus')}</span>
                 <InlineSelectField
                   value={createUserStatus}
                   onValueChange={(value) => setCreateUserStatus(value as (typeof userStatuses)[number])}
-                  ariaLabel="Yeni kullanici durumunu sec"
+                  ariaLabel={t('settings.newUserStatusAria')}
                   options={userStatuses.map((status) => ({
                     value: status,
                     label: status,
@@ -250,7 +252,7 @@ export function UsersTab({ users, roles }: UsersTabProps) {
               </div>
             </div>
             <Button type="submit" disabled={isPending}>
-              {isPending ? 'Olusturuluyor...' : 'Kullanici Olustur'}
+              {isPending ? t('common.creating') : t('settings.createUserButton')}
             </Button>
           </form>
         </CardContent>

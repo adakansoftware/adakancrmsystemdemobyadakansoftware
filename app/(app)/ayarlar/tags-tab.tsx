@@ -10,6 +10,7 @@ import { createTagAction, deleteTagAction, updateTagAction } from '@/app/actions
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { useI18n } from '@/components/i18n/locale-provider'
 import { Input } from '@/components/ui/input'
 import { useOptimisticRowAction } from '@/hooks/use-optimistic-row-action'
 import { useServerActionToast } from '@/hooks/use-server-action-toast'
@@ -27,6 +28,7 @@ type TagsTabProps = {
 
 export function TagsTab({ tags }: TagsTabProps) {
   const { isPending, runServerAction } = useServerActionToast()
+  const { t } = useI18n()
   const tagActions = useOptimisticRowAction<string>()
   const [tagEdits, setTagEdits] = useState<Record<string, { name: string; color: string }>>(
     Object.fromEntries(tags.map((tag) => [tag.id, { name: tag.name, color: tag.color }])),
@@ -42,8 +44,8 @@ export function TagsTab({ tags }: TagsTabProps) {
 
   const handleCreateTag = createTagForm.handleSubmit((values) => {
     runServerAction(() => createTagAction(values), {
-      successMessage: 'Etiket olusturuldu',
-      errorMessage: 'Etiket olusturulamadi',
+      successMessage: t('settings.tagCreated'),
+      errorMessage: t('settings.tagCreateFailed'),
       onSuccess: () => {
         createTagForm.reset({
           name: '',
@@ -73,16 +75,16 @@ export function TagsTab({ tags }: TagsTabProps) {
           ...parsed.data,
         }),
       {
-        successMessage: 'Etiket guncellendi',
-        errorMessage: 'Etiket guncellenemedi',
+        successMessage: t('settings.tagUpdated'),
+        errorMessage: t('settings.tagUpdateFailed'),
       },
     )
   }
 
   function removeTag(tagId: string) {
     tagActions.runRowAction(tagId, () => deleteTagAction({ id: tagId }), {
-      successMessage: 'Etiket silindi',
-      errorMessage: 'Etiket silinemedi',
+      successMessage: t('settings.tagDeleted'),
+      errorMessage: t('settings.tagDeleteFailed'),
     })
   }
 
@@ -90,11 +92,11 @@ export function TagsTab({ tags }: TagsTabProps) {
     <div className="grid gap-6 xl:grid-cols-[1.2fr_0.9fr]">
       <Card>
         <CardHeader>
-          <CardTitle>Etiket Kutuphanesi</CardTitle>
+          <CardTitle>{t('settings.tagLibrary')}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-3">
           {tags.length === 0 ? (
-            <p className="text-sm text-muted-foreground">Henuz etiket yok.</p>
+            <p className="text-sm text-muted-foreground">{t('settings.noTags')}</p>
           ) : (
             tags.map((tag) => (
               <div
@@ -127,10 +129,12 @@ export function TagsTab({ tags }: TagsTabProps) {
                 />
                 <div className="flex flex-wrap items-center gap-2">
                   <Badge variant="outline">
-                    {tag._count.companies + tag._count.contacts + tag._count.deals} bag
+                    {t('common.countLinks', {
+                      count: tag._count.companies + tag._count.contacts + tag._count.deals,
+                    })}
                   </Badge>
                   <Button onClick={() => saveTag(tag.id)} disabled={tagActions.isRowPending(tag.id)}>
-                    Kaydet
+                    {t('common.save')}
                   </Button>
                   <Button
                     variant="outline"
@@ -148,22 +152,22 @@ export function TagsTab({ tags }: TagsTabProps) {
 
       <Card>
         <CardHeader>
-          <CardTitle>Yeni Etiket</CardTitle>
+          <CardTitle>{t('settings.newTag')}</CardTitle>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleCreateTag} className="grid gap-4">
             <label className="space-y-2 text-sm">
-              <span>Etiket Adi</span>
+              <span>{t('settings.tagName')}</span>
               <Input {...createTagForm.register('name')} />
               <ErrorText message={createTagForm.formState.errors.name?.message} />
             </label>
             <label className="space-y-2 text-sm">
-              <span>Renk</span>
+              <span>{t('settings.color')}</span>
               <Input {...createTagForm.register('color')} />
               <ErrorText message={createTagForm.formState.errors.color?.message} />
             </label>
             <Button type="submit" disabled={isPending}>
-              {isPending ? 'Olusturuluyor...' : 'Etiket Olustur'}
+              {isPending ? t('common.creating') : t('settings.createTag')}
             </Button>
           </form>
         </CardContent>
