@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<title>Adakan CRM — Puan Raporu</title>
+<style>
+  body { font-family: "Segoe UI", Arial, sans-serif; color: #1a1a1a; margin: 40px; font-size: 13px; line-height: 1.5; }
+  h1 { font-size: 22px; border-bottom: 3px solid #2563eb; padding-bottom: 8px; }
+  h2 { font-size: 16px; margin-top: 28px; color: #2563eb; }
+  .meta { color: #666; font-size: 12px; }
+  table { border-collapse: collapse; width: 100%; margin: 16px 0; }
+  th, td { border: 1px solid #d1d5db; padding: 8px 10px; text-align: left; vertical-align: top; }
+  th { background: #eff6ff; }
+  .score { font-weight: bold; white-space: nowrap; }
+  .total { background: #fefce8; font-weight: bold; }
+  .delta { font-size: 11px; color: #16a34a; white-space: nowrap; }
+  ul, ol { margin: 6px 0; padding-left: 20px; }
+  li { margin: 3px 0; }
+  .section { margin-bottom: 18px; }
+</style>
+</head>
+<body>
+
+<h1>Adakan CRM — Puanlı Kalite Raporu</h1>
+<p class="meta">Tarih: 2026-11-10 &nbsp;|&nbsp; Kaynaklar: kod tabanı taraması, docs/codebase-audit-report.md (3 hardening pass), canlı metrik toplama, verify + Playwright koşuları</p>
+
+<h2>Özet</h2>
+<table>
+  <tr class="total"><td>GENEL PUAN</td><td class="score">8.4 / 10</td><td>Önceki rapor: 8.2. i18n kalıntıları kapatıldı, EN yerel test kapsamına alındı. En zayıf halkalar: topbar/login kalıntı metinleri, zod şema mesajları, test coverage ölçümü yok.</td></tr>
+</table>
+
+<h2>Kategori Puanları</h2>
+<table>
+  <tr><th>Kategori</th><th>Puan</th><th>Değişim</th><th>Değerlendirme</th></tr>
+  <tr>
+    <td>Güvenlik / Auth</td><td class="score">9/10</td><td class="delta">=</td>
+    <td>NextAuth beta.32 (kritik advisory'ler kapalı), fail-closed prod secret, bcrypt, RBAC matrisi eksiksiz, sessionVersion ile JWT revoke, IP+email rate limit (PostgreSQL-backed), CSV formula injection koruması, security header'lar proxy.ts'te. Eksi: next-auth hâlâ beta; deepmerge/minimatch advisory'leri ertelenmiş.</td>
+  </tr>
+  <tr>
+    <td>Veri modeli</td><td class="score">9/10</td><td class="delta">=</td>
+    <td>20 model, 11 enum. Soft-delete 7 modelde + composite index'ler, AuditLog (IP/UA dahil), DealStageHistory + DealValueHistory, RateLimitBucket. Düşünülmemiş edge yok.</td>
+  </tr>
+  <tr>
+    <td>Mimari / Kod kalitesi</td><td class="score">8.5/10</td><td class="delta">=</td>
+    <td>lib/ net katman ayrımı (queries/actions/validation/auth). Dev monolitler bölündü. Zod her yerde, env merkezî. Eksi: 11 TODO/FIXME.</td>
+  </tr>
+  <tr>
+    <td>i18n</td><td class="score">8.5/10</td><td class="delta">7 → 8.5</td>
+    <td>TR/EN sözlük ~490 anahtar, typed keys (eksik anahtar = tsc hatası), enum label map'leri, {param} interpolasyon. Tüm CRM sayfaları, ayarlar sekmeleri, detay bileşenleri, quick-create dialog, not/aktivite panelleri, error sınırları t() üzerinden. TR-EN karışık anahtar düzeltildi (quotes.weightedPipeline). Eksi: topbar aria/bildirim metinleri, login/setup sayfaları, zod şema mesajları sabit.</td>
+  </tr>
+  <tr>
+    <td>Test</td><td class="score">8/10</td><td class="delta">7.5 → 8</td>
+    <td>17 Playwright (dil toggle EN↔TR regresyon testi eklendi) + 47 unit + 12 smoke + 6 ops assert; npm run verify zinciri tamam, 17/17 yeşil. Eksi: unit test framework'süz tsx script, coverage ölçümü yok.</td>
+  </tr>
+  <tr>
+    <td>UX / Erişilebilirlik</td><td class="score">8/10</td><td class="delta">=</td>
+    <td>Paylaşımlı useServerActionToast (18 kullanım) + useOptimisticRowAction (12), klavye ile pipeline taşıma, yerelleştirilmiş ARIA label'lar, dark mode.</td>
+  </tr>
+  <tr>
+    <td>Dokümantasyon</td><td class="score">8/10</td><td class="delta">=</td>
+    <td>Audit raporu 3 pass detaylı, production-architecture.md var. Eksi: README yok, katman dokümanı yok.</td>
+  </tr>
+  <tr>
+    <td>Bağımlılık sağlığı</td><td class="score">7.5/10</td><td class="delta">=</td>
+    <td>next 16.4.5, zod 4, prisma 6.16 güncel. Eksi: shadcn 1.0 / prisma 7 kırıcı yükseltmeler advisory kapatmak için ertelendi.</td>
+  </tr>
+</table>
+
+<h2>Bu Turda Kapatılan Maddeler (commit e0951ba)</h2>
+<div class="section">
+<ul>
+  <li>~140 yeni sözlük anahtarı: anlasmalar/musteriler/firmalar listeleri + detay sayfaları, ayarlar 5 sekmesi, quick-create dialog, not/aktivite panelleri, error.tsx + route-error.tsx, raporlar "Win Rate", dashboard ipucu metni.</li>
+  <li>TR sözlükteki İngilizce değer düzeltildi: quotes.weightedPipeline → 'Agirliklandirilmis Pipeline'.</li>
+  <li>EN yereli Playwright testiyle doğrulandı: dil toggle EN, dashboard/anlasmalar/ayarlar/raporlar İngilizce kontrol, TR'ye geri dönüş.</li>
+  <li>npm run verify (prisma validate, lint, build, unit, smoke) + Playwright 17/17 yeşil; commit pushlandı.</li>
+</ul>
+</div>
+
+<h2>Metrikler</h2>
+<div class="section">
+<ul>
+  <li><b>Veri:</b> 20 Prisma modeli, 11 enum, 7 modelde soft-delete (archivedAt + composite index)</li>
+  <li><b>Sayfalar:</b> 17 sayfa (13 authenticated shell + /admin, /login, /setup), 4 API route, 9 server action modülü</li>
+  <li><b>lib/:</b> ~4.8K satır, 43 dosya (auth, i18n, crm/queries, validation, security, export)</li>
+  <li><b>i18n:</b> TR/EN sözlük ~490 anahtar, 59 enum label girişi, typed keys</li>
+  <li><b>Test:</b> 17 Playwright + 47 unit + 12 smoke + 6 ops assert</li>
+  <li><b>Altyapı:</b> proxy.ts auth + security header'lar, health endpoint, ops-assert DB bütünlük kontrolü</li>
+  <li><b>Teknik borç:</b> 11 TODO/FIXME, topbar/login/setup sabit metinleri, zod şema mesajları, next-auth beta</li>
+</ul>
+</div>
+
+<h2>Hızlı İyileştirme Yol Haritası</h2>
+<div class="section">
+<ol>
+  <li>topbar.tsx kalıntıları: aria-label'lar, bildirim mock başlıkları, arama placeholder'ları → t(). i18n 8.5'ten 9'a çıkar.</li>
+  <li>login/setup sayfalarının dili kararlandır (bilinçli İngilizce mi, yerelleştirilecek mi).</li>
+  <li>Zod şema mesajlarını yerelleştir (şemaları bileşen içine taşımayı gerektirir).</li>
+  <li>Test coverage ölçümü ekle (vitest + coverage) — Test 8'den 9'a çıkar.</li>
+  <li>README + katman dokümanı yaz — Dokümantasyon 8'den 9.5'a çıkar.</li>
+  <li>Uzun vade: shadcn 1.0 / prisma 7 yükseltmeleri ile kalan advisory'leri kapat.</li>
+</ol>
+</div>
+
+<p class="meta">Rapor sonu.</p>
+
+</body>
+</html>
