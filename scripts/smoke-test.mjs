@@ -51,7 +51,7 @@ async function runChecks() {
 
   const login = await request("/login");
   assert(login.response.status === 200, `/login beklenmeyen durum dondu: ${login.response.status}`);
-  assert(login.text.includes("CRM Login"), "/login beklenen basligi donmedi");
+  assert(login.text.includes("CRM Giris"), "/login beklenen basligi donmedi");
 
   const protectedRoute = await fetch(`${baseUrl}/musteriler`, { redirect: "manual" });
   assert(

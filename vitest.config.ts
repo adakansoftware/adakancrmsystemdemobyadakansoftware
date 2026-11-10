@@ -8,6 +8,7 @@ export default defineConfig({
     coverage: {
       provider: 'v8',
       include: ['lib/**'],
+      exclude: ['lib/db/generated/**'],
       reporter: ['text', 'text-summary', 'lcov'],
       reportsDirectory: 'coverage',
     },
