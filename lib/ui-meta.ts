@@ -4,7 +4,7 @@ import type {
   LeadStatus,
   TaskPriority,
   TaskStatus,
-} from '@prisma/client'
+} from '@/lib/db/generated/prisma/client'
 
 // Label maps moved to `lib/i18n/enums.ts` (locale-aware); only visual meta
 // (badge variants, dots) lives here.

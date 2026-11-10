@@ -1,4 +1,4 @@
-import { LeadSource, LeadStatus, LeadTemperature, Prisma, TaskPriority, TaskStatus } from '@prisma/client'
+import { LeadSource, LeadStatus, LeadTemperature, Prisma, TaskPriority, TaskStatus } from '@/lib/db/generated/prisma/client'
 import { hashPassword } from '@/lib/auth/password'
 import { SYSTEM_ROLE_DEFINITIONS } from '@/lib/auth/constants'
 import { ensureDefaultDealPipeline } from '@/lib/crm/bootstrap'

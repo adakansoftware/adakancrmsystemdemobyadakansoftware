@@ -1,19 +1,19 @@
-import { Prisma } from '@prisma/client'
+import { Prisma } from '@/lib/db/generated/prisma/client'
 
-export const roleSummarySelect = Prisma.validator<Prisma.RoleSelect>()({
+export const roleSummarySelect = {
   id: true,
   name: true,
   slug: true,
-})
+} satisfies Prisma.RoleSelect
 
-export const managedUserRoleSelect = Prisma.validator<Prisma.UserRoleSelect>()({
+export const managedUserRoleSelect = {
   roleId: true,
   role: {
     select: roleSummarySelect,
   },
-})
+} satisfies Prisma.UserRoleSelect
 
-export const managedUserSelect = Prisma.validator<Prisma.UserSelect>()({
+export const managedUserSelect = {
   id: true,
   email: true,
   firstName: true,
@@ -22,9 +22,9 @@ export const managedUserSelect = Prisma.validator<Prisma.UserSelect>()({
   roles: {
     select: managedUserRoleSelect,
   },
-})
+} satisfies Prisma.UserSelect
 
-export const roleAssignmentSelect = Prisma.validator<Prisma.UserRoleSelect>()({
+export const roleAssignmentSelect = {
   userId: true,
   roleId: true,
   user: {
@@ -33,7 +33,7 @@ export const roleAssignmentSelect = Prisma.validator<Prisma.UserRoleSelect>()({
   role: {
     select: roleSummarySelect,
   },
-})
+} satisfies Prisma.UserRoleSelect
 
 export type ManagedUserRecord = Prisma.UserGetPayload<{
   select: typeof managedUserSelect

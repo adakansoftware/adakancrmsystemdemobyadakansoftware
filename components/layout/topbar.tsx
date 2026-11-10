@@ -235,7 +235,7 @@ export function Topbar({ currentUser, quickCreateOptions }: TopbarProps) {
       })
 
     return () => controller.abort()
-  }, [deferredSearchValue])
+  }, [deferredSearchValue, t])
 
   useEffect(() => {
     function onKeyDown(event: KeyboardEvent) {

@@ -1,4 +1,4 @@
-import type { ActivityType, Prisma } from '@prisma/client'
+import type { ActivityType, Prisma } from '@/lib/db/generated/prisma/client'
 import { db } from '@/lib/db/prisma'
 
 type TimelineActivityInput = {

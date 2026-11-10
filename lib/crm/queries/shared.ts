@@ -1,3 +1,4 @@
+import type { ActivityType } from '@/lib/db/generated/prisma/client'
 import type {
   EntityActivityViewModel,
   EntityNoteViewModel,
@@ -26,7 +27,7 @@ export function mapEntityNotes(
 export function mapEntityActivities(
   activities: Array<{
     id: string
-    type: import('@prisma/client').ActivityType
+    type: ActivityType
     subject: string
     description: string | null
     occurredAt: Date

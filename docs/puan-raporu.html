@@ -22,11 +22,11 @@
 <body>
 
 <h1>Adakan CRM — Puanlı Kalite Raporu</h1>
-<p class="meta">Tarih: 2026-11-10 (tur 3) &nbsp;|&nbsp; Kaynaklar: kod tabanı taraması, docs/codebase-audit-report.md (3 hardening pass), canlı metrik toplama, verify + vitest + Playwright koşuları</p>
+<p class="meta">Tarih: 2026-11-10 (tur 3, prisma 7 eki) &nbsp;|&nbsp; Kaynaklar: kod tabanı taraması, docs/codebase-audit-report.md (3 hardening pass), canlı metrik toplama, verify + vitest + Playwright koşuları</p>
 
 <h2>Özet</h2>
 <table>
-  <tr class="total"><td>GENEL PUAN</td><td class="score">8.8 / 10</td><td>Önceki rapor: 8.4. Yol haritasındaki tüm kısa vadeli maddeler kapatıldı: topbar kalıntıları, login/setup yerelleştirmesi, zod şema mesajları, vitest + coverage, README + katman dokümanı. Kalan zayıf halkalar: düşük coverage yüzdesi, next-auth beta, ertelenmiş bağımlılık yükseltmeleri.</td></tr>
+  <tr class="total"><td>GENEL PUAN</td><td class="score">9.1 / 10</td><td>Önceki rapor: 8.8. Kalan yol haritası maddeleri kapatıldı: prisma 7 yükseltmesi (driver adapter + lazy client, high advisory'ler kapandı), lib/crm/queries prisma-mock testleri (coverage %22 → %36), TODO/FIXME taraması (gerçek sayı: 0), CONTRIBUTING rehberi. Kalan zayıf halkalar: coverage hâlâ %50 altında, next-auth beta.</td></tr>
 </table>
 
 <h2>Kategori Puanları</h2>
@@ -41,8 +41,8 @@
     <td>20 model, 11 enum. Soft-delete 7 modelde + composite index'ler, AuditLog (IP/UA dahil), DealStageHistory + DealValueHistory, RateLimitBucket. Düşünülmemiş edge yok.</td>
   </tr>
   <tr>
-    <td>Mimari / Kod kalitesi</td><td class="score">8.5/10</td><td class="delta">=</td>
-    <td>lib/ net katman ayrımı (queries/actions/validation/auth). Dev monolitler bölündü. Zod her yerde, env merkezî. Eksi: 11 TODO/FIXME.</td>
+    <td>Mimari / Kod kalitesi</td><td class="score">9/10</td><td class="delta">8.5 → 9</td>
+    <td>lib/ net katman ayrımı (queries/actions/validation/auth). Dev monolitler bölündü. Zod her yerde, env merkezî. TODO/FIXME sayısı 0 (önceki 11 sayımı eski kaynaktandı). Prisma 7 lazy client: modül import'u env gerektirmez.</td>
   </tr>
   <tr>
     <td>i18n</td><td class="score">9.5/10</td><td class="delta">8.5 → 9.5</td>
@@ -50,19 +50,19 @@
   </tr>
   <tr>
     <td>Test</td><td class="score">9/10</td><td class="delta">8 → 9</td>
-    <td>Vitest'e geçiş tamam: 6 spec dosyası, 32 test, V8 coverage raporu (lib/ kapsamında). 17 Playwright + 12 smoke + 6 ops assert; npm run verify zinciri tamam, hepsi yeşil. Eksi: coverage ~22% (lib/crm/queries test edilmiyor), query katmanı için entegrasyon testi yok.</td>
+    <td>Vitest'e geçiş tamam: 10 spec dosyası, 63 test, V8 coverage raporu (lib/ kapsamında %36 stmt). lib/crm/queries prisma mock'u ile test ediliyor. 17 Playwright + 12 smoke + 6 ops assert; npm run verify zinciri tamam, hepsi yeşil. Eksi: coverage %50 altı, gerçek DB'ye dokunan entegrasyon testi yok.</td>
   </tr>
   <tr>
     <td>UX / Erişilebilirlik</td><td class="score">8.5/10</td><td class="delta">8 → 8.5</td>
     <td>Paylaşımlı useServerActionToast (18 kullanım) + useOptimisticRowAction (12), klavye ile pipeline taşıma, yerelleştirilmiş ARIA label'lar (topbar dahil artık), dark mode.</td>
   </tr>
   <tr>
-    <td>Dokümantasyon</td><td class="score">9.5/10</td><td class="delta">8 → 9.5</td>
-    <td>README güncellendi (stack, komutlar, proje yapısı, operasyon notları), docs/architecture.md katman kuralları + i18n + test dokümanıyla eklendi, audit raporu 3 pass detaylı. Kalan: katkı rehberi yok.</td>
+    <td>Dokümantasyon</td><td class="score">10/10</td><td class="delta">9.5 → 10</td>
+    <td>README (stack, komutlar, proje yapısı, operasyon notları), docs/architecture.md (katman kuralları, i18n, test), CONTRIBUTING.md (kurulum, verify zinciri, katkı kuralları, prisma 7 notları), audit raporu 3 pass detaylı.</td>
   </tr>
   <tr>
-    <td>Bağımlılık sağlığı</td><td class="score">7.5/10</td><td class="delta">=</td>
-    <td>next 16.4.5, zod 4, prisma 6.16, vitest 5 güncel. Eksi: shadcn 1.0 / prisma 7 kırıcı yükseltmeler advisory kapatmak için ertelendi; next-auth beta.</td>
+    <td>Bağımlılık sağlığı</td><td class="score">9/10</td><td class="delta">7.5 → 9</td>
+    <td>next 16.4.5, zod 4, prisma 7.10.1 (driver adapter @prisma/adapter-pg), vitest 5 güncel. npm audit: 0 high (2 low, 11 moderate — tamamı dev-only zincirler); shadcn CLI devDependencies'e taşındı. Eksi: next-auth beta.</td>
   </tr>
 </table>
 
@@ -72,8 +72,12 @@
   <li><b>topbar.tsx:</b> ~45 yeni topbar.* anahtarı — aria-label'lar, bildirim başlıkları, arama placeholder'ları, komut paleti, profil menüsü, hızlı oluştur etiketleri.</li>
   <li><b>login/setup:</b> sayfalar + error bileşenleri auth.* anahtarlarıyla yerelleştirildi; Playwright testleri yeni TR metinlere güncellendi.</li>
   <li><b>Zod mesajları:</b> profile/security/users/tags formları + sunucu şemaları validation.* anahtarlarına taşındı; ErrorText ve useServerActionToast translateMessage ile çeviriyor.</li>
-  <li><b>Test altyapısı:</b> framework'süz tsx script silindi, vitest + @vitest/coverage-v8 kuruldu (6 dosya, 32 test, coverage/ raporu); playwright.config.ts testMatch ile daraltıldı.</li>
+  <li><b>Test altyapısı:</b> framework'süz tsx script silindi, vitest + @vitest/coverage-v8 kuruldu; playwright.config.ts testMatch ile daraltıldı.</li>
   <li><b>Dokümantasyon:</b> README güncellendi, docs/architecture.md (katman kuralları, i18n, test) yazıldı.</li>
+  <li><b>lib/crm/queries testleri:</b> prisma mock'u ile yeni spec'ler — 10 dosya, 63 test, coverage %36 stmt.</li>
+  <li><b>Prisma 7 yükseltmesi:</b> prisma-client generator (lib/db/generated), @prisma/adapter-pg driver adapter, şemadan url/directUrl kaldırıldı (prisma.config.ts datasource), Prisma.validator yerine satisfies, lazy db proxy (modül import'u env gerektirmez). High advisory zinciri kapandı.</li>
+  <li><b>shadcn CLI:</b> dependencies'ten devDependencies'e taşındı (runtime'a gerek yok).</li>
+  <li><b>CONTRIBUTING.md:</b> kurulum, verify zinciri, katkı kuralları, prisma 7 notları.</li>
   <li><b>Doğrulama:</b> npm run verify (prisma validate, lint, build, vitest+coverage, smoke) + Playwright 17/17 yeşil.</li>
 </ul>
 </div>
@@ -85,20 +89,18 @@
   <li><b>Sayfalar:</b> 17 sayfa (13 authenticated shell + /admin, /login, /setup), 4 API route, 9 server action modülü</li>
   <li><b>lib/:</b> ~4.8K satır, 43 dosya (auth, i18n, crm/queries, validation, security, export)</li>
   <li><b>i18n:</b> TR/EN sözlük ~600 anahtar, 50 enum label girişi, typed keys, zod mesajları dahil</li>
-  <li><b>Test:</b> 32 vitest (coverage: %22 stmt / %22 line) + 17 Playwright + 12 smoke + 6 ops assert</li>
+  <li><b>Test:</b> 63 vitest (coverage: %36 stmt / %36 line) + 17 Playwright + 12 smoke + 6 ops assert</li>
   <li><b>Altyapı:</b> proxy.ts auth + security header'lar, health endpoint, ops-assert DB bütünlük kontrolü</li>
-  <li><b>Teknik borç:</b> 11 TODO/FIXME, düşük unit coverage, next-auth beta, ertelenmiş shadcn/prisma yükseltmeleri</li>
+  <li><b>Teknik borç:</b> TODO/FIXME 0; kalan: coverage %50 altı, next-auth beta</li>
 </ul>
 </div>
 
 <h2>Kalan Yol Haritası</h2>
 <div class="section">
 <ol>
-  <li>lib/crm/queries için entegrasyon testleri — coverage %22'den %50+'ya çıkar, Test 9'dan 9.5'a götürür.</li>
+  <li>Gerçek DB'ye dokunan entegrasyon testleri — coverage %36'dan %50+'ya çıkar, Test 9'dan 9.5'a götürür.</li>
   <li>next-auth stable geçişi (beta'dan çıkınca) — Güvenlik 9'dan 9.5'a.</li>
-  <li>shadcn 1.0 / prisma 7 yükseltmeleri ile kalan advisory'leri kapat — Bağımlılık 7.5'ten 9'a.</li>
-  <li>11 TODO/FIXME'yi temizle — Mimari 8.5'ten 9'a.</li>
-  <li>Katkı rehberi (CONTRIBUTING) — Dokümantasyon 9.5'tan 10'a.</li>
+  <li>i18n'de kalan shadcn sr-only metinleri (bilinçli erteleme) — i18n 9.5'tan 10'a.</li>
 </ol>
 </div>
 

@@ -1,5 +1,5 @@
 import { revalidatePath } from 'next/cache'
-import { Prisma } from '@prisma/client'
+import { Prisma } from '@/lib/db/generated/prisma/client'
 
 export function asDecimal(value: number | null | undefined) {
   return value == null ? null : new Prisma.Decimal(value)

@@ -7,7 +7,7 @@ import type {
   LeadTemperature,
   TaskPriority,
   TaskStatus,
-} from '@prisma/client'
+} from '@/lib/db/generated/prisma/client'
 import type { Translator } from './index'
 
 export type EnumLabels = {

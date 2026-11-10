@@ -1,4 +1,4 @@
-import type { AuditAction, Prisma } from '@prisma/client'
+import type { AuditAction, Prisma } from '@/lib/db/generated/prisma/client'
 import { db } from '@/lib/db/prisma'
 import { getRequestMetadata, type RequestMetadata } from '@/lib/request/request-metadata'
 

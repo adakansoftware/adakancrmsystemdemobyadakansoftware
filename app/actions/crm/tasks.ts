@@ -1,6 +1,6 @@
 'use server'
 
-import { Prisma } from '@prisma/client'
+import { Prisma } from '@/lib/db/generated/prisma/client'
 import { createValidatedAction } from '@/lib/actions/create-validated-action'
 import { createAuditLog } from '@/lib/audit/log'
 import { requirePermission } from '@/lib/auth/rbac'

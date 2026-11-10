@@ -1,4 +1,4 @@
-import type { Role } from '@prisma/client'
+import type { Role } from '@/lib/db/generated/prisma/client'
 import type { UsersWithRolesData } from '@/app/actions/auth'
 import type { SessionUser } from '@/lib/auth/rbac'
 import type { SettingsOverviewData } from '@/lib/crm/queries'
